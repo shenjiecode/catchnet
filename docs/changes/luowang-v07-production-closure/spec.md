@@ -6,7 +6,7 @@
 - 关联 Intent：[intent.md](./intent.md)
 - 实现计划：[plan.md](./plan.md)
 - 上游规格：[罗网 Harness MVP Spec](../luowang-harness-mvp/spec.md)
-- 权威设计：`罗网（LuoWang）场景测试 Harness 设计 · MVP Implementation Baseline v0.7`
+- 权威设计：`罗网（Catchnet）场景测试 Harness 设计 · MVP Implementation Baseline v0.7`
 
 ## 1. 规格范围与优先级
 
@@ -506,7 +506,7 @@ https://github.com/cynos-ai/cynos-website
 - `LUOWANG_MASTER_KEY`；
 - 可选 `LUOWANG_ALLOWED_ORIGIN`；
 - 持久化卷、仅本地或非生产入口、访问 GitHub/Provider/OSS/样例应用的网络；
-- `cynos-ai/luowang` 的 PR 和最终 tag 权限。
+- `shenjiecode/catchnet` 的 PR 和最终 tag 权限。
 
 ### 9.7 建议的本地 Secret 变量
 

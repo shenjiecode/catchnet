@@ -13,7 +13,7 @@ export function BrandLogo({
       src={`/brand/logo-${tone}.png`}
       width={600}
       height={tone === 'color' ? 246 : 245}
-      alt={decorative ? '' : '罗网 LuoWang'}
+      alt={decorative ? '' : '罗网 Catchnet'}
       draggable={false}
     />
   );

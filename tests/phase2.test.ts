@@ -127,7 +127,7 @@ describe('Phase 2 repository control', () => {
     const competingDir = join(fixture.rootDir, 'competing');
     await git(['clone', fixture.remoteDir, competingDir], fixture.rootDir);
     await git(['checkout', 'scenario-testing'], competingDir);
-    await git(['config', 'user.name', 'LuoWang Test'], competingDir);
+    await git(['config', 'user.name', 'Catchnet Test'], competingDir);
     await git(['config', 'user.email', 'luowang@example.test'], competingDir);
     await writeFile(join(competingDir, 'README.md'), 'scenario side\n');
     await git(['add', 'README.md'], competingDir);
@@ -293,7 +293,7 @@ async function createGitFixture() {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Test'], sourceDir);
   await git(['config', 'user.email', 'luowang@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'initial product\n');
   await git(['add', 'README.md'], sourceDir);

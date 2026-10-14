@@ -41,7 +41,7 @@ npm run test:acceptance:release
 
 正式结果保存 JSON 与 Markdown，区分 `local.status`、`live.status`、`release.status`，并列出资源、AC 与命令。特殊场景 PR Run 按设计不发布正式报告，不请求其 Indexer 报告；普通已发布 Run 的报告读不到仍是失败，不能统一忽略 404。
 
-当前检查器仍从指定项目历史选择事实，尚未实现候选指纹或批次 manifest。操作者必须在本轮 Plan/PR 核对选中的 Run、target、候选与预期范围；旧事实不能自动证明新版本。后续改进见 [#103](https://github.com/cynos-ai/luowang/issues/103)。
+当前检查器仍从指定项目历史选择事实，尚未实现候选指纹或批次 manifest。操作者必须在本轮 Plan/PR 核对选中的 Run、target、候选与预期范围；旧事实不能自动证明新版本。后续改进见 [#103](https://github.com/shenjiecode/catchnet/issues/103)。
 
 ## 4. 检查器修复后怎么办
 

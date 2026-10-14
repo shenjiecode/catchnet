@@ -860,13 +860,13 @@ function GlobalSection({
           </Field>
           <Field
             label={
-              <HelpLabel label="Bucket" help="存放测试证据的 Bucket 名，例如 luowang-files。" />
+              <HelpLabel label="Bucket" help="存放测试证据的 Bucket 名，例如 catchnet-files。" />
             }
           >
             <input
               aria-label="Bucket"
               disabled={disabled}
-              placeholder="luowang-files"
+              placeholder="catchnet-files"
               value={value.oss.bucket}
               onChange={(event) => set({ oss: { ...value.oss, bucket: event.target.value } })}
             />
@@ -924,7 +924,7 @@ function GlobalSection({
             label={
               <HelpLabel
                 label="Public URL"
-                help="公开访问时的 Bucket 基础地址，例如 https://luowang-files.s3.cn-east-1.jdcloud-oss.com。"
+                help="公开访问时的 Bucket 基础地址，例如 https://catchnet-files.s3.cn-east-1.jdcloud-oss.com。"
               />
             }
           >
@@ -950,14 +950,14 @@ function GlobalSection({
             label={
               <HelpLabel
                 label="Object prefix"
-                help="所有对象共享的可选目录前缀，例如 luowang；不要以斜杠开头。"
+                help="所有对象共享的可选目录前缀，例如 catchnet；不要以斜杠开头。"
               />
             }
           >
             <input
               aria-label="Object prefix"
               disabled={disabled}
-              placeholder="luowang"
+              placeholder="catchnet"
               value={value.oss.objectPrefix}
               onChange={(event) => set({ oss: { ...value.oss, objectPrefix: event.target.value } })}
             />

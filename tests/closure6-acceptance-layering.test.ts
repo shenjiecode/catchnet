@@ -374,12 +374,12 @@ describe('Closure 6 acceptance status layering', () => {
       parseHarnessUrl('https://harness.example.test', 'https://harness.example.test'),
       'https://harness.example.test',
     );
-    assert.deepEqual(parseGitHubRepository('https://github.com/cynos-ai/luowang.git'), {
-      owner: 'cynos-ai',
-      name: 'luowang',
+    assert.deepEqual(parseGitHubRepository('https://github.com/shenjiecode/catchnet.git'), {
+      owner: 'shenjiecode',
+      name: 'catchnet',
     });
-    assert.throws(() => parseGitHubRepository('http://github.com/cynos-ai/luowang'));
-    assert.throws(() => parseGitHubRepository('https://user@github.com/cynos-ai/luowang'));
+    assert.throws(() => parseGitHubRepository('http://github.com/shenjiecode/catchnet'));
+    assert.throws(() => parseGitHubRepository('https://user@github.com/shenjiecode/catchnet'));
     assert.equal(isNewSemVerTag('v0.2.0'), true);
     assert.equal(isNewSemVerTag('v1.0.0'), true);
     assert.equal(isNewSemVerTag('v0.1.0'), false);

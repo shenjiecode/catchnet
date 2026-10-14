@@ -50,7 +50,7 @@ export function productHeader(page) {
   const active = topSection(page);
   return `
     <header class="product-header">
-      <button class="wordmark" type="button" data-page="workspace"><strong>罗网</strong><span>LuoWang</span></button>
+      <button class="wordmark" type="button" data-page="workspace"><strong>罗网</strong><span>Catchnet</span></button>
       <nav class="global-nav" aria-label="主导航">
         ${navButton('工作台', 'workspace', active)}
         ${navButton('项目', 'projects', active)}

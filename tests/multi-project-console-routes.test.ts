@@ -37,7 +37,7 @@ it('protects every console route and accepts only fixed system checks', async ()
       calls.push('status');
       return {
         fetchedAt: '2026-09-27T00:00:00.000Z',
-        service: { name: 'luowang', version: 'test', build: null },
+        service: { name: 'catchnet', version: 'test', build: null },
         database: 'ok',
         secretStore: 'available',
         scheduler: {

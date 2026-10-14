@@ -19,8 +19,8 @@ function useOperatorName(): string {
   const reload = profile.reload;
   useEffect(() => {
     const onProfileChanged = () => reload();
-    window.addEventListener('luowang:profile-changed', onProfileChanged);
-    return () => window.removeEventListener('luowang:profile-changed', onProfileChanged);
+    window.addEventListener('catchnet:profile-changed', onProfileChanged);
+    return () => window.removeEventListener('catchnet:profile-changed', onProfileChanged);
   }, [reload]);
   return profile.value?.profile?.displayName?.trim() || '管理员';
 }

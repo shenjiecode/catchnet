@@ -20,7 +20,7 @@ describe('project execution image source', () => {
     try {
       const repo = join(root, 'repo');
       await git(['init', '-b', 'main', repo], root);
-      await git(['config', 'user.name', 'LuoWang Test'], repo);
+      await git(['config', 'user.name', 'Catchnet Test'], repo);
       await git(['config', 'user.email', 'luowang@example.test'], repo);
       await writeFile(
         join(repo, 'Dockerfile.luowang'),
@@ -92,7 +92,7 @@ describe('project execution image source', () => {
     try {
       const repo = join(root, 'repo');
       await git(['init', '-b', 'main', repo], root);
-      await git(['config', 'user.name', 'LuoWang Test'], repo);
+      await git(['config', 'user.name', 'Catchnet Test'], repo);
       await git(['config', 'user.email', 'luowang@example.test'], repo);
       await writeFile(join(root, 'outside.txt'), 'outside');
       await writeFile(join(repo, 'Dockerfile.luowang'), 'FROM scratch\n');

@@ -56,7 +56,7 @@ npm run test:e2e
 - Secret 扫描为阴性；
 - 既有 34 AC 的本地回归不倒退；
 - 没有修改 `v0.1.0` tag 或历史报告；
-- 没有在 `cynos-ai/luowang` 创建 `scenario-testing`、测试 PR、测试 Issue 或测试资产。
+- 没有在 `shenjiecode/catchnet` 创建 `scenario-testing`、测试 PR、测试 Issue 或测试资产。
 
 ## 4. 外部资源门禁
 
@@ -78,7 +78,7 @@ Closure Phase 0–6 不需要真实 GitHub Token、Provider Key、测试账号�
 | OSS | endpoint/region/private bucket/prefix/Access Key | 只允许专用 prefix put/get/head/delete，按需 list | Phase 7 blocked |
 | 候选实例 | Admin Password、Master Key、可选 Allowed Origin | 独立持久卷、本地/非生产入口、非 root、无 Docker socket | Phase 7 blocked |
 | 网络/费用 | 出口和本次调用额度 | 能访问四类外部系统，允许有限测试费用 | Phase 7 blocked |
-| 发布 | `cynos-ai/luowang` PR/tag 权限和 SemVer 选择 | 不移动 `v0.1.0` | 只能完成验收，不能发布 |
+| 发布 | `shenjiecode/catchnet` PR/tag 权限和 SemVer 选择 | 不移动 `v0.1.0` | 只能完成验收，不能发布 |
 
 非 Secret 配置可以写入验收记录；Secret 只能记录 `configured: true/false`。项目负责人还需确认验收结束后测试账号、Token 和 OSS Key 是撤销、轮换还是继续作为专用凭据保留。
 

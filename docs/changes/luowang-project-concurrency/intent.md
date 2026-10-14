@@ -11,7 +11,7 @@
 
 控制台也按一个当前 Run 展示执行状态和全局队列位置。仅放开后台限制，会造成正在执行的任务显示不全、等待原因不准确，以及恢复和清理遗漏。
 
-同时存在两个明确的界面缺陷：[#118](https://github.com/cynos-ai/luowang/issues/118) 模型设置目录状态挤占角色卡片网格、[#119](https://github.com/cynos-ai/luowang/issues/119) 768px 视口出现整页横向滚动。[#94](https://github.com/cynos-ai/luowang/issues/94) 已有 Git 超时实现和专项测试，但从底层到就绪页面的错误传递还需要核验，不能按开放 issue 数量重复开发。
+同时存在两个明确的界面缺陷：[#118](https://github.com/shenjiecode/catchnet/issues/118) 模型设置目录状态挤占角色卡片网格、[#119](https://github.com/shenjiecode/catchnet/issues/119) 768px 视口出现整页横向滚动。[#94](https://github.com/shenjiecode/catchnet/issues/94) 已有 Git 超时实现和专项测试，但从底层到就绪页面的错误传递还需要核验，不能按开放 issue 数量重复开发。
 
 ## 期望结果
 

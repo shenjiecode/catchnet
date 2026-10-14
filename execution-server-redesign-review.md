@@ -45,7 +45,7 @@
 - **运行边界**：项目镜像构建、被测应用启动、测试命令和临时资源清理都发生在项目绑定的执行服务器上。
 - **控制边界**：调度、数据库、Secret Store、模型 Session、证据归档和报告仍在罗网本机管理。
 
-第一版采用无 Agent 的 SSH 执行方式，不要求远程服务器安装常驻 LuoWang Worker。服务器数量和任务规模扩大后，再评估独立 Worker。
+第一版采用无 Agent 的 SSH 执行方式，不要求远程服务器安装常驻 Catchnet Worker。服务器数量和任务规模扩大后，再评估独立 Worker。
 
 ## 四、一次 Run 的目标流程
 
@@ -121,7 +121,7 @@
 
 所有远程资源必须附带并核对：
 
-- LuoWang 实例 ID
+- Catchnet 实例 ID
 - projectId
 - runId
 - target commit

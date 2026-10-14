@@ -625,7 +625,7 @@ async function createContext(
   await mkdir(source, { recursive: true });
   await git(['init', '--bare', remote], root);
   await git(['init', '--initial-branch=main'], source);
-  await git(['config', 'user.name', 'LuoWang Closure 6'], source);
+  await git(['config', 'user.name', 'Catchnet Closure 6'], source);
   await git(['config', 'user.email', 'luowang-closure6@example.test'], source);
   await writeFile(join(source, 'README.md'), '# Local Pi target\n', 'utf8');
   if (behavior === 'reuse-existing' || behavior === 'omit-modified') {

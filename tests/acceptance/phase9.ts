@@ -551,7 +551,7 @@ async function createGitFixture(parentDirectory: string): Promise<GitFixture> {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Phase 9 Fixture'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Phase 9 Fixture'], sourceDir);
   await git(['config', 'user.email', 'luowang-phase9@example.test'], sourceDir);
   await mkdir(join(sourceDir, 'docs'), { recursive: true });
   await mkdir(join(sourceDir, 'src'), { recursive: true });
@@ -1848,7 +1848,7 @@ function renderMarkdownReport(report: {
         `| ${item.status} | \`${item.command}\` | ${item.durationMs} ms | ${item.summary} |`,
     )
     .join('\n');
-  return `# LuoWang Phase 9 acceptance report
+  return `# Catchnet Phase 9 acceptance report
 
 - Status: **${report.status}**
 - Target project: \`${report.targetProject}\`

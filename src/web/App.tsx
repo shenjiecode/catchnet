@@ -99,8 +99,8 @@ export default function App() {
       setConfig(null);
       setError('登录已过期，请重新登录');
     };
-    window.addEventListener('luowang:unauthorized', onUnauthorized);
-    return () => window.removeEventListener('luowang:unauthorized', onUnauthorized);
+    window.addEventListener('catchnet:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('catchnet:unauthorized', onUnauthorized);
   }, []);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {

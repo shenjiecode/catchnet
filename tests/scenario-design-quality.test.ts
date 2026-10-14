@@ -325,7 +325,7 @@ async function createGitFixture(): Promise<Fixture> {
   await git(['init', '--bare', remoteDir], rootDir);
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang SDQ Test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet SDQ Test'], sourceDir);
   await git(['config', 'user.email', 'luowang-sdq@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'modified.txt'), 'old\n');
   await writeFile(join(sourceDir, 'deleted.txt'), 'deleted before\n');

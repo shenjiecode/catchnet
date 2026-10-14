@@ -89,7 +89,7 @@ v0.6.1 不作为本版本完成条件。深读记录先使用现有仓库身份�
 
 ## 2026-09-23 自主执行收尾
 
-本轮停在已实现、已验证并提交的开发候选，不发布 v0.6.0。产品实现提交为 `9f77bd508f524e80b7abcb350307318d966a8ffc`，开发 PR 为 [#75](https://github.com/cynos-ai/luowang/pull/75)，保持 draft。v0.5.0 仍为正式版本；未合并 develop/main、未改版本号、未创建发布 tag，v0.6.1 未启动。
+本轮停在已实现、已验证并提交的开发候选，不发布 v0.6.0。产品实现提交为 `9f77bd508f524e80b7abcb350307318d966a8ffc`，开发 PR 为 [#75](https://github.com/shenjiecode/catchnet/pull/75)，保持 draft。v0.5.0 仍为正式版本；未合并 develop/main、未改版本号、未创建发布 tag，v0.6.1 未启动。
 
 ### 模型对照结果与限制
 
@@ -110,7 +110,7 @@ round3 冻结标识为 `dcc865554284c909d47b93971645899db605c4276192680856135862
 
 ### 修正候选的工程与真实联合证明
 
-- 修正后的完整 local 再次通过，覆盖格式、lint、类型、338 项单测、构建、E2E 与生产 Pi 专项；报告 `.cynos/code-understanding-stage5/local-proof/local/report.json`。quality/runtime 使用干净源码构建，八种角色/初始化资源组合核对通过。产品提交的 [quality CI](https://github.com/cynos-ai/luowang/actions/runs/35786145264/job/106943320215) 通过。
+- 修正后的完整 local 再次通过，覆盖格式、lint、类型、338 项单测、构建、E2E 与生产 Pi 专项；报告 `.cynos/code-understanding-stage5/local-proof/local/report.json`。quality/runtime 使用干净源码构建，八种角色/初始化资源组合核对通过。产品提交的 [quality CI](https://github.com/shenjiecode/catchnet/actions/runs/35786145264/job/106943320215) 通过。
 - 沿用已授权的非生产 `cynos-ai/luowang-closure7-fixture`，新建隔离本地数据目录，不重置历史分支。固定 target `fa6242b3105f1c01d7b82f363d145aca7e25ba16`；Run `01M35G3MZZ6Z0FWKEQNX00AR79` 使用 Main/Runner `deepseek-v4-flash`、Reviewer `deepseek-v4-flash-vision-exp`，四 Session 正常结束，AUTH-LOGIN-001 为 passed，归档 completed，97 次请求。
 - 实际覆盖登录、刷新后的身份保持、退出后旧会话拒绝、删除账号后会话和凭据拒绝，以及真实浏览器、视觉审核、OSS、GitHub 自动归档和清理。独立数据库核验 users=0、sessions=0；清理核验无残留。不是六 Session 初始化，也不替代本候选 normal/defect/blocked 全组合验收。
 - 独立核对 plan 内容哈希及全部 15 个引用：13 个脱敏后全文引用、2 个目录分页范围；均属于本 Run 的规划 Main 和固定 target。Reviewer 实际调用 `query_source_reads` 并在 review 中核对 planHash；只有规划 Main 加载 code-understanding，其他三角色资源隔离成立。

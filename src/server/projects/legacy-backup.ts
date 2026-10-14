@@ -36,7 +36,7 @@ interface BackupTreeDigest {
   sha256: string;
 }
 
-/** Caller must stop the LuoWang service before backing up mutable work directories. */
+/** Caller must stop the Catchnet service before backing up mutable work directories. */
 export async function createLegacyBackup(input: LegacyBackupInput): Promise<LegacyBackupManifest> {
   const databasePath = resolve(input.databasePath);
   const repoDir = resolve(input.repoDir);

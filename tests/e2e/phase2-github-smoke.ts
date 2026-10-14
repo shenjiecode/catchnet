@@ -33,7 +33,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
   let lastError = 'unknown error';
   while (Date.now() < deadline) {
     if (child.exitCode !== null)
-      throw new Error(`LuoWang server exited with code ${child.exitCode}: ${lastError}`);
+      throw new Error(`Catchnet server exited with code ${child.exitCode}: ${lastError}`);
     try {
       const response = await fetch(`http://127.0.0.1:${port}/health`);
       if (response.ok) return;
@@ -43,7 +43,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error(`LuoWang server did not become healthy: ${lastError}`);
+  throw new Error(`Catchnet server did not become healthy: ${lastError}`);
 }
 
 async function request<T>(

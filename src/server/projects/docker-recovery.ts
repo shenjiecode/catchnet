@@ -88,7 +88,7 @@ export async function recoverProjectDockerResources(
       retainedImages += 1;
       continue;
     }
-    // Inherited Docker labels are not proof that a derived image belongs to LuoWang.
+    // Inherited Docker labels are not proof that a derived image belongs to Catchnet.
     // Only an exact tag created by our builder is eligible; dangling images stay untouched.
     const legacyTag = `luowang-project-${labels['luowang.project-id']}:${labels['luowang.target-commit']}`;
     const composePrefix = `luowang-compose-${labels['luowang.project-id'].slice(0, 8)}:`;

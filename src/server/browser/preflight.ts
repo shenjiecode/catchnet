@@ -21,7 +21,7 @@ import {
 } from './playwright-mcp.js';
 
 const TMPFS_MAGIC = 0x01021994;
-const MARKER = 'LuoWang native MCP preflight';
+const MARKER = 'Catchnet native MCP preflight';
 
 /** Operator-only readiness check, never exposed as a Run tool or model prompt. */
 export async function runBrowserPreflight(

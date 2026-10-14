@@ -20,7 +20,7 @@ it('exports the pinned commit plus this Run patch without modifying the reposito
   try {
     const repo = join(root, 'repo');
     await git(['init', '-b', 'main', repo], root);
-    await git(['config', 'user.name', 'LuoWang Test'], repo);
+    await git(['config', 'user.name', 'Catchnet Test'], repo);
     await git(['config', 'user.email', 'luowang@example.test'], repo);
     await mkdir(join(repo, 'docs/scenario-testing/scenarios'), { recursive: true });
     await writeFile(join(repo, 'value.txt'), 'fixed commit\n');

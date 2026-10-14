@@ -34,7 +34,7 @@ async function command(file, args, cwd = root) {
 async function makeProject(label, dockerfile, sourceFile, sourceText, githubId) {
   const directory = join(root, `repo-${label}`);
   await command('git', ['init', '-b', 'main', directory]);
-  await command('git', ['config', 'user.name', 'LuoWang Smoke'], directory);
+  await command('git', ['config', 'user.name', 'Catchnet Smoke'], directory);
   await command('git', ['config', 'user.email', 'luowang@example.test'], directory);
   await mkdir(join(directory, 'docs/scenario-testing/scenarios'), { recursive: true });
   await writeFile(join(directory, 'Dockerfile.luowang'), dockerfile);

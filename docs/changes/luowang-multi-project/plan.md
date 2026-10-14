@@ -386,7 +386,7 @@ Python 项目三个 Run 的 DeepSeek SDK Session 目录估值依次为约 `0.035
 | 备份回退 | 通过 | 校验备份清单后恢复到一次性目录，旧 schema 可识别、SQLite 完整性正常、8 个 target commit 均存在；未用旧程序打开迁移后的数据库 |
 | 服务器部署形态 | 已通过 | 前述测试机的隔离 Compose、Docker 权限、实例资源回收及失联恢复；完整模型/浏览器负载在本机候选执行 |
 
-最终生产镜像 ID 为 `sha256:7882855ab151a83b7ad9cca206e85acabbd0fe938a32d0e37656d42ff5f2b4e2`，包含版本 0.6.1 和代码修复 `3bceb5d`。本地镜像不是已发布的镜像地址。GitHub Quality 的最终结果以 [PR #79](https://github.com/cynos-ai/luowang/pull/79) 当前提交检查为准。
+最终生产镜像 ID 为 `sha256:7882855ab151a83b7ad9cca206e85acabbd0fe938a32d0e37656d42ff5f2b4e2`，包含版本 0.6.1 和代码修复 `3bceb5d`。本地镜像不是已发布的镜像地址。GitHub Quality 的最终结果以 [PR #79](https://github.com/shenjiecode/catchnet/pull/79) 当前提交检查为准。
 
 历史核对摘要：Run 关键事实 SHA-256 `a2e44b073a3873371f7311d1ccbddd4e4b99ce8716abbe845b4b95b336a708d2`；30 份工件正文 `4439d2b47a8599edddfb4efffd1b96fa0ad10a9802f3adac962ea509bbb9bd00`；2 条 Issue 事实 `b69b52a906d0da9b677c524db5eccc82809a173df03a03fc38fb779cafe0f66f`。这些摘要限定于脚本核对的内容，不声称所有数据库列都不变。
 
@@ -418,12 +418,12 @@ Python 项目三个 Run 的 DeepSeek SDK Session 目录估值依次为约 `0.035
 
 ### 2026-09-26 负责人审阅通过
 
-负责人已审阅最终候选报告并授权完成收尾。功能 PR #79 已合入 develop（`282e0f6c8fc9dd61b41006ab7e3bff218353c70d`），发布 PR #80 指向 main。发布前补正文档中的过期未验收说明，后续按该 PR 检查、annotated tag、正式 runtime、带 tag 的发布核验和实例资源清理依次完成。前面的“待审阅”是当时的历史快照；本次不再等待额外批准。最终发布状态以 [v0.6.1 Release](https://github.com/cynos-ai/luowang/releases/tag/v0.6.1) 和后续收尾记录为准。
+负责人已审阅最终候选报告并授权完成收尾。功能 PR #79 已合入 develop（`282e0f6c8fc9dd61b41006ab7e3bff218353c70d`），发布 PR #80 指向 main。发布前补正文档中的过期未验收说明，后续按该 PR 检查、annotated tag、正式 runtime、带 tag 的发布核验和实例资源清理依次完成。前面的“待审阅”是当时的历史快照；本次不再等待额外批准。最终发布状态以 [v0.6.1 Release](https://github.com/shenjiecode/catchnet/releases/tag/v0.6.1) 和后续收尾记录为准。
 
 
 ## v0.6.1 发布收尾记录（2026-09-26）
 
-负责人审阅通过后，功能 PR #79、发布文档 PR #81 和历史同步/CI 报告留存 PR #82 依次合入 develop，发布 PR #80 合入 main。正式版本已发布：[LuoWang v0.6.1](https://github.com/cynos-ai/luowang/releases/tag/v0.6.1)。
+负责人审阅通过后，功能 PR #79、发布文档 PR #81 和历史同步/CI 报告留存 PR #82 依次合入 develop，发布 PR #80 合入 main。正式版本已发布：[LuoWang v0.6.1](https://github.com/shenjiecode/catchnet/releases/tag/v0.6.1)。
 
 - main 发布提交：`33d068ff72c104129e8a945a8e17bb30fa5208e9`。
 - annotated tag 对象：`47d122bbc40c9311c314f089882908c3d9774236`，剥离后指向上述 main 提交。v0.6.0 tag 对象仍为 `c5d60254c489761d5de9c91822a76400ba9bc5b0`；发布门禁也确认 v0.1.0 原对象及提交未变。

@@ -146,9 +146,9 @@ try {
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: '导出 YAML', exact: true }).click();
     const download = await downloadPromise;
-    assert.equal(download.suggestedFilename(), 'luowang-config.yml');
+    assert.equal(download.suggestedFilename(), 'catchnet-config.yml');
     await page.locator('input[type="file"]').setInputFiles({
-      name: 'luowang-config.yml',
+      name: 'catchnet-config.yml',
       mimeType: 'application/yaml',
       buffer: Buffer.from('version: 1\nharness: {}\nrepository: {}\n'),
     });
@@ -327,7 +327,7 @@ async function installApiFixtures(page: import('playwright').Page): Promise<void
     }
     if (path === '/api/config/export' && request.method() === 'GET') {
       return fulfillJson(route, {
-        fileName: 'luowang-config.yml',
+        fileName: 'catchnet-config.yml',
         yaml: 'version: 1\nharness: {}\nrepository: {}\n',
       });
     }

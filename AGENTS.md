@@ -24,22 +24,22 @@
 
 - v0.6.0 代码深读的实现与验收遵循 `docs/changes/luowang-code-understanding/`。它扩展 Main 的内置角色资源、固定版本读取回执与计划引用；不启用 Pi Skills，不新增角色 Session。当前多项目开发以 `docs/changes/luowang-multi-project/` 的 Spec 覆盖单仓库基线，不能将合成测试视为真实联合验收。
 
-- 正式仓库是公开的 `cynos-ai/luowang`；许可证为 GNU Affero General Public License v3.0（`AGPL-3.0`）。它允许商业使用，但分发衍生作品或通过网络提供修改版时必须按 AGPL 提供对应源码。
+- 正式仓库是公开的 `shenjiecode/catchnet`；许可证为 GNU Affero General Public License v3.0（`AGPL-3.0`）。它允许商业使用，但分发衍生作品或通过网络提供修改版时必须按 AGPL 提供对应源码。
 - `main` 只保存正式发布历史；`develop` 是日常开发集成分支。两者都禁止直接提交和 force-push，通过 Pull Request 合并。
 - 功能从最新 `develop` 创建 `feat/<short-kebab-name>`，完成后向 `develop` 提交 PR。
 - 普通缺陷从最新 `develop` 创建 `fix/<short-kebab-name>`，完成后向 `develop` 提交 PR；正式版本紧急缺陷从 `main` 创建同样的 `fix/*`，合入 `main` 后必须同步到 `develop`。
 - 不预设 `release/*`、`hotfix/*` 等额外分支。独立文档、CI 或依赖维护确有需要时可使用 `chore/*`。
 - 发布通过 `develop → main` PR 完成，并在 `main` 使用 SemVer tag。项目负责人决定版本并逐次明确授权发布；授权后 AI 可以在验收满足对应 Spec、PR 检查通过且核对目标提交后协助合并发布 PR、创建**新的**指定 tag 和发布 GitHub Release，并执行发布后核验。不得无授权发布、覆盖/移动历史 tag，或把发布前验收冒充发布后核验。仓库级“合并后自动删除 head 分支”保持关闭，避免发布 PR 删除长期 `develop`；合并者只手工删除 `feat/*`、`fix/*`、`chore/*`。
-- `scenario-testing` 只存在于罗网所管理的外部目标仓库中，用于保存该目标项目的测试事实；它不是 `cynos-ai/luowang` 的开发或发布分支。MVP 验收使用独立样例仓库和独立非生产样例应用。
+- `scenario-testing` 只存在于罗网所管理的外部目标仓库中，用于保存该目标项目的测试事实；它不是 `shenjiecode/catchnet` 的开发或发布分支。MVP 验收使用独立样例仓库和独立非生产样例应用。
 
 ## 本计划固定测试目标
 
-- `docs/changes/luowang-harness-mvp/plan.md` 的全部阶段统一使用外部 GitHub 仓库 [`cynos-ai/cynos-website`](https://github.com/cynos-ai/cynos-website) 作为 Cynos 官网非生产测试项目；除非用户明确更换目标，不新建或切换其他测试项目，也不把 `cynos-ai/luowang` 当作被测产品。
+- `docs/changes/luowang-harness-mvp/plan.md` 的全部阶段统一使用外部 GitHub 仓库 [`cynos-ai/cynos-website`](https://github.com/cynos-ai/cynos-website) 作为 Cynos 官网非生产测试项目；除非用户明确更换目标，不新建或切换其他测试项目，也不把 `shenjiecode/catchnet` 当作被测产品。
 - 用户已于 2026-09-29 明确授权将 v0.7.0 发布验收固定目标更换为独立公开仓库 [`cynos-ai/luowang-v070-release-fixture`](https://github.com/cynos-ai/luowang-v070-release-fixture)。该仓库的 `main` 固定在 `6405a45b6889ad92cf7cfbce12d8ec22b5040f23`，开始本轮 live 验收前不存在 `scenario-testing`；该分支必须由同一个持久候选实例首次创建。原 [`cynos-ai/luowang-closure7-fixture`](https://github.com/cynos-ai/luowang-closure7-fixture) 已产生历史分支、报告和 PR，只能作为历史验收事实读取，不得删除资产或冒充本轮首次创建。
-- 目标仓库默认使用 `scenario-testing` 保存长期场景和正式报告；LuoWang 自身的代码仍按本仓库的 `develop`、`feat/*` 和 PR 规则开发。每个 Run 必须固定并记录不可变的 `target_commit`，不能把移动中的分支 HEAD 当作测试事实。
+- 目标仓库默认使用 `scenario-testing` 保存长期场景和正式报告；Catchnet 自身的代码仍按本仓库的 `develop`、`feat/*` 和 PR 规则开发。每个 Run 必须固定并记录不可变的 `target_commit`，不能把移动中的分支 HEAD 当作测试事实。
 - 官网测试只使用非生产环境、合成数据和通过 Harness Secret Store 提供的预置测试账号；允许覆盖登录/注册等官网功能，但禁止触碰生产数据、把测试账号密码写入文档/日志/报告，且临时数据必须按 Run 标记并清理。
 - 本计划当前模型约定为：Main/Runner 使用文本模型 `deepseek-v4-flash`；Reviewer 使用视觉模型 `deepseek-v4-flash-vision-exp`。模型 API Key、GitHub Token、OSS 凭据和测试账号信息只进入受控 Secret Store，不写入本文件或 Git。
-- 当前 LuoWang 工程基线已实现 Phase 0–8；Phase 8 运维控制台通过普通 HTTP 轮询展示 Git、场景、Run、当前执行、归档、队列和依赖健康事实，并在外部依赖不可用时保留并标记陈旧缓存。
+- 当前 Catchnet 工程基线已实现 Phase 0–8；Phase 8 运维控制台通过普通 HTTP 轮询展示 Git、场景、Run、当前执行、归档、队列和依赖健康事实，并在外部依赖不可用时保留并标记陈旧缓存。
 - 浏览器与构建环境由 `Dockerfile` 的 `quality`/`runtime` targets 固定：Node 基础镜像使用 digest，npm 与 Playwright 浏览器下载使用可覆盖的镜像源，CI 的全部质量检查在 `quality` 容器内运行；不要恢复为依赖 GitHub runner 宿主机预装 Chromium 的做法。
 
 ## 固定安全边界

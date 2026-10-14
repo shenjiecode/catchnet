@@ -1,10 +1,10 @@
-# 罗网（LuoWang）场景测试 Harness MVP Intent
+# 罗网（Catchnet）场景测试 Harness MVP Intent
 
 - 状态：MVP Baseline v0.1
 - 关联规格：[spec.md](./spec.md)
 - 实现计划：[plan.md](./plan.md)
 - 项目定位：AI Scenario Testing Harness
-- 正式仓库：公开的 `cynos-ai/luowang`
+- 正式仓库：公开的 `shenjiecode/catchnet`
 - 许可证：GNU Affero General Public License v3.0（`AGPL-3.0`）
 
 ## 1. 当前问题

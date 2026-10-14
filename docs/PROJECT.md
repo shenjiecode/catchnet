@@ -1,4 +1,4 @@
-# 罗网（LuoWang）项目理解
+# 罗网（Catchnet）项目理解
 
 > 本文件由 Cynos 项目理解流程维护。它记录跨代码和需求的稳定项目理解，不代替具体需求的 intent、spec 或 plan。
 
@@ -8,7 +8,7 @@
 
 项目的主要使用者是负责配置测试环境、触发测试、审核场景资产和处理测试结果的项目负责人或测试操作者。开发和需求系统消费罗网写入 GitHub 的报告与 Issue，但不由罗网直接调度。
 
-项目公开托管在 `cynos-ai/luowang`，采用 GNU Affero General Public License v3.0（AGPL-3.0）。许可证允许商业使用，但要求分发的衍生作品继续使用同一许可证；修改版通过网络提供服务时，也必须向用户提供完整对应源码。
+项目公开托管在 `shenjiecode/catchnet`，采用 GNU Affero General Public License v3.0（AGPL-3.0）。许可证允许商业使用，但要求分发的衍生作品继续使用同一许可证；修改版通过网络提供服务时，也必须向用户提供完整对应源码。
 
 ## 关键概念
 
@@ -70,4 +70,4 @@
 
 v0.6.1 建立了离线升级、项目 App、调度、控制台和执行镜像。两个 Node 目标与一个 Python 目标完成交替真实 Run 和故障隔离验证；历史持久测试实例的隔离副本完成迁移、恢复、历史内容核对及备份回退演练。发布和最终验收记录见[多项目 Plan](changes/luowang-multi-project/plan.md)，行为边界以同目录 Spec 为准；v0.6.1 tag 固定在 main 发布提交 `33d068ff72c104129e8a945a8e17bb30fa5208e9`。下面的 MVP 描述仅保留历史基线，当前多项目规则由上述 Spec 覆盖。
 
-当前 MVP 的已确认产品、架构、安全和验收边界记录在 `docs/changes/luowang-harness-mvp/spec.md`，分阶段实现顺序和每阶段证明记录在同目录 `plan.md`。当前已完成 Phase 0–8，并在 Phase 9 增加了 `npm run test:acceptance` 聚合验收入口：包括 GitHub Repository Service、场景分支控制、Markdown 索引、Agent Run、headless 浏览器与 OSS 证据、幂等归档、SQLite FIFO 自动化队列与恢复、场景生命周期，以及展示 Git、场景、Run、当前执行、队列、后台任务和依赖健康事实的运维控制台。Phase 9 使用隔离的本地样例仓库和 Cynos 官网登录/注册样例应用验证本地 AC；真实 `cynos-ai/cynos-website` smoke 仍须显式提供非生产权限和凭据。目标测试项目固定为 `cynos-ai/cynos-website`，其凭证只保存在 LuoWang 本地被忽略的 `.env` 或网站 Secret Store，不进入项目理解文档和 Git。
+当前 MVP 的已确认产品、架构、安全和验收边界记录在 `docs/changes/luowang-harness-mvp/spec.md`，分阶段实现顺序和每阶段证明记录在同目录 `plan.md`。当前已完成 Phase 0–8，并在 Phase 9 增加了 `npm run test:acceptance` 聚合验收入口：包括 GitHub Repository Service、场景分支控制、Markdown 索引、Agent Run、headless 浏览器与 OSS 证据、幂等归档、SQLite FIFO 自动化队列与恢复、场景生命周期，以及展示 Git、场景、Run、当前执行、队列、后台任务和依赖健康事实的运维控制台。Phase 9 使用隔离的本地样例仓库和 Cynos 官网登录/注册样例应用验证本地 AC；真实 `cynos-ai/cynos-website` smoke 仍须显式提供非生产权限和凭据。目标测试项目固定为 `cynos-ai/cynos-website`，其凭证只保存在 Catchnet 本地被忽略的 `.env` 或网站 Secret Store，不进入项目理解文档和 Git。

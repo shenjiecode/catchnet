@@ -22,7 +22,7 @@ export interface ProjectImageSource {
   cleanup(): Promise<void>;
 }
 
-/** LuoWang's versioned Node baseline; projects needing other tools use their own Dockerfile. */
+/** Catchnet's versioned Node baseline; projects needing other tools use their own Dockerfile. */
 export async function prepareBuiltInProjectImageSource(input: {
   repository: GitRepository;
   projectId: string;

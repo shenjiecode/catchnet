@@ -1799,7 +1799,7 @@ async function createGitFixture(withScenarios = false): Promise<Fixture> {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Phase 3 Test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Phase 3 Test'], sourceDir);
   await git(['config', 'user.email', 'luowang-phase3@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'fixture product\n');
   if (withScenarios) {

@@ -14,7 +14,7 @@ import {
 
 export function loginPage() {
   return `<div class="login-prototype">
-    <div class="login-brand"><span>LuoWang</span><strong>罗网</strong><p>v0.7.0</p></div>
+    <div class="login-brand"><span>Catchnet</span><strong>罗网</strong><p>v0.7.0</p></div>
     <main class="login-surface">
       <span class="scope-label">单管理员安全入口</span>
       <h1>登录</h1>
@@ -156,7 +156,7 @@ export function systemStatusPage() {
     `<div class="system-status-grid">
       <section class="panel system-services"><div class="panel-heading"><h2>服务</h2>${status('正常', 'ok')}</div>${stats(
         [
-          ['LuoWang', 'v0.7.0'],
+          ['Catchnet', 'v0.7.0'],
           ['数据库', 'SQLite · 正常'],
           ['Secret Store', '可用'],
           ['调度器', '运行中'],

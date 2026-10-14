@@ -74,7 +74,7 @@ try {
 
   const shellResponse = await fetch(`http://127.0.0.1:${port}/`);
   assert.equal(shellResponse.status, 200);
-  assert.match(await shellResponse.text(), /LuoWang/);
+  assert.match(await shellResponse.text(), /Catchnet/);
 
   const authStatus = await fetch(`http://127.0.0.1:${port}/api/auth/status`);
   assert.deepEqual(await authStatus.json(), { configured: true, authenticated: false });

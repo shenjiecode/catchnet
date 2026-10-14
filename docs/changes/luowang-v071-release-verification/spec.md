@@ -92,7 +92,7 @@ README 保留作为用户入口，按项目说明、部署启动、首次使用�
 
 ## 7. 延后处理
 
-- [#103](https://github.com/cynos-ai/luowang/issues/103)：显式批次选择、候选关联与跨环境证据复用规则。需要更完整的数据契约和失效判断，超出本版。
-- [#104](https://github.com/cynos-ai/luowang/issues/104)：Git 有界重试与 prepared target 幂等恢复；关联已有超时问题 [#94](https://github.com/cynos-ai/luowang/issues/94)。涉及远端副作用，不能在验收工具小修复中顺带实现。
+- [#103](https://github.com/shenjiecode/catchnet/issues/103)：显式批次选择、候选关联与跨环境证据复用规则。需要更完整的数据契约和失效判断，超出本版。
+- [#104](https://github.com/shenjiecode/catchnet/issues/104)：Git 有界重试与 prepared target 幂等恢复；关联已有超时问题 [#94](https://github.com/shenjiecode/catchnet/issues/94)。涉及远端副作用，不能在验收工具小修复中顺带实现。
 
 自动就绪修复、自动产品/驱动归因、成本看板暂不实现；没有明确收益的功能不为凑范围新建 Issue。

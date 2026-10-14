@@ -22,7 +22,7 @@ describe('Fastify application', () => {
   it('serves health, status, and the console shell', async () => {
     const dataDir = await mkdtemp(join(tmpdir(), 'luowang-app-'));
     const webRoot = await mkdtemp(join(tmpdir(), 'luowang-web-'));
-    await writeFile(join(webRoot, 'index.html'), '<!doctype html><html>LuoWang shell</html>');
+    await writeFile(join(webRoot, 'index.html'), '<!doctype html><html>Catchnet shell</html>');
     cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
     cleanup.push(async () => rm(webRoot, { recursive: true, force: true }));
 
@@ -43,16 +43,16 @@ describe('Fastify application', () => {
 
     const statusResponse = await app.inject({ method: 'GET', url: '/api/status' });
     assert.equal(statusResponse.statusCode, 200);
-    assert.equal(statusResponse.json().service, 'luowang');
+    assert.equal(statusResponse.json().service, 'catchnet');
 
     const shellResponse = await app.inject({ method: 'GET', url: '/' });
     assert.equal(shellResponse.statusCode, 200);
-    assert.match(shellResponse.body, /LuoWang shell/);
+    assert.match(shellResponse.body, /Catchnet shell/);
     assert.equal(shellResponse.headers['cache-control'], 'no-store');
 
     const spaResponse = await app.inject({ method: 'GET', url: '/settings/models' });
     assert.equal(spaResponse.statusCode, 200);
-    assert.match(spaResponse.body, /LuoWang shell/);
+    assert.match(spaResponse.body, /Catchnet shell/);
     assert.equal(spaResponse.headers['cache-control'], 'no-store');
   });
 

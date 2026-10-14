@@ -1,6 +1,6 @@
 <!-- luowang-role-id: common; format-version: 1 -->
 
-# LuoWang 共同工作方法
+# Catchnet 共同工作方法
 
 ## 目标
 

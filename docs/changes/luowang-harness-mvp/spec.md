@@ -1,4 +1,4 @@
-# 罗网（LuoWang）场景测试 Harness MVP 规格
+# 罗网（Catchnet）场景测试 Harness MVP 规格
 
 - 工件类型：Spec
 - 关联 Intent：[intent.md](./intent.md)
@@ -6,8 +6,8 @@
 - 状态：MVP Implementation Baseline v0.7
 - 日期：2026-08-29
 - 中文名：罗网
-- 英文名：LuoWang
-- GitHub 目标：公开仓库 `cynos-ai/luowang`
+- 英文名：Catchnet
+- GitHub 目标：公开仓库 `shenjiecode/catchnet`
 - 许可证：GNU Affero General Public License v3.0（`AGPL-3.0`，允许商业使用的强 copyleft）
 - 本地目录：`/home/sj/Codes/cynos/luowang`
 - 项目定位：AI Scenario Testing Harness
@@ -1387,11 +1387,11 @@ SQLite 表、API 路径、React 组件划分、CSS、日志库、迁移文件组
 
 ### 22.9 项目发布、分支与许可证
 
-本节规定 `cynos-ai/luowang` 如何开发和发布，不改变罗网对外部目标项目 `scenario-testing` 分支的管理规则。
+本节规定 `shenjiecode/catchnet` 如何开发和发布，不改变罗网对外部目标项目 `scenario-testing` 分支的管理规则。
 
 #### 公开方式和许可证
 
-- 正式仓库为 GitHub `cynos-ai/luowang`，可见性为 Public；
+- 正式仓库为 GitHub `shenjiecode/catchnet`，可见性为 Public；
 - 根目录保存完整的 GNU Affero General Public License v3.0 官方文本，GitHub 识别为 `AGPL-3.0`，`package.json` 使用精确 SPDX 标识 `AGPL-3.0-only`；
 - 允许个人和商业使用、修改、分发和收费，但许可证与版权声明必须保留；
 - 分发基于本项目的作品时，完整对应源码必须按 AGPL-3.0 提供；修改版通过网络与用户交互时，同样必须向这些用户提供完整对应源码；
@@ -1416,7 +1416,7 @@ SQLite 表、API 路径、React 组件划分、CSS、日志库、迁移文件组
 3. PR 必须通过格式检查、lint、typecheck、测试和生产构建；单人维护阶段不强制另一位人工批准，避免自己阻塞自己，有第二位维护者后再启用至少一人审核；
 4. 正常发布直接使用 `develop → main` PR，不创建 `release/*`；
 5. 正式版本紧急修复使用 `fix/*` 从 `main` 创建，合入 `main` 并打补丁版本 tag 后，必须把同一修复同步到 `develop`；不再额外建立 `hotfix/*` 命名；
-6. `scenario-testing` 只存在于配置的外部目标仓库中，不是 `cynos-ai/luowang` 的开发集成或发布分支；MVP 发布验收使用独立样例仓库和独立本地或非生产样例应用，不增加自动发布 gate。
+6. `scenario-testing` 只存在于配置的外部目标仓库中，不是 `shenjiecode/catchnet` 的开发集成或发布分支；MVP 发布验收使用独立样例仓库和独立本地或非生产样例应用，不增加自动发布 gate。
 
 ## 23. MVP 验收标准
 

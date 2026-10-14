@@ -31,7 +31,7 @@ export async function requestJson<T>(url: string, init: RequestInit = {}): Promi
       error?.code !== 'INVALID_CREDENTIALS' &&
       error?.code !== 'INVALID_CURRENT_PASSWORD'
     )
-      window.dispatchEvent(new Event('luowang:unauthorized'));
+      window.dispatchEvent(new Event('catchnet:unauthorized'));
     const message = typeof error?.message === 'string' ? error.message : '请求失败';
     throw new ApiError(message, response.status);
   }

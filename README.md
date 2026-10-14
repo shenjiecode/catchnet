@@ -1,10 +1,10 @@
-# LuoWang
+# Catchnet
 
-罗网（LuoWang）是一个独立部署的 AI 场景测试 Harness。它读取目标项目的需求、代码变化和已有场景，规划测试、执行浏览器或命令操作，由独立 Reviewer 审核证据，再把正式场景、报告与确认的 Bug 归档到 GitHub。
+罗网（Catchnet）是一个独立部署的 AI 场景测试 Harness。它读取目标项目的需求、代码变化和已有场景，规划测试、执行浏览器或命令操作，由独立 Reviewer 审核证据，再把正式场景、报告与确认的 Bug 归档到 GitHub。
 
 一个管理员可以管理多个项目；同一部署一次只执行一个 Run。只连接可信仓库和非生产环境，不用于生产数据测试，也不自动修复目标项目代码。
 
-当前代码版本为 0.7.1；实际已发布版本与 tag 以 [GitHub Releases](https://github.com/cynos-ai/luowang/releases) 为准。
+当前代码版本为 0.7.1；实际已发布版本与 tag 以 [GitHub Releases](https://github.com/shenjiecode/catchnet/releases) 为准。
 
 - [项目如何工作](#项目如何工作)
 - [部署与启动](#部署与启动)
@@ -98,9 +98,9 @@ HTTP API 要求管理员会话：账号位于 `/api/account`，部署配置及 S
 Dockerfile 的 `quality`/`runtime` targets 固定 Node 镜像 digest 与 lockfile 对应的 Playwright Chromium。CI 与生产使用同一份浏览器，不依赖宿主机预装 Chromium。
 
 ```bash
-docker build --target quality --tag luowang:quality .
-docker run --rm --init --ipc=host luowang:quality npm run test:e2e
-docker build --target runtime --tag luowang:runtime .
+docker build --target quality --tag catchnet:quality .
+docker run --rm --init --ipc=host catchnet:quality npm run test:e2e
+docker build --target runtime --tag catchnet:runtime .
 ```
 
 默认 Node、npm、Playwright 与 Debian 镜像源可通过 `NODE_IMAGE`、`NPM_REGISTRY`、`PLAYWRIGHT_DOWNLOAD_HOST`、`DEBIAN_MIRROR`、`DEBIAN_SECURITY_MIRROR` 构建参数覆盖，具体默认值见 [`Dockerfile`](./Dockerfile)。Compose 也支持其声明的镜像源变量；本地 `.env` 不得提交。不要另装宿主机 Chromium 代替镜像构建。
@@ -132,15 +132,23 @@ npm run test:acceptance:release   # 公共质量 + local + live
 
 ## 版本迭代
 
-正式发布内容以 [GitHub Releases](https://github.com/cynos-ai/luowang/releases) 为准。
+正式发布内容以 [GitHub Releases](https://github.com/shenjiecode/catchnet/releases) 为准。
 
-| 版本                                                             | 主要变化                                                                                           | 说明                                                                                                    |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| 0.7.1                                                            | 发布检查器回归、廉价预检、证据复核规则与文档整理                                                   | [实施与验收记录](docs/changes/luowang-v071-release-verification/plan.md)                                |
-| [0.7.0](https://github.com/cynos-ai/luowang/releases/tag/v0.7.0) | 重构控制台：异常优先工作台、独立项目配置/准备/测试/记录/场景页面，系统状态与全局设置保持部署作用域 | 保持多项目归属与执行隔离，生产页面读取真实 API                                                          |
-| 0.6.2                                                            | 首次接入、运行环境诊断、Docker 资源盘点、冻结模型评测复核                                          | 改善部署与排障                                                                                          |
-| 0.6.1                                                            | 同一管理员管理多个项目、项目执行镜像与离线升级                                                     | 虽使用补丁版本号，仍有数据库/API 不兼容变化，必须离线升级                                               |
-| 0.6.0                                                            | 内置代码深读方法、固定版本读取回执与计划引用                                                       | 回执只证明材料返回过，不证明模型理解正确；[实施与验收](docs/changes/luowang-code-understanding/plan.md) |
+| 版本                                                                 | 主要变化                                                                                           | 说明                                                                                                    |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 0.7.1                                                                | 发布检查器回归、廉价预检、证据复核规则与文档整理                                                   | [实施与验收记录](docs/changes/luowang-v071-release-verification/plan.md)                                |
+| [0.7.0](https://github.com/shenjiecode/catchnet/releases/tag/v0.7.0) | 重构控制台：异常优先工作台、独立项目配置/准备/测试/记录/场景页面，系统状态与全局设置保持部署作用域 | 保持多项目归属与执行隔离，生产页面读取真实 API                                                          |
+| 0.6.2                                                                | 首次接入、运行环境诊断、Docker 资源盘点、冻结模型评测复核                                          | 改善部署与排障                                                                                          |
+| 0.6.1                                                                | 同一管理员管理多个项目、项目执行镜像与离线升级                                                     | 虽使用补丁版本号，仍有数据库/API 不兼容变化，必须离线升级                                               |
+| 0.6.0                                                                | 内置代码深读方法、固定版本读取回执与计划引用                                                       | 回执只证明材料返回过，不证明模型理解正确；[实施与验收](docs/changes/luowang-code-understanding/plan.md) |
+
+## 名称与迁移
+
+项目英文名为 **Catchnet**，中文名仍为 **罗网**，正式仓库为 [`shenjiecode/catchnet`](https://github.com/shenjiecode/catchnet)。中文 Logo 保持不变。
+
+为保持已有部署、数据和测试资产可用，`LUOWANG_*` 环境变量、数据库文件名、Compose 服务与数据卷名、加密标识、Docker 资源标签、报告协议及历史 `docs/changes/luowang-*` 路径继续保留。它们是兼容标识，不是项目的新英文名称；本次改名不需要迁移数据库或重建数据卷。独立验收样例仓库仍使用各自原有地址。
+
+已有 Compose 部署如果同时移动或重命名工作目录，必须通过 `docker compose -p <原项目名>` 或 `COMPOSE_PROJECT_NAME` 保持原项目名，避免 Compose 按新目录名创建另一套数据卷。
 
 ## 许可证
 

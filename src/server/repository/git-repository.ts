@@ -346,9 +346,9 @@ export class GitRepository {
         try {
           await this.run([
             '-c',
-            'user.name=LuoWang Repository Service',
+            'user.name=Catchnet Repository Service',
             '-c',
-            'user.email=luowang-repository-service@localhost',
+            'user.email=catchnet-repository-service@localhost',
             'merge',
             '--no-ff',
             '--no-edit',
@@ -595,9 +595,9 @@ export class GitRepository {
         }
         await this.run([
           '-c',
-          'user.name=LuoWang Report Archiver',
+          'user.name=Catchnet Report Archiver',
           '-c',
-          'user.email=luowang-report-archiver@localhost',
+          'user.email=catchnet-report-archiver@localhost',
           'commit',
           '-m',
           `test: archive run ${runId}`,
@@ -762,9 +762,9 @@ export class GitRepository {
         await this.stageScenarioPatch(applied.changes);
         await this.run([
           '-c',
-          'user.name=LuoWang Scenario Archiver',
+          'user.name=Catchnet Scenario Archiver',
           '-c',
-          'user.email=luowang-scenario-archiver@localhost',
+          'user.email=catchnet-scenario-archiver@localhost',
           'commit',
           '-m',
           `test: update scenarios for run ${runId}`,

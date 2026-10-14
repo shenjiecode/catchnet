@@ -351,7 +351,7 @@ class DefaultRunArchiver implements RunArchiver {
     const title = issue.title.replace(/[\r\n]+/g, ' ').trim();
     if (title === '') throw new RepositoryError('ISSUE_CREATE_FAILED', 'Issue 标题无效', 400);
     const body = [
-      '由 LuoWang 归档的 confirmed bug。',
+      '由 Catchnet 归档的 confirmed bug。',
       '',
       `- ${runMarker}`,
       `- ${bugMarker}`,

@@ -37,7 +37,7 @@ dockerIt(
     process.env.LUOWANG_MASTER_KEY = 'synthetic-docker-smoke-master';
     try {
       await execFileAsync('git', ['init', '-b', 'main', repo], { cwd: root });
-      await execFileAsync('git', ['config', 'user.name', 'LuoWang Test'], { cwd: repo });
+      await execFileAsync('git', ['config', 'user.name', 'Catchnet Test'], { cwd: repo });
       await execFileAsync('git', ['config', 'user.email', 'luowang@example.test'], { cwd: repo });
       await mkdir(join(repo, 'docs/scenario-testing/scenarios'), { recursive: true });
       await writeFile(

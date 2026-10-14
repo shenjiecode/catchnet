@@ -1517,7 +1517,7 @@ async function validateCompletedLiveAcceptance(environment: NodeJS.ProcessEnv): 
       headers: {
         accept: 'application/vnd.github+json',
         authorization: `Bearer ${token}`,
-        'user-agent': 'luowang-closure-live-acceptance',
+        'user-agent': 'catchnet-closure-live-acceptance',
         'x-github-api-version': '2022-11-28',
       },
       redirect: 'error',
@@ -1588,26 +1588,28 @@ async function validateCompletedLiveAcceptance(environment: NodeJS.ProcessEnv): 
   const releaseTag = environment.LUOWANG_LIVE_RELEASE_TAG?.trim();
   if (releaseTag) {
     assertLive(isNewSemVerTag(releaseTag), '新发布 tag 必须是高于 v0.1.0 的 SemVer');
-    const mainRef = await github(`${repoPathFor('cynos-ai', 'luowang')}/git/ref/heads/main`);
+    const mainRef = await github(`${repoPathFor('shenjiecode', 'catchnet')}/git/ref/heads/main`);
     const tagRef = await github(
-      `${repoPathFor('cynos-ai', 'luowang')}/git/ref/tags/${encodeURIComponent(releaseTag)}`,
+      `${repoPathFor('shenjiecode', 'catchnet')}/git/ref/tags/${encodeURIComponent(releaseTag)}`,
     );
-    const releaseCommit = await peelGitHubTag(github, 'cynos-ai', 'luowang', tagRef);
+    const releaseCommit = await peelGitHubTag(github, 'shenjiecode', 'catchnet', tagRef);
     assertLive(
       asRecord(mainRef.object).sha === releaseCommit,
-      '发布 tag 与 luowang main commit 不一致',
+      '发布 tag 与 catchnet main commit 不一致',
     );
-    const legacyTagRef = await github(`${repoPathFor('cynos-ai', 'luowang')}/git/ref/tags/v0.1.0`);
+    const legacyTagRef = await github(
+      `${repoPathFor('shenjiecode', 'catchnet')}/git/ref/tags/v0.1.0`,
+    );
     assertLive(
       asRecord(legacyTagRef.object).sha === '388c54741e86e10f252bac4f15b353d4ef2f7037',
       'v0.1.0 tag object 已改变',
     );
-    const legacyCommit = await peelGitHubTag(github, 'cynos-ai', 'luowang', legacyTagRef);
+    const legacyCommit = await peelGitHubTag(github, 'shenjiecode', 'catchnet', legacyTagRef);
     assertLive(
       legacyCommit === '71bb6bec0fc9e93c4a6578e165233d793ed49037',
       'v0.1.0 peeled commit 已改变',
     );
-    releaseEvidence.push(`release tag ${releaseTag} equals luowang main ${releaseCommit}`);
+    releaseEvidence.push(`release tag ${releaseTag} equals catchnet main ${releaseCommit}`);
   }
 
   const secretValues = [
@@ -1763,7 +1765,7 @@ function renderMarkdown(report: AcceptanceReport): string {
   const ac = report.acEvidence
     .map((item) => `| ${item.ac} | ${item.status} | ${item.evidence.join('<br>')} |`)
     .join('\n');
-  return `# LuoWang production acceptance\n\n- Mode: **${report.mode}**\n- local.status: **${report.local.status}**\n- live.status: **${report.live.status}**\n- release.status: **${report.release.status}**\n\n## Resource checks\n\n| Check | Status | Evidence |\n|---|---|---|\n${resources}\n\n## AC evidence\n\n| AC | Status | Evidence |\n|---|---|---|\n${ac}\n\n本地 test double 只能证明 local；live blocked 时 release 必须 blocked。\n`;
+  return `# Catchnet production acceptance\n\n- Mode: **${report.mode}**\n- local.status: **${report.local.status}**\n- live.status: **${report.live.status}**\n- release.status: **${report.release.status}**\n\n## Resource checks\n\n| Check | Status | Evidence |\n|---|---|---|\n${resources}\n\n## AC evidence\n\n| AC | Status | Evidence |\n|---|---|---|\n${ac}\n\n本地 test double 只能证明 local；live blocked 时 release 必须 blocked。\n`;
 }
 
 function summarize(value: string): string {

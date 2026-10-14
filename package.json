@@ -1,8 +1,8 @@
 {
-  "name": "luowang",
+  "name": "catchnet",
   "version": "0.7.1",
   "private": true,
-  "description": "LuoWang AI scenario testing harness",
+  "description": "Catchnet AI scenario testing harness",
   "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=24 <25",

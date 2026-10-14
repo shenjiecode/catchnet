@@ -12,7 +12,7 @@
 - 状态：实施中；Phase 0–3 的工程实现与本机确定性验证完成，Phase 4–5 的远程真实资源和联合验收仍受外部资源阻塞。
 - [Intent](intent.md) · [建议 Spec](spec.md)
 - 评审输入：[原审核稿](../../../execution-server-redesign-review.md)。它保留为输入，不作为实施后的第二份规格。
-- 当前代码基线：`feat/model-settings-polish` 的 `b81a8e8`；依赖 [PR #128](https://github.com/cynos-ai/luowang/pull/128)，尚未合入 develop 或发布。本需求在 `feat/execution-server-runtime` 上包含该基线实施。
+- 当前代码基线：`feat/model-settings-polish` 的 `b81a8e8`；依赖 [PR #128](https://github.com/shenjiecode/catchnet/pull/128)，尚未合入 develop 或发布。本需求在 `feat/execution-server-runtime` 上包含该基线实施。
 
 ## 1 评审结论
 
@@ -83,7 +83,7 @@
 
 ### Phase 3：受控文件安全注入（工程完成）
 
-- 承接 [#129](https://github.com/cynos-ai/luowang/issues/129)，继续使用既有资源与 Secret Store。增加选择文件到 service 的规则、版本引用、相对路径/链接/冲突校验及总量限制。
+- 承接 [#129](https://github.com/shenjiecode/catchnet/issues/129)，继续使用既有资源与 Secret Store。增加选择文件到 service 的规则、版本引用、相对路径/链接/冲突校验及总量限制。
 - 源码构建完毕后注入临时副本/卷；不上传至镜像 build context。准备、运行、取消和重启均记录文件资源归属。
 - 在输出进入日志/模型/证据之前统一脱敏；验证多行 env/JSON/YAML、标量值、跨 chunk、错误路径，不能仅验证整文件替换。
 - 验证：合成 Secret canary 扫描构建上下文、image history/layers、容器日志、工具输出、报告/Git/OSS 替身和恢复后工作目录；不使用真实凭据做泄漏测试。
@@ -91,7 +91,7 @@
 
 ### Phase 4：远程 SSH、SFTP 与访问通道（实现完成，真实远程验收阻塞）
 
-- 承接 [#130](https://github.com/cynos-ai/luowang/issues/130)，实现主机指纹确认、密码/私钥认证、目录根约束、受控传输、固定 Docker/Compose 参数与回环隧道。
+- 承接 [#130](https://github.com/shenjiecode/catchnet/issues/130)，实现主机指纹确认、密码/私钥认证、目录根约束、受控传输、固定 Docker/Compose 参数与回环隧道。
 - 同一份本机契约在远程执行，包括 build、单容器、Compose、测试命令、文件注入、健康及资源回收；不把模型 Shell 直接发送 SSH。
 - 验证服务器检查与准备快照失效：主机/平台/资源版本改变后拒绝旧快照，检查期间配置变化不能被晚到成功覆盖。
 - 对上传、build、create、start、exec、清理回执分别注入断线；从资源意图及实际 daemon 查询恢复，不靠“ssh 进程退出”判断远端进程结束。
