@@ -3,6 +3,7 @@ LICENSE
 docs/**
 .cynos/**
 .cache/**
+prototypes/**
 node_modules/**
 dist/**
 coverage/**
