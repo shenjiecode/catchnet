@@ -328,7 +328,7 @@ it('rejects file snapshots and fails closed on unknown or unavailable snapshot p
 });
 
 async function fixture(gateway = 'mcp', operationContext?: () => Record<string, unknown>) {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-observation-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-observation-'));
   directories.push(directory);
   const workspace = new RunWorkspace('01K00000000000000000000000', directory);
   await workspace.create();

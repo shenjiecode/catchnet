@@ -24,62 +24,62 @@ export const PUBLIC_QUALITY_SCRIPTS = [
 ] as const;
 
 export const LIVE_INPUT_NAMES = [
-  'LUOWANG_LIVE_REPOSITORY',
-  'LUOWANG_LIVE_PROJECT_ID',
-  'LUOWANG_LIVE_INITIAL_REF',
-  'LUOWANG_LIVE_TARGET_ALLOWLIST',
-  'LUOWANG_LIVE_GITHUB_TOKEN',
-  'LUOWANG_ADMIN_PASSWORD',
-  'LUOWANG_MASTER_KEY',
-  'LUOWANG_LIVE_BASE_URL',
-  'LUOWANG_LIVE_NON_PRODUCTION_CONFIRMED',
-  'LUOWANG_LIVE_TEST_ACCOUNT_DEDICATED_CONFIRMED',
-  'LUOWANG_LIVE_TEST_USERNAME',
-  'LUOWANG_LIVE_TEST_PASSWORD',
-  'LUOWANG_LIVE_PROVIDER',
-  'LUOWANG_LIVE_PROVIDER_API_KEY',
-  'LUOWANG_LIVE_MAIN_MODEL',
-  'LUOWANG_LIVE_MAIN_THINKING',
-  'LUOWANG_LIVE_RUNNER_MODEL',
-  'LUOWANG_LIVE_RUNNER_THINKING',
-  'LUOWANG_LIVE_REVIEWER_MODEL',
-  'LUOWANG_LIVE_REVIEWER_THINKING',
-  'LUOWANG_LIVE_REVIEWER_VISION_CONFIRMED',
-  'LUOWANG_LIVE_OSS_ENDPOINT',
-  'LUOWANG_LIVE_OSS_REGION',
-  'LUOWANG_LIVE_OSS_BUCKET',
-  'LUOWANG_LIVE_OSS_PREFIX',
-  'LUOWANG_LIVE_OSS_ACCESS_KEY_ID',
-  'LUOWANG_LIVE_OSS_ACCESS_KEY_SECRET',
-  'LUOWANG_LIVE_OSS_PRIVATE_CONFIRMED',
-  'LUOWANG_LIVE_PASSED_CASE',
-  'LUOWANG_LIVE_FAILED_CASE_1',
-  'LUOWANG_LIVE_FAILED_CASE_2',
-  'LUOWANG_LIVE_BLOCKED_CASE',
-  'LUOWANG_LIVE_RESET_PROCEDURE',
-  'LUOWANG_LIVE_DELETION_PROCEDURE',
-  'LUOWANG_LIVE_ABSENCE_VERIFICATION',
-  'LUOWANG_LIVE_NETWORK_APPROVED',
-  'LUOWANG_LIVE_COST_APPROVED',
-  'LUOWANG_LIVE_RELEASE_AUTHORIZED',
-  'LUOWANG_LIVE_CREDENTIAL_DISPOSITION',
+  'CATCHNET_LIVE_REPOSITORY',
+  'CATCHNET_LIVE_PROJECT_ID',
+  'CATCHNET_LIVE_INITIAL_REF',
+  'CATCHNET_LIVE_TARGET_ALLOWLIST',
+  'CATCHNET_LIVE_GITHUB_TOKEN',
+  'CATCHNET_ADMIN_PASSWORD',
+  'CATCHNET_MASTER_KEY',
+  'CATCHNET_LIVE_BASE_URL',
+  'CATCHNET_LIVE_NON_PRODUCTION_CONFIRMED',
+  'CATCHNET_LIVE_TEST_ACCOUNT_DEDICATED_CONFIRMED',
+  'CATCHNET_LIVE_TEST_USERNAME',
+  'CATCHNET_LIVE_TEST_PASSWORD',
+  'CATCHNET_LIVE_PROVIDER',
+  'CATCHNET_LIVE_PROVIDER_API_KEY',
+  'CATCHNET_LIVE_MAIN_MODEL',
+  'CATCHNET_LIVE_MAIN_THINKING',
+  'CATCHNET_LIVE_RUNNER_MODEL',
+  'CATCHNET_LIVE_RUNNER_THINKING',
+  'CATCHNET_LIVE_REVIEWER_MODEL',
+  'CATCHNET_LIVE_REVIEWER_THINKING',
+  'CATCHNET_LIVE_REVIEWER_VISION_CONFIRMED',
+  'CATCHNET_LIVE_OSS_ENDPOINT',
+  'CATCHNET_LIVE_OSS_REGION',
+  'CATCHNET_LIVE_OSS_BUCKET',
+  'CATCHNET_LIVE_OSS_PREFIX',
+  'CATCHNET_LIVE_OSS_ACCESS_KEY_ID',
+  'CATCHNET_LIVE_OSS_ACCESS_KEY_SECRET',
+  'CATCHNET_LIVE_OSS_PRIVATE_CONFIRMED',
+  'CATCHNET_LIVE_PASSED_CASE',
+  'CATCHNET_LIVE_FAILED_CASE_1',
+  'CATCHNET_LIVE_FAILED_CASE_2',
+  'CATCHNET_LIVE_BLOCKED_CASE',
+  'CATCHNET_LIVE_RESET_PROCEDURE',
+  'CATCHNET_LIVE_DELETION_PROCEDURE',
+  'CATCHNET_LIVE_ABSENCE_VERIFICATION',
+  'CATCHNET_LIVE_NETWORK_APPROVED',
+  'CATCHNET_LIVE_COST_APPROVED',
+  'CATCHNET_LIVE_RELEASE_AUTHORIZED',
+  'CATCHNET_LIVE_CREDENTIAL_DISPOSITION',
 ] as const;
 
 const LIVE_THINKING_INPUTS = new Set<string>([
-  'LUOWANG_LIVE_MAIN_THINKING',
-  'LUOWANG_LIVE_RUNNER_THINKING',
-  'LUOWANG_LIVE_REVIEWER_THINKING',
+  'CATCHNET_LIVE_MAIN_THINKING',
+  'CATCHNET_LIVE_RUNNER_THINKING',
+  'CATCHNET_LIVE_REVIEWER_THINKING',
 ]);
 const VALID_THINKING_LEVELS = new Set(['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']);
 
 const LIVE_TRUE_CONFIRMATIONS = new Set<string>([
-  'LUOWANG_LIVE_NON_PRODUCTION_CONFIRMED',
-  'LUOWANG_LIVE_TEST_ACCOUNT_DEDICATED_CONFIRMED',
-  'LUOWANG_LIVE_REVIEWER_VISION_CONFIRMED',
-  'LUOWANG_LIVE_OSS_PRIVATE_CONFIRMED',
-  'LUOWANG_LIVE_NETWORK_APPROVED',
-  'LUOWANG_LIVE_COST_APPROVED',
-  'LUOWANG_LIVE_RELEASE_AUTHORIZED',
+  'CATCHNET_LIVE_NON_PRODUCTION_CONFIRMED',
+  'CATCHNET_LIVE_TEST_ACCOUNT_DEDICATED_CONFIRMED',
+  'CATCHNET_LIVE_REVIEWER_VISION_CONFIRMED',
+  'CATCHNET_LIVE_OSS_PRIVATE_CONFIRMED',
+  'CATCHNET_LIVE_NETWORK_APPROVED',
+  'CATCHNET_LIVE_COST_APPROVED',
+  'CATCHNET_LIVE_RELEASE_AUTHORIZED',
 ]);
 
 type LayerStatus = 'passed' | 'failed' | 'blocked' | 'not_run';
@@ -138,7 +138,7 @@ export interface ClosureProofStatuses {
 }
 
 interface AcceptanceReport {
-  schema: 'luowang.production-acceptance.v1';
+  schema: 'catchnet.production-acceptance.v1';
   mode: AcceptanceMode;
   startedAt: string;
   finishedAt: string;
@@ -360,7 +360,7 @@ export function createLayeredReport(input: {
       ? 'failed'
       : 'blocked';
   return {
-    schema: 'luowang.production-acceptance.v1',
+    schema: 'catchnet.production-acceptance.v1',
     mode: input.mode,
     startedAt: input.startedAt,
     finishedAt: new Date().toISOString(),
@@ -479,7 +479,11 @@ export function createLayeredReport(input: {
       {
         ac: 'AC-CLOSURE-DOC-01',
         status: input.proofs.doc,
-        evidence: ['README.md', 'tests/closure6-acceptance-layering.test.ts: documentation'],
+        evidence: [
+          'README.md',
+          'README.zh.md',
+          'tests/closure6-acceptance-layering.test.ts: documentation',
+        ],
       },
       {
         ac: 'AC-CLOSURE-INSTR-01',
@@ -586,7 +590,7 @@ export function createLayeredReport(input: {
             ? ['Immutable SemVer tag, main and release commit verified after publication']
             : [
                 'Pre-release gate requires local.status=passed and live.status=passed',
-                'Set LUOWANG_LIVE_RELEASE_TAG and rerun after publication to verify immutable tag and main',
+                'Set CATCHNET_LIVE_RELEASE_TAG and rerun after publication to verify immutable tag and main',
               ],
       },
       {
@@ -735,7 +739,7 @@ function requiredLiveValue(environment: NodeJS.ProcessEnv, name: string): string
 export function liveProjectPath(projectId: string, suffix: string): string {
   assertLive(
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId),
-    'LUOWANG_LIVE_PROJECT_ID 不是有效项目 ID',
+    'CATCHNET_LIVE_PROJECT_ID 不是有效项目 ID',
   );
   assertLive(/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(suffix), 'live 项目路径无效');
   return `/api/projects/${projectId}/${suffix}`;
@@ -746,7 +750,7 @@ export function parseHarnessUrl(value: string, allowlist: string): string {
   try {
     url = new URL(value);
   } catch {
-    throw new Error('LUOWANG_LIVE_HARNESS_URL 不是有效 URL');
+    throw new Error('CATCHNET_LIVE_HARNESS_URL 不是有效 URL');
   }
   assertLive(
     !url.username && !url.password && !url.search && !url.hash && url.pathname === '/',
@@ -781,7 +785,7 @@ export function parseGitHubRepository(value: string): { owner: string; name: str
   try {
     url = new URL(value);
   } catch {
-    throw new Error('LUOWANG_LIVE_REPOSITORY 不是有效 URL');
+    throw new Error('CATCHNET_LIVE_REPOSITORY 不是有效 URL');
   }
   assertLive(
     url.protocol === 'https:' &&
@@ -1261,7 +1265,7 @@ export async function runPreflight(environment: NodeJS.ProcessEnv, request: type
     }
   }
   return {
-    schema: 'luowang.acceptance-preflight.v1' as const,
+    schema: 'catchnet.acceptance-preflight.v1' as const,
     startedAt,
     finishedAt: new Date().toISOString(),
     status,
@@ -1340,15 +1344,15 @@ export async function readLivePreparation(
   readinessSource: 'probe' | 'cached' = 'probe',
 ) {
   const harnessUrl = parseHarnessUrl(
-    environment.LUOWANG_LIVE_HARNESS_URL ?? 'http://127.0.0.1:3000',
-    requiredLiveValue(environment, 'LUOWANG_LIVE_TARGET_ALLOWLIST'),
+    environment.CATCHNET_LIVE_HARNESS_URL ?? 'http://127.0.0.1:3000',
+    requiredLiveValue(environment, 'CATCHNET_LIVE_TARGET_ALLOWLIST'),
   );
-  const adminPassword = requiredLiveValue(environment, 'LUOWANG_ADMIN_PASSWORD');
-  const projectId = requiredLiveValue(environment, 'LUOWANG_LIVE_PROJECT_ID');
+  const adminPassword = requiredLiveValue(environment, 'CATCHNET_ADMIN_PASSWORD');
+  const projectId = requiredLiveValue(environment, 'CATCHNET_LIVE_PROJECT_ID');
   const projectPath = (suffix: string) => liveProjectPath(projectId, suffix);
   projectPath('readiness'); // Validate the ID before authentication or any project request.
   const repository = parseGitHubRepository(
-    requiredLiveValue(environment, 'LUOWANG_LIVE_REPOSITORY'),
+    requiredLiveValue(environment, 'CATCHNET_LIVE_REPOSITORY'),
   );
   let cookie = '';
   const harness = async (path: string): Promise<unknown> => {
@@ -1510,14 +1514,14 @@ async function validateCompletedLiveAcceptance(environment: NodeJS.ProcessEnv): 
     '项目 Indexer commit 缺失或存在索引错误',
   );
 
-  const token = requiredLiveValue(environment, 'LUOWANG_LIVE_GITHUB_TOKEN');
+  const token = requiredLiveValue(environment, 'CATCHNET_LIVE_GITHUB_TOKEN');
   const githubPayloads: unknown[] = [];
   const github = async (path: string): Promise<Record<string, unknown>> => {
     const response = await fetch(`https://api.github.com${path}`, {
       headers: {
         accept: 'application/vnd.github+json',
         authorization: `Bearer ${token}`,
-        'user-agent': 'luowang-closure-live-acceptance',
+        'user-agent': 'catchnet-closure-live-acceptance',
         'x-github-api-version': '2022-11-28',
       },
       redirect: 'error',
@@ -1537,7 +1541,7 @@ async function validateCompletedLiveAcceptance(environment: NodeJS.ProcessEnv): 
   const initializationQueue = queue.find(
     (item) => item.runId === selection.initializationRunId,
   ) as LiveQueueFact;
-  const sourceRef = requiredLiveValue(environment, 'LUOWANG_LIVE_INITIAL_REF');
+  const sourceRef = requiredLiveValue(environment, 'CATCHNET_LIVE_INITIAL_REF');
   const initialCommit = await github(`${repoPath}/commits/${encodeURIComponent(sourceRef)}`);
   assertLive(
     initialCommit.sha === initializationQueue.preparedMergeCommit,
@@ -1585,39 +1589,41 @@ async function validateCompletedLiveAcceptance(environment: NodeJS.ProcessEnv): 
   assertLive(new Set(verifiedIssueNumbers).size === 2, '两个 confirmed Bugs 关联了重复 Issue');
 
   const releaseEvidence: string[] = [];
-  const releaseTag = environment.LUOWANG_LIVE_RELEASE_TAG?.trim();
+  const releaseTag = environment.CATCHNET_LIVE_RELEASE_TAG?.trim();
   if (releaseTag) {
     assertLive(isNewSemVerTag(releaseTag), '新发布 tag 必须是高于 v0.1.0 的 SemVer');
-    const mainRef = await github(`${repoPathFor('cynos-ai', 'luowang')}/git/ref/heads/main`);
+    const mainRef = await github(`${repoPathFor('shenjiecode', 'catchnet')}/git/ref/heads/main`);
     const tagRef = await github(
-      `${repoPathFor('cynos-ai', 'luowang')}/git/ref/tags/${encodeURIComponent(releaseTag)}`,
+      `${repoPathFor('shenjiecode', 'catchnet')}/git/ref/tags/${encodeURIComponent(releaseTag)}`,
     );
-    const releaseCommit = await peelGitHubTag(github, 'cynos-ai', 'luowang', tagRef);
+    const releaseCommit = await peelGitHubTag(github, 'shenjiecode', 'catchnet', tagRef);
     assertLive(
       asRecord(mainRef.object).sha === releaseCommit,
-      '发布 tag 与 luowang main commit 不一致',
+      '发布 tag 与 catchnet main commit 不一致',
     );
-    const legacyTagRef = await github(`${repoPathFor('cynos-ai', 'luowang')}/git/ref/tags/v0.1.0`);
+    const legacyTagRef = await github(
+      `${repoPathFor('shenjiecode', 'catchnet')}/git/ref/tags/v0.1.0`,
+    );
     assertLive(
       asRecord(legacyTagRef.object).sha === '388c54741e86e10f252bac4f15b353d4ef2f7037',
       'v0.1.0 tag object 已改变',
     );
-    const legacyCommit = await peelGitHubTag(github, 'cynos-ai', 'luowang', legacyTagRef);
+    const legacyCommit = await peelGitHubTag(github, 'shenjiecode', 'catchnet', legacyTagRef);
     assertLive(
       legacyCommit === '71bb6bec0fc9e93c4a6578e165233d793ed49037',
       'v0.1.0 peeled commit 已改变',
     );
-    releaseEvidence.push(`release tag ${releaseTag} equals luowang main ${releaseCommit}`);
+    releaseEvidence.push(`release tag ${releaseTag} equals catchnet main ${releaseCommit}`);
   }
 
   const secretValues = [
-    'LUOWANG_LIVE_GITHUB_TOKEN',
-    'LUOWANG_ADMIN_PASSWORD',
-    'LUOWANG_MASTER_KEY',
-    'LUOWANG_LIVE_TEST_PASSWORD',
-    'LUOWANG_LIVE_PROVIDER_API_KEY',
-    'LUOWANG_LIVE_OSS_ACCESS_KEY_ID',
-    'LUOWANG_LIVE_OSS_ACCESS_KEY_SECRET',
+    'CATCHNET_LIVE_GITHUB_TOKEN',
+    'CATCHNET_ADMIN_PASSWORD',
+    'CATCHNET_MASTER_KEY',
+    'CATCHNET_LIVE_TEST_PASSWORD',
+    'CATCHNET_LIVE_PROVIDER_API_KEY',
+    'CATCHNET_LIVE_OSS_ACCESS_KEY_ID',
+    'CATCHNET_LIVE_OSS_ACCESS_KEY_SECRET',
   ]
     .map((name) => environment[name])
     .filter((value): value is string => typeof value === 'string' && value.length >= 8);
@@ -1724,7 +1730,7 @@ export function localOnlyEnvironment(phase9Directory: string): NodeJS.ProcessEnv
     PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH,
     NPM_CONFIG_REGISTRY: process.env.NPM_CONFIG_REGISTRY,
     npm_config_registry: process.env.npm_config_registry,
-    LUOWANG_ACCEPTANCE_ARTIFACT_DIR: phase9Directory,
+    CATCHNET_ACCEPTANCE_ARTIFACT_DIR: phase9Directory,
     npm_execpath: process.env.npm_execpath,
   };
   if (process.platform === 'win32') {
@@ -1763,7 +1769,7 @@ function renderMarkdown(report: AcceptanceReport): string {
   const ac = report.acEvidence
     .map((item) => `| ${item.ac} | ${item.status} | ${item.evidence.join('<br>')} |`)
     .join('\n');
-  return `# LuoWang production acceptance\n\n- Mode: **${report.mode}**\n- local.status: **${report.local.status}**\n- live.status: **${report.live.status}**\n- release.status: **${report.release.status}**\n\n## Resource checks\n\n| Check | Status | Evidence |\n|---|---|---|\n${resources}\n\n## AC evidence\n\n| AC | Status | Evidence |\n|---|---|---|\n${ac}\n\n本地 test double 只能证明 local；live blocked 时 release 必须 blocked。\n`;
+  return `# Catchnet production acceptance\n\n- Mode: **${report.mode}**\n- local.status: **${report.local.status}**\n- live.status: **${report.live.status}**\n- release.status: **${report.release.status}**\n\n## Resource checks\n\n| Check | Status | Evidence |\n|---|---|---|\n${resources}\n\n## AC evidence\n\n| AC | Status | Evidence |\n|---|---|---|\n${ac}\n\n本地 test double 只能证明 local；live blocked 时 release 必须 blocked。\n`;
 }
 
 function summarize(value: string): string {
@@ -1831,7 +1837,7 @@ async function main(): Promise<void> {
     throw new Error(`未知验收模式：${mode}`);
   }
   const directory =
-    process.env.LUOWANG_ACCEPTANCE_ARTIFACT_DIR ??
+    process.env.CATCHNET_ACCEPTANCE_ARTIFACT_DIR ??
     join(
       process.cwd(),
       '.cynos',

@@ -16,14 +16,14 @@ const PROJECT_B = '00000000-0000-4000-8000-000000000002';
 
 describe('project execution image source', () => {
   it('stages the pinned tree in separate project roots, not the current checkout', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-image-source-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-image-source-'));
     try {
       const repo = join(root, 'repo');
       await git(['init', '-b', 'main', repo], root);
-      await git(['config', 'user.name', 'LuoWang Test'], repo);
-      await git(['config', 'user.email', 'luowang@example.test'], repo);
+      await git(['config', 'user.name', 'Catchnet Test'], repo);
+      await git(['config', 'user.email', 'catchnet@example.test'], repo);
       await writeFile(
-        join(repo, 'Dockerfile.luowang'),
+        join(repo, 'Dockerfile.catchnet'),
         'FROM scratch\nCOPY value.txt /value.txt\n',
       );
       await writeFile(join(repo, 'value.txt'), 'old');
@@ -39,14 +39,14 @@ describe('project execution image source', () => {
         repository,
         projectId: PROJECT_A,
         targetCommit: first,
-        dockerfilePath: 'Dockerfile.luowang',
+        dockerfilePath: 'Dockerfile.catchnet',
         storageRoot: root,
       });
       const b = await prepareProjectImageSource({
         repository,
         projectId: PROJECT_B,
         targetCommit: second,
-        dockerfilePath: 'Dockerfile.luowang',
+        dockerfilePath: 'Dockerfile.catchnet',
         storageRoot: root,
       });
       try {
@@ -77,7 +77,7 @@ describe('project execution image source', () => {
             repository,
             projectId: '../outside',
             targetCommit: first,
-            dockerfilePath: 'Dockerfile.luowang',
+            dockerfilePath: 'Dockerfile.catchnet',
             storageRoot: root,
           }),
         /项目或镜像目标提交无效/,
@@ -88,16 +88,16 @@ describe('project execution image source', () => {
   });
 
   it('rejects a Dockerfile symlink and a build-context link outside the project', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-image-source-link-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-image-source-link-'));
     try {
       const repo = join(root, 'repo');
       await git(['init', '-b', 'main', repo], root);
-      await git(['config', 'user.name', 'LuoWang Test'], repo);
-      await git(['config', 'user.email', 'luowang@example.test'], repo);
+      await git(['config', 'user.name', 'Catchnet Test'], repo);
+      await git(['config', 'user.email', 'catchnet@example.test'], repo);
       await writeFile(join(root, 'outside.txt'), 'outside');
-      await writeFile(join(repo, 'Dockerfile.luowang'), 'FROM scratch\n');
+      await writeFile(join(repo, 'Dockerfile.catchnet'), 'FROM scratch\n');
       await symlink(join(root, 'outside.txt'), join(repo, 'escape'));
-      await symlink('Dockerfile.luowang', join(repo, 'linked-Dockerfile'));
+      await symlink('Dockerfile.catchnet', join(repo, 'linked-Dockerfile'));
       await git(['add', '.'], repo);
       await git(['commit', '-m', 'links'], repo);
       const commit = (await git(['rev-parse', 'HEAD'], repo)).stdout.trim();
@@ -113,7 +113,7 @@ describe('project execution image source', () => {
         /普通 Dockerfile/,
       );
       await assert.rejects(
-        () => prepareProjectImageSource({ ...input, dockerfilePath: 'Dockerfile.luowang' }),
+        () => prepareProjectImageSource({ ...input, dockerfilePath: 'Dockerfile.catchnet' }),
         /路径越界/,
       );
     } finally {

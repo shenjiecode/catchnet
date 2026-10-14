@@ -259,9 +259,9 @@ export function createEnvironmentValidationService(input: {
           executionLocationRevision: location.revision,
           resourceType: 'environment-validation',
           ownerLabels: {
-            'luowang.instance-id': readInstanceId(input.database),
-            'luowang.project-id': projectId,
-            'luowang.attempt-id': id,
+            'catchnet.instance-id': readInstanceId(input.database),
+            'catchnet.project-id': projectId,
+            'catchnet.attempt-id': id,
           },
         });
       })();

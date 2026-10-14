@@ -27,7 +27,7 @@ import { createScopedSecretStore } from '../src/server/security/scoped-secret-st
 
 const COMMIT = 'a'.repeat(40);
 const IMAGE = `sha256:${'b'.repeat(64)}`;
-const cookie = { cookie: 'luowang_session=valid' };
+const cookie = { cookie: 'catchnet_session=valid' };
 
 it('prepares only the authenticated project image at the resolved fixed commit', async () => {
   const database = new Database(':memory:');

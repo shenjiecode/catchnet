@@ -37,7 +37,7 @@ it('protects every console route and accepts only fixed system checks', async ()
       calls.push('status');
       return {
         fetchedAt: '2026-09-27T00:00:00.000Z',
-        service: { name: 'luowang', version: 'test', build: null },
+        service: { name: 'catchnet', version: 'test', build: null },
         database: 'ok',
         secretStore: 'available',
         scheduler: {
@@ -98,7 +98,7 @@ it('protects every console route and accepts only fixed system checks', async ()
     assert.equal(unauthorized.statusCode, 401);
     assert.deepEqual(calls, []);
 
-    const headers = { cookie: 'luowang_session=valid-session' };
+    const headers = { cookie: 'catchnet_session=valid-session' };
     assert.equal(
       (await app.inject({ method: 'GET', url: '/api/workspace', headers })).statusCode,
       200,
@@ -155,7 +155,7 @@ it('fails the whole resource preview closed without leaking an inventory error',
     const response = await app.inject({
       method: 'GET',
       url: '/api/system/resources',
-      headers: { cookie: 'luowang_session=valid-session' },
+      headers: { cookie: 'catchnet_session=valid-session' },
     });
     assert.equal(response.statusCode, 503);
     assert.equal(response.body.includes('/home/private'), false);

@@ -37,7 +37,7 @@ describe('Closure 1 built-in role instructions', () => {
         loaded.versions.map((item) => item.id),
         expectedIds,
       );
-      assert.match(loaded.content, /luowang-role-id: common/);
+      assert.match(loaded.content, /catchnet-role-id: common/);
       assert.equal(
         loaded.versions.every((item) => item.applicationVersion === 'closure1-test'),
         true,
@@ -47,10 +47,10 @@ describe('Closure 1 built-in role instructions', () => {
         true,
       );
       for (const other of Object.keys(expectedByKind).filter((id) => !expectedIds.includes(id))) {
-        assert.doesNotMatch(loaded.content, new RegExp(`luowang-role-id: ${other}`));
+        assert.doesNotMatch(loaded.content, new RegExp(`catchnet-role-id: ${other}`));
       }
       assert.equal(
-        loaded.content.includes('luowang-role-id: code-understanding;'),
+        loaded.content.includes('catchnet-role-id: code-understanding;'),
         kind === 'main-planning',
       );
     }
@@ -63,7 +63,7 @@ describe('Closure 1 built-in role instructions', () => {
       const ids = loaded.versions.map((item) => item.id);
       assert.equal(ids.includes('code-understanding'), kind === 'main-planning');
       assert.equal(
-        loaded.content.includes('luowang-role-id: code-understanding;'),
+        loaded.content.includes('catchnet-role-id: code-understanding;'),
         kind === 'main-planning',
       );
       if (kind === 'main-planning' || kind === 'main-finalization') {
@@ -95,7 +95,7 @@ describe('Closure 1 built-in role instructions', () => {
   });
 
   it('ignores ambient target, host and user resources outside the fixed allowlist', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-closure1-ambient-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-closure1-ambient-'));
     cleanup.push(async () => rm(root, { recursive: true, force: true }));
     const fixed = join(root, 'fixed');
     await cp(sourceDirectory, fixed, { recursive: true });
@@ -122,7 +122,7 @@ describe('Closure 1 built-in role instructions', () => {
   });
 
   it('records the exact built-in method bytes and updates their hash on a new revision', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-code-understanding-version-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-code-understanding-version-'));
     cleanup.push(async () => rm(root, { recursive: true, force: true }));
     await cp(sourceDirectory, root, { recursive: true });
     const loader = createRoleInstructionLoader({
@@ -156,7 +156,7 @@ describe('Closure 1 built-in role instructions', () => {
   it.skipIf(process.platform === 'win32')(
     'rejects an unreadable method without exposing paths',
     async () => {
-      const root = await mkdtemp(join(tmpdir(), 'luowang-code-understanding-unreadable-'));
+      const root = await mkdtemp(join(tmpdir(), 'catchnet-code-understanding-unreadable-'));
       const target = join(root, 'code-understanding.md');
       cleanup.push(async () => {
         await chmod(target, 0o600);
@@ -180,7 +180,7 @@ describe('Closure 1 built-in role instructions', () => {
     async (kind) => {
       const resourceId = kind === 'main-planning' ? 'code-understanding' : kind;
       for (const mode of ['missing', 'empty', 'marker', 'symlink'] as const) {
-        const root = await mkdtemp(join(tmpdir(), `luowang-closure1-${mode}-`));
+        const root = await mkdtemp(join(tmpdir(), `catchnet-closure1-${mode}-`));
         cleanup.push(async () => rm(root, { recursive: true, force: true }));
         await cp(sourceDirectory, root, { recursive: true });
         const target = join(root, `${resourceId}.md`);

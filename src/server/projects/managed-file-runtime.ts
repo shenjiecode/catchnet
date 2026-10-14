@@ -32,7 +32,7 @@ export async function injectManagedFiles(input: {
     (file) => file.serviceName === null || file.serviceName === (input.serviceName ?? null),
   );
   if (selected.length === 0) return;
-  const destinationRoot = input.destinationRoot ?? '/luowang-source';
+  const destinationRoot = input.destinationRoot ?? '/catchnet-source';
   if (!destinationRoot.startsWith('/') || destinationRoot.includes('..'))
     throw new ControlledCommandError('COMMAND_INVALID', '受控配置文件目标根目录无效');
   let total = 0;
@@ -53,7 +53,7 @@ export async function injectManagedFiles(input: {
       throw new ControlledCommandError('COMMAND_INVALID', '受控配置文件路径冲突');
     seen.add(file.path);
   }
-  const staging = await mkdtemp(join(tmpdir(), 'luowang-managed-'));
+  const staging = await mkdtemp(join(tmpdir(), 'catchnet-managed-'));
   try {
     input.signal?.throwIfAborted();
     const state = await input.docker.run(
@@ -77,7 +77,7 @@ export async function injectManagedFiles(input: {
           'sh',
           '-c',
           'test -e "$1" || test -L "$1"',
-          'luowang',
+          'catchnet',
           destination,
         ],
         { timeoutMs: 10_000, signal: input.signal },
@@ -96,7 +96,7 @@ export async function injectManagedFiles(input: {
           '-eu',
           '-c',
           'current=$1; rest=$2; old_ifs=$IFS; IFS=/; for part in $rest; do current="$current/$part"; test ! -L "$current"; if test -e "$current"; then test -d "$current"; else mkdir -- "$current"; fi; done; IFS=$old_ifs',
-          'luowang',
+          'catchnet',
           destinationRoot,
           parent.slice(destinationRoot.replace(/\/$/, '').length + 1),
         ],
@@ -108,7 +108,7 @@ export async function injectManagedFiles(input: {
       await writeFile(local, file.bytes ?? file.content, { mode: 0o600, flag: 'wx' });
       input.signal?.throwIfAborted();
       const dockerSource = input.executionAdapter?.locationId.startsWith('server:')
-        ? `/tmp/luowang-managed/${input.containerId}/${index}`
+        ? `/tmp/catchnet-managed/${input.containerId}/${index}`
         : local;
       if (dockerSource !== local) {
         await input.executionAdapter!.upload(local, dockerSource, {
@@ -129,7 +129,7 @@ export async function injectManagedFiles(input: {
   } finally {
     if (input.executionAdapter?.locationId.startsWith('server:'))
       await input.executionAdapter
-        .removeTree(`/tmp/luowang-managed/${input.containerId}`)
+        .removeTree(`/tmp/catchnet-managed/${input.containerId}`)
         .catch(() => undefined);
     await rm(staging, { recursive: true, force: true });
   }
@@ -152,7 +152,7 @@ async function injectIntoStoppedContainer(
   await mkdir(payload, { recursive: true });
   input.signal?.throwIfAborted();
   const remote = input.executionAdapter?.locationId.startsWith('server:');
-  const remoteRoot = `/tmp/luowang-managed/${input.containerId}`;
+  const remoteRoot = `/tmp/catchnet-managed/${input.containerId}`;
   const remoteInspection = `${remoteRoot}/inspection`;
   if (remote)
     await input.executionAdapter!.uploadTree(inspection, remoteInspection, {

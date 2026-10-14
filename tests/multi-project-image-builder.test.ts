@@ -17,7 +17,7 @@ const COMMIT = 'a'.repeat(40);
 
 describe('project image builder', () => {
   it('builds from the staged context and records the immutable image ID', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-image-builder-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-image-builder-'));
     try {
       const source = await createSource(root);
       let built = false;
@@ -27,21 +27,21 @@ describe('project image builder', () => {
           assert.equal(args[args.length - 1], source.directory);
           assert.equal(
             args[args.indexOf('--file') + 1],
-            join(source.directory, 'Dockerfile.luowang'),
+            join(source.directory, 'Dockerfile.catchnet'),
           );
           assert.equal(
             args[args.indexOf('--tag') + 1],
-            projectImageTag(PROJECT, COMMIT, 'Dockerfile.luowang'),
+            projectImageTag(PROJECT, COMMIT, 'Dockerfile.catchnet'),
           );
-          assert.ok(args.includes(`luowang.project-id=${PROJECT}`));
+          assert.ok(args.includes(`catchnet.project-id=${PROJECT}`));
           assert.deepEqual(
             args.slice(
-              args.indexOf(`luowang.instance-id=${PROJECT}`) - 1,
-              args.indexOf(`luowang.instance-id=${PROJECT}`) + 1,
+              args.indexOf(`catchnet.instance-id=${PROJECT}`) - 1,
+              args.indexOf(`catchnet.instance-id=${PROJECT}`) + 1,
             ),
-            ['--label', `luowang.instance-id=${PROJECT}`],
+            ['--label', `catchnet.instance-id=${PROJECT}`],
           );
-          assert.ok(args.includes(`luowang.target-commit=${COMMIT}`));
+          assert.ok(args.includes(`catchnet.target-commit=${COMMIT}`));
           assert.equal(options.cwd, source.directory);
           await writeFile(args[args.indexOf('--iidfile') + 1], `sha256:${'b'.repeat(64)}\n`);
           built = true;
@@ -56,10 +56,10 @@ describe('project image builder', () => {
         projectId: PROJECT,
         targetCommit: COMMIT,
         imageId: `sha256:${'b'.repeat(64)}`,
-        tag: projectImageTag(PROJECT, COMMIT, 'Dockerfile.luowang'),
+        tag: projectImageTag(PROJECT, COMMIT, 'Dockerfile.catchnet'),
       });
       assert.notEqual(
-        projectImageTag(PROJECT, COMMIT, 'Dockerfile.luowang'),
+        projectImageTag(PROJECT, COMMIT, 'Dockerfile.catchnet'),
         projectImageTag(PROJECT, COMMIT, '@builtin/node'),
       );
       await assert.rejects(() => readFile(join(root, 'image-id.txt')), /ENOENT/);
@@ -81,7 +81,7 @@ describe('project image builder', () => {
   });
 
   it('rejects an invalid image ID rather than recording an unverified tag', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-image-builder-invalid-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-image-builder-invalid-'));
     try {
       const source = await createSource(root);
       const docker: DockerCommand = {
@@ -103,10 +103,10 @@ describe('project image builder', () => {
 async function createSource(root: string): Promise<ProjectImageSource> {
   const directory = resolve(root, 'context');
   await mkdir(directory);
-  await writeFile(join(directory, 'Dockerfile.luowang'), 'FROM scratch\n');
+  await writeFile(join(directory, 'Dockerfile.catchnet'), 'FROM scratch\n');
   return {
     directory,
-    dockerfilePath: 'Dockerfile.luowang',
+    dockerfilePath: 'Dockerfile.catchnet',
     targetCommit: COMMIT,
     cleanup: async () => {},
   };

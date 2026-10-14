@@ -15,7 +15,7 @@ import { createProjectRunWorkspaceStore, RunWorkspaceStore } from '../src/server
 
 describe('project-bound Run workspace', () => {
   it('separates new artifacts and evidence while retaining the legacy directory', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-project-runs-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-project-runs-'));
     const database = new Database(':memory:');
     try {
       runMigrations(database);

@@ -31,7 +31,7 @@ const expected = {
 };
 const proof = {
   ...expected,
-  schema: 'luowang.run-reliability-live.v1',
+  schema: 'catchnet.run-reliability-live.v1',
   layer: 'live',
   status: 'passed',
   files: [

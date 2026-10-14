@@ -234,7 +234,7 @@ export function createProjectConsoleService(input: {
     systemStatus() {
       return {
         fetchedAt: now(),
-        service: { name: 'luowang', version: input.version, build: input.build ?? null },
+        service: { name: 'catchnet', version: input.version, build: input.build ?? null },
         database: input.databaseHealthy() ? 'ok' : 'error',
         secretStore: safeSecretStoreAvailable(input.secretStoreAvailable)
           ? 'available'

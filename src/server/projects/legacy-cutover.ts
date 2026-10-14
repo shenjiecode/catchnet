@@ -34,7 +34,7 @@ export interface LegacyCutoverInput {
   reviewedHistoryFingerprint?: string;
 }
 
-/** Offline only: caller must stop all LuoWang processes before making and verifying the backup. */
+/** Offline only: caller must stop all Catchnet processes before making and verifying the backup. */
 export async function applyLegacyProjectCutover(input: LegacyCutoverInput): Promise<string> {
   if (
     input.database.name === ':memory:' ||
@@ -167,7 +167,7 @@ async function verifyBackupMatches(
   backupDir: string,
 ): Promise<string> {
   await verifyLegacyBackup(backupDir);
-  const backup = new Database(join(resolve(backupDir), 'luowang.db'), {
+  const backup = new Database(join(resolve(backupDir), 'catchnet.db'), {
     readonly: true,
     fileMustExist: true,
   });

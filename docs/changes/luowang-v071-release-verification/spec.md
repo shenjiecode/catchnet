@@ -41,7 +41,7 @@
 - 允许认证请求建立管理员会话，之后只读取候选项目；不得调用入队、merge、镜像构建、配置写入、模型、OSS 写入或 GitHub 写入。
 - 验证项目与目标仓库一致、已有五项 readiness 全部 ok 且有合法检查时间，并验证 queue/runs 响应可解析；尚无 Run 的合法空列表可以预检通过。缓存缺失、需要重检或检查失败时不能通过，不自动发起实时检查。
 - 不要求在预检中已有 passed/failed/blocked 事实，不把预检变成正式 live 的重复执行。
-- 报告单独使用 `luowang.acceptance-preflight.v1`，包含时间、`status`、缺失项/脱敏原因及成功时的 `readinessCheckedAt`；注明未实时探测依赖，不提供 AC 通过结论，也不写 local/live/release passed。
+- 报告单独使用 `catchnet.acceptance-preflight.v1`，包含时间、`status`、缺失项/脱敏原因及成功时的 `readinessCheckedAt`；注明未实时探测依赖，不提供 AC 通过结论，也不写 local/live/release passed。
 - 缺输入为 blocked；资源/响应错误为 failed；均非零退出。成功只表示本次预检通过。
 - 不自动重建镜像或恢复故障注入；操作者按失败原因修复后新做一次预检。
 
@@ -92,7 +92,7 @@ README 保留作为用户入口，按项目说明、部署启动、首次使用�
 
 ## 7. 延后处理
 
-- [#103](https://github.com/cynos-ai/luowang/issues/103)：显式批次选择、候选关联与跨环境证据复用规则。需要更完整的数据契约和失效判断，超出本版。
-- [#104](https://github.com/cynos-ai/luowang/issues/104)：Git 有界重试与 prepared target 幂等恢复；关联已有超时问题 [#94](https://github.com/cynos-ai/luowang/issues/94)。涉及远端副作用，不能在验收工具小修复中顺带实现。
+- [#103](https://github.com/shenjiecode/catchnet/issues/103)：显式批次选择、候选关联与跨环境证据复用规则。需要更完整的数据契约和失效判断，超出本版。
+- [#104](https://github.com/shenjiecode/catchnet/issues/104)：Git 有界重试与 prepared target 幂等恢复；关联已有超时问题 [#94](https://github.com/shenjiecode/catchnet/issues/94)。涉及远端副作用，不能在验收工具小修复中顺带实现。
 
 自动就绪修复、自动产品/驱动归因、成本看板暂不实现；没有明确收益的功能不为凑范围新建 Issue。

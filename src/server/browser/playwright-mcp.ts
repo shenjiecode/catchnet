@@ -183,7 +183,7 @@ class DefaultPlaywrightMcpAdapter implements BrowserMcpAdapter {
   ): InlineExtension {
     const definition = this.serverDefinition(evidenceDirectory, targetBaseUrl, additionalOrigins);
     return {
-      name: `luowang-playwright-mcp-${PLAYWRIGHT_MCP_VERSION}`,
+      name: `catchnet-playwright-mcp-${PLAYWRIGHT_MCP_VERSION}`,
       hidden: true,
       factory: async (pi) => {
         const originProxy = targetBaseUrl
@@ -249,7 +249,7 @@ class DefaultPlaywrightMcpAdapter implements BrowserMcpAdapter {
 
     let evidenceDirectory: string | undefined;
     try {
-      evidenceDirectory = await mkdtemp(join(tmpdir(), 'luowang-mcp-check-'));
+      evidenceDirectory = await mkdtemp(join(tmpdir(), 'catchnet-mcp-check-'));
       const definition = this.serverDefinition(evidenceDirectory);
       const probe = this.options.probe ?? probeWithMcpClient;
       const result = await withTimeout(
@@ -508,7 +508,7 @@ async function probeWithMcpClient(
     maxBufferSize: 16 * 1024 * 1024,
   };
   const transport = new StdioClientTransport(server);
-  const client = new Client({ name: 'luowang-connectivity-check', version: '0.1.0' });
+  const client = new Client({ name: 'catchnet-connectivity-check', version: '0.1.0' });
   try {
     await client.connect(transport);
     const result = await client.listTools();

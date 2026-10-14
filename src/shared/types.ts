@@ -4,7 +4,7 @@ export type DatabaseStatus = 'ok' | 'error';
 
 export interface HealthResponse {
   status: ServiceStatus;
-  service: 'luowang';
+  service: 'catchnet';
   version: string;
   database: DatabaseStatus;
   timestamp: string;
@@ -737,7 +737,7 @@ export interface SystemCheckResponse {
 export interface SystemStatusResponse {
   fetchedAt: string;
   service: {
-    name: 'luowang';
+    name: 'catchnet';
     version: string;
     build: string | null;
   };

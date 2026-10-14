@@ -84,13 +84,13 @@ export async function buildProjectImage(
         '--tag',
         tag,
         '--label',
-        `luowang.project-id=${input.projectId}`,
+        `catchnet.project-id=${input.projectId}`,
         '--label',
-        `luowang.instance-id=${input.instanceId}`,
+        `catchnet.instance-id=${input.instanceId}`,
         '--label',
-        `luowang.target-commit=${input.source.targetCommit}`,
+        `catchnet.target-commit=${input.source.targetCommit}`,
         '--label',
-        `luowang.build-definition=${input.source.buildDefinition ?? input.source.dockerfilePath}`,
+        `catchnet.build-definition=${input.source.buildDefinition ?? input.source.dockerfilePath}`,
         directory,
       ],
       { cwd: directory, timeoutMs: 15 * 60 * 1000, signal: input.signal },
@@ -109,7 +109,7 @@ export function projectImageTag(
   buildDefinition: string,
 ): string {
   const definition = createHash('sha256').update(buildDefinition).digest('hex').slice(0, 12);
-  return `luowang-project-${projectId}:${targetCommit}-${definition}`;
+  return `catchnet-project-${projectId}:${targetCommit}-${definition}`;
 }
 
 function assertWithin(root: string, path: string): void {

@@ -160,7 +160,7 @@ describe('Phase 3 agent run', () => {
                 stdout: 'PROJECT_CONTAINER_ONLY',
                 stderr: '',
                 exitCode: 0,
-                environmentKeys: ['LUOWANG_RUN_ID', 'LUOWANG_TARGET_COMMIT'],
+                environmentKeys: ['CATCHNET_RUN_ID', 'CATCHNET_TARGET_COMMIT'],
               };
             },
             async close() {
@@ -210,7 +210,7 @@ describe('Phase 3 agent run', () => {
     'does not start a Session if the built-in method is missing (initialization=%s)',
     async (initialization) => {
       const fixture = await createGitFixture();
-      const resources = await mkdtemp(join(tmpdir(), 'luowang-missing-method-'));
+      const resources = await mkdtemp(join(tmpdir(), 'catchnet-missing-method-'));
       cleanup.push(async () => rm(resources, { recursive: true, force: true }));
       await cp('resources/agent-roles', resources, { recursive: true });
       await rm(join(resources, 'code-understanding.md'));
@@ -543,8 +543,8 @@ describe('Phase 3 agent run', () => {
       ['off', 'off', 'off', 'off'],
     );
     for (const input of context.sessions.inputs) {
-      assert.match(input.systemPrompt, /luowang-role-id: common/);
-      assert.doesNotMatch(input.userMessage, /luowang-role-id:/);
+      assert.match(input.systemPrompt, /catchnet-role-id: common/);
+      assert.doesNotMatch(input.userMessage, /catchnet-role-id:/);
       assert.doesNotMatch(input.systemPrompt, new RegExp(fixture.initialHead));
       assert.match(input.userMessage, new RegExp(fixture.initialHead));
       assert.equal(
@@ -557,16 +557,19 @@ describe('Phase 3 agent run', () => {
         assert.equal(version.formatVersion, '1');
       }
     }
-    assert.match(context.sessions.inputs[0]?.systemPrompt ?? '', /luowang-role-id: main-planning/);
+    assert.match(context.sessions.inputs[0]?.systemPrompt ?? '', /catchnet-role-id: main-planning/);
     assert.doesNotMatch(context.sessions.inputs[0]?.systemPrompt ?? '', /runner-execution/);
     assert.match(
       context.sessions.inputs[1]?.systemPrompt ?? '',
-      /luowang-role-id: runner-execution/,
+      /catchnet-role-id: runner-execution/,
     );
-    assert.match(context.sessions.inputs[2]?.systemPrompt ?? '', /luowang-role-id: reviewer-audit/);
+    assert.match(
+      context.sessions.inputs[2]?.systemPrompt ?? '',
+      /catchnet-role-id: reviewer-audit/,
+    );
     assert.match(
       context.sessions.inputs[3]?.systemPrompt ?? '',
-      /luowang-role-id: main-finalization/,
+      /catchnet-role-id: main-finalization/,
     );
     const mainToolContext = commandText(
       await invokeTool(context.sessions.inputs[0] as AgentSessionInput, 'get_run_context', {}),
@@ -1179,7 +1182,7 @@ describe('Phase 3 agent run', () => {
   });
 
   it('only exposes an explicit non-sensitive environment to fixture commands', async () => {
-    const scriptDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase3-env-'));
+    const scriptDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase3-env-'));
     cleanup.push(async () => rm(scriptDirectory, { recursive: true, force: true }));
     await writeFile(
       join(scriptDirectory, 'print-env.js'),
@@ -1191,8 +1194,8 @@ describe('Phase 3 agent run', () => {
       GIT_TOKEN: 'must-not-leak',
       OPENAI_API_KEY: 'must-not-leak',
       OSS_ACCESS_KEY_SECRET: 'must-not-leak',
-      LUOWANG_ADMIN_PASSWORD: 'must-not-leak',
-      LUOWANG_MASTER_KEY: 'must-not-leak',
+      CATCHNET_ADMIN_PASSWORD: 'must-not-leak',
+      CATCHNET_MASTER_KEY: 'must-not-leak',
     });
     const result = await runner.run('node print-env.js', {
       cwd: scriptDirectory,
@@ -1203,10 +1206,10 @@ describe('Phase 3 agent run', () => {
     assert.equal(childEnvironment.GIT_TOKEN, undefined);
     assert.equal(childEnvironment.OPENAI_API_KEY, undefined);
     assert.equal(childEnvironment.OSS_ACCESS_KEY_SECRET, undefined);
-    assert.equal(childEnvironment.LUOWANG_ADMIN_PASSWORD, undefined);
-    assert.equal(childEnvironment.LUOWANG_MASTER_KEY, undefined);
-    assert.equal(childEnvironment.LUOWANG_RUN_ID, '01K00000000000000000000001');
-    assert.ok(result.environmentKeys.includes('LUOWANG_TARGET_COMMIT'));
+    assert.equal(childEnvironment.CATCHNET_ADMIN_PASSWORD, undefined);
+    assert.equal(childEnvironment.CATCHNET_MASTER_KEY, undefined);
+    assert.equal(childEnvironment.CATCHNET_RUN_ID, '01K00000000000000000000001');
+    assert.ok(result.environmentKeys.includes('CATCHNET_TARGET_COMMIT'));
   });
 
   it('rejects executable paths, inline interpreter code, and mutating Git forms', async () => {
@@ -1229,7 +1232,7 @@ describe('Phase 3 agent run', () => {
   });
 
   it('does not allow a role writer to write another role artifact', async () => {
-    const reportDir = await mkdtemp(join(tmpdir(), 'luowang-phase3-workspace-'));
+    const reportDir = await mkdtemp(join(tmpdir(), 'catchnet-phase3-workspace-'));
     cleanup.push(async () => rm(reportDir, { recursive: true, force: true }));
     const workspace = new RunWorkspace('01K00000000000000000000001', reportDir);
     await workspace.create();
@@ -1327,16 +1330,16 @@ async function createRunContext(
     sessionGate?: (input: AgentSessionInput) => Promise<void>;
   } = {},
 ): Promise<TestContext> {
-  const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase3-data-'));
+  const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase3-data-'));
   const reportDir = join(dataDir, 'report');
   cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPO_DIR: fixture.cloneDir,
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_ADMIN_PASSWORD: 'phase3-test-password!',
-    LUOWANG_MASTER_KEY: 'phase3-test-master-key',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPO_DIR: fixture.cloneDir,
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_ADMIN_PASSWORD: 'phase3-test-password!',
+    CATCHNET_MASTER_KEY: 'phase3-test-master-key',
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
@@ -1791,7 +1794,7 @@ tags:
 }
 
 async function createGitFixture(withScenarios = false): Promise<Fixture> {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-phase3-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-phase3-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
@@ -1799,8 +1802,8 @@ async function createGitFixture(withScenarios = false): Promise<Fixture> {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Phase 3 Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang-phase3@example.test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Phase 3 Test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-phase3@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'fixture product\n');
   if (withScenarios) {
     const scenarioDirectory = join(sourceDir, 'docs', 'scenario-testing', 'scenarios');

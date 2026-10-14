@@ -79,7 +79,7 @@ export function createHttpTestDataCleanupAdapter(
       };
     },
     async cleanupAndVerify({ runId, entry }) {
-      if (!RUN_ID.test(runId) || !entry.id.startsWith(`luowang-${runId}-`)) {
+      if (!RUN_ID.test(runId) || !entry.id.startsWith(`catchnet-${runId}-`)) {
         throw new Error('测试数据清理范围无效');
       }
       if (entry.cleanupScope !== 'website-accounts') {

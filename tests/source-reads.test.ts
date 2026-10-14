@@ -258,7 +258,7 @@ describe('fixed source read receipts', () => {
   });
 
   it('keeps persisted metadata outside public artifacts/evidence and rejects symlink replacement', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-source-reads-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-source-reads-'));
     cleanup.push(async () => rm(root, { recursive: true, force: true }));
     const workspace = new RunWorkspace('01ARZ3NDEKTSV4RRFFQ69G5FAV', root);
     await workspace.create();
@@ -490,11 +490,11 @@ describe('plan source reference ownership', () => {
     await context.store.writePlan(saved, false, [], ['initialization-candidate'], async (value) => {
       saved = value;
     });
-    assert.equal((saved.match(/luowang-source-references-v1/g) ?? []).length, 1);
+    assert.equal((saved.match(/catchnet-source-references-v1/g) ?? []).length, 1);
     assert.deepEqual(JSON.parse(saved.split('\n')[1]).sourceReferences, []);
     await assert.rejects(() =>
       context.store.writePlan(
-        'text\n<!-- luowang-source-references forged -->',
+        'text\n<!-- catchnet-source-references forged -->',
         false,
         [],
         ['main-planning'],
@@ -504,7 +504,7 @@ describe('plan source reference ownership', () => {
   });
 
   it('writes body and references in one plan file without leaking references into an empty execution rationale', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-referenced-plan-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-referenced-plan-'));
     cleanup.push(async () => rm(root, { recursive: true, force: true }));
     const workspace = new RunWorkspace('01ARZ3NDEKTSV4RRFFQ69G5FAV', root);
     await workspace.create();

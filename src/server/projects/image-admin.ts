@@ -182,9 +182,9 @@ export function createProjectImageAdminService(input: {
             executionLocationRevision: location.revision,
             resourceType: 'image-preparation',
             ownerLabels: {
-              'luowang.instance-id': instanceId,
-              'luowang.project-id': projectId,
-              'luowang.attempt-id': attemptId,
+              'catchnet.instance-id': instanceId,
+              'catchnet.project-id': projectId,
+              'catchnet.attempt-id': attemptId,
             },
           });
         })();
@@ -218,12 +218,12 @@ export function createProjectImageAdminService(input: {
           const dependencies = createProjectImagePreparationDependencies(docker);
           if (location.kind === 'ssh') {
             dependencies.build = async (build) => {
-              const remote = `/tmp/luowang/${instanceId}/${projectId}/prepare-${attemptId}`;
+              const remote = `/tmp/catchnet/${instanceId}/${projectId}/prepare-${attemptId}`;
               await adapter.uploadTree(build.source.directory, remote, {
                 timeoutMs: 10 * 60_000,
               });
               try {
-                const iid = `${remote}/.luowang-iid`;
+                const iid = `${remote}/.catchnet-iid`;
                 const result = await adapter.execute(
                   'docker',
                   [
@@ -233,13 +233,13 @@ export function createProjectImageAdminService(input: {
                     '--iidfile',
                     iid,
                     '--label',
-                    `luowang.project-id=${build.projectId}`,
+                    `catchnet.project-id=${build.projectId}`,
                     '--label',
-                    `luowang.instance-id=${build.instanceId}`,
+                    `catchnet.instance-id=${build.instanceId}`,
                     '--label',
-                    `luowang.target-commit=${build.source.targetCommit}`,
+                    `catchnet.target-commit=${build.source.targetCommit}`,
                     '--label',
-                    `luowang.build-definition=${build.source.buildDefinition ?? build.source.dockerfilePath}`,
+                    `catchnet.build-definition=${build.source.buildDefinition ?? build.source.dockerfilePath}`,
                     remote,
                   ],
                   { timeoutMs: 30 * 60_000 },

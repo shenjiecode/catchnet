@@ -1,4 +1,4 @@
-<!-- luowang-role-id: scenario-initialization; format-version: 1 -->
+<!-- catchnet-role-id: scenario-initialization; format-version: 1 -->
 
 # 陌生项目初始化附加规则
 

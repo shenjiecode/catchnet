@@ -343,15 +343,15 @@ class DefaultRunArchiver implements RunArchiver {
 
     assertMarkerPart(run.runId);
     assertMarkerPart(issue.bugKey);
-    const runMarker = `luowang-run:${run.runId}`;
-    const bugMarker = `luowang-bug:${issue.bugKey}`;
+    const runMarker = `catchnet-run:${run.runId}`;
+    const bugMarker = `catchnet-bug:${issue.bugKey}`;
     const matches = await this.options.repository.findIssuesByMarkers([runMarker, bugMarker]);
     const existing = matches.sort((left, right) => left.number - right.number)[0];
     if (existing) return { number: existing.number, url: existing.url };
     const title = issue.title.replace(/[\r\n]+/g, ' ').trim();
     if (title === '') throw new RepositoryError('ISSUE_CREATE_FAILED', 'Issue 标题无效', 400);
     const body = [
-      '由 LuoWang 归档的 confirmed bug。',
+      '由 Catchnet 归档的 confirmed bug。',
       '',
       `- ${runMarker}`,
       `- ${bugMarker}`,

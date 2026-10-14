@@ -22,7 +22,7 @@ Limits：工程检查不等于真实业务验收通过。存储的 thinking 保�
 
 ## 真实验收结果：业务验收 blocked
 
-工程提交 `f602aad4ce7c338b17afd3ed7ab762fba065f1f6` 已提交 [PR #66](https://github.com/cynos-ai/luowang/pull/66)，对应 Quality CI 成功。随后按授权正常/缺陷各执行一次，未等待合并、未重跑。两次均完成四 Session、真实 RunStore、OSS、清理和 Archiver 流程，但 **AUTH-LOGIN-001 均未获得业务观察，不能宣称正常通过或缺陷检出成功**。
+工程提交 `f602aad4ce7c338b17afd3ed7ab762fba065f1f6` 已提交 [PR #66](https://github.com/shenjiecode/catchnet/pull/66)，对应 Quality CI 成功。随后按授权正常/缺陷各执行一次，未等待合并、未重跑。两次均完成四 Session、真实 RunStore、OSS、清理和 Archiver 流程，但 **AUTH-LOGIN-001 均未获得业务观察，不能宣称正常通过或缺陷检出成功**。
 
 | 环境 | Run | 模型请求 | 功能结果 | 归档提交 |
 | --- | --- | --- | --- | --- |

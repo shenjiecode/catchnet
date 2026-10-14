@@ -17,7 +17,7 @@
       "独立身份验证继续",
       "存储场景 blocked，不得无依据 passed"
     ],
-    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\luowang\\.cynos\\run-reliability\\full-repositories\\storage-missing",
+    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\catchnet\\.cynos\\run-reliability\\full-repositories\\storage-missing",
     "applicationCommit": "6405a45b6889ad92cf7cfbce12d8ec22b5040f23",
     "evaluationCommit": "722dbea749cb698f9162f5cc27d6a789430bef68"
   },
@@ -38,7 +38,7 @@
       "有证据通过，不因未知其他存储细节误阻塞",
       "不将目标资源充分与模型改进混淆"
     ],
-    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\luowang\\.cynos\\run-reliability\\full-repositories\\storage-present",
+    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\catchnet\\.cynos\\run-reliability\\full-repositories\\storage-present",
     "applicationCommit": "47328c32606c7446101f8e1cbf09c17f7c6f817b",
     "evaluationCommit": "43e8c58dbe21fadcd4f042ac7e3b0203a85a2122"
   },
@@ -59,7 +59,7 @@
       "不重复尝试已知不可用路径",
       "不伪造页面证据"
     ],
-    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\luowang\\.cynos\\run-reliability\\full-environment-repositories\\environment-unavailable",
+    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\catchnet\\.cynos\\run-reliability\\full-environment-repositories\\environment-unavailable",
     "applicationCommit": "6405a45b6889ad92cf7cfbce12d8ec22b5040f23",
     "evaluationCommit": "f41e598269ca08b63d79b3c3db1a9e4d460f1606"
   },
@@ -78,7 +78,7 @@
       "实际受控 HTTP 和浏览器观察",
       "真实可用条件不被保守误阻塞"
     ],
-    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\luowang\\.cynos\\run-reliability\\full-environment-repositories\\environment-available",
+    "repository": "C:\\Users\\shenj\\Documents\\ChatGPT\\catchnet\\.cynos\\run-reliability\\full-environment-repositories\\environment-available",
     "applicationCommit": "6405a45b6889ad92cf7cfbce12d8ec22b5040f23",
     "evaluationCommit": "5dd04464766fce1080ebf6714331621a642f9cf6"
   }

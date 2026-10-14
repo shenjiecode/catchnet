@@ -15,7 +15,7 @@ export type ProjectConfiguration = Omit<RepositoryConfig, 'repository'> & {
   language: string;
   browserAllowedOrigins: string[];
   testDataCleanupUrl: string;
-  /** Empty uses LuoWang's built-in executor image. */
+  /** Empty uses Catchnet's built-in executor image. */
   executionDockerfile: string;
   runtimeMode: 'managed' | 'external' | 'repository-only';
   startType: 'single-container' | 'compose';

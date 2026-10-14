@@ -34,5 +34,5 @@
 
 ## 后续 Issue
 
-- [#129 将项目受控文件安全注入测试 Run](https://github.com/cynos-ai/luowang/issues/129)
-- [#130 支持项目绑定服务器上的安全远程执行](https://github.com/cynos-ai/luowang/issues/130)
+- [#129 将项目受控文件安全注入测试 Run](https://github.com/shenjiecode/catchnet/issues/129)
+- [#130 支持项目绑定服务器上的安全远程执行](https://github.com/shenjiecode/catchnet/issues/130)

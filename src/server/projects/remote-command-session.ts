@@ -71,14 +71,14 @@ export function createRemoteProjectRunCommandSessionFactory(input: {
     });
     const dependencies = createProjectImagePreparationDependencies(docker);
     dependencies.build = async (build) => {
-      const remote = `/tmp/luowang/${readInstanceId(input.database)}/${input.task.projectId}/command-image-${context.runId}`;
+      const remote = `/tmp/catchnet/${readInstanceId(input.database)}/${input.task.projectId}/command-image-${context.runId}`;
       const localIid = `${input.storageRoot}/remote-command-iid-${context.runId}`;
       await adapter.uploadTree(build.source.directory, remote, {
         signal: build.signal,
         timeoutMs: 10 * 60_000,
       });
       try {
-        const iid = `${remote}/.luowang-iid`;
+        const iid = `${remote}/.catchnet-iid`;
         const result = await adapter.execute(
           'docker',
           [
@@ -88,13 +88,13 @@ export function createRemoteProjectRunCommandSessionFactory(input: {
             '--iidfile',
             iid,
             '--label',
-            `luowang.project-id=${build.projectId}`,
+            `catchnet.project-id=${build.projectId}`,
             '--label',
-            `luowang.instance-id=${build.instanceId}`,
+            `catchnet.instance-id=${build.instanceId}`,
             '--label',
-            `luowang.target-commit=${build.source.targetCommit}`,
+            `catchnet.target-commit=${build.source.targetCommit}`,
             '--label',
-            `luowang.build-definition=${build.source.buildDefinition ?? build.source.dockerfilePath}`,
+            `catchnet.build-definition=${build.source.buildDefinition ?? build.source.dockerfilePath}`,
             remote,
           ],
           { timeoutMs: 30 * 60_000, signal: context.signal },
@@ -143,7 +143,7 @@ export function createRemoteProjectRunCommandSessionFactory(input: {
       storageRoot: input.storageRoot,
       signal: context.signal,
     });
-    const remote = `/tmp/luowang/${readInstanceId(input.database)}/${input.task.projectId}/command-${context.runId}`;
+    const remote = `/tmp/catchnet/${readInstanceId(input.database)}/${input.task.projectId}/command-${context.runId}`;
     try {
       await adapter.uploadTree(source.directory, remote, {
         signal: context.signal,

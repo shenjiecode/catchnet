@@ -35,7 +35,7 @@ export function normalizeGeneratedDefinition(value: unknown): GeneratedDefinitio
     const entry = file as Record<string, unknown>;
     if (
       typeof entry.path !== 'string' ||
-      !entry.path.startsWith('.luowang-generated/') ||
+      !entry.path.startsWith('.catchnet-generated/') ||
       !isManagedFilePath(entry.path) ||
       seen.has(entry.path) ||
       typeof entry.content !== 'string' ||

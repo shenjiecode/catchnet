@@ -38,9 +38,9 @@ import {
 it('uses only new-schema administration routes, scoped Secrets, and the existing administrator session', async () => {
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATABASE_PATH: ':memory:',
-    LUOWANG_ADMIN_PASSWORD: 'initial-password-123',
-    LUOWANG_MASTER_KEY: 'test-master',
+    CATCHNET_DATABASE_PATH: ':memory:',
+    CATCHNET_ADMIN_PASSWORD: 'initial-password-123',
+    CATCHNET_MASTER_KEY: 'test-master',
   });
   const database = openDatabase(config);
   runMigrations(database.sqlite);
@@ -377,7 +377,7 @@ it('uses only new-schema administration routes, scoped Secrets, and the existing
       'config/beta.yml',
     );
     const stalled = createServer(() => {});
-    const gitDirectory = await mkdtemp(join(tmpdir(), 'luowang-api-timeout-'));
+    const gitDirectory = await mkdtemp(join(tmpdir(), 'catchnet-api-timeout-'));
     await new Promise<void>((done) => stalled.listen(0, '127.0.0.1', done));
     const remote = stalled.address();
     assert.ok(remote && typeof remote !== 'string');

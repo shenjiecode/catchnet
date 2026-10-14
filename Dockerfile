@@ -89,9 +89,9 @@ ARG DEBIAN_MIRROR
 ARG DEBIAN_SECURITY_MIRROR
 
 ENV NODE_ENV=production \
-  LUOWANG_HOST=0.0.0.0 \
-  LUOWANG_PORT=3000 \
-  LUOWANG_DATA_DIR=/data \
+  CATCHNET_HOST=0.0.0.0 \
+  CATCHNET_PORT=3000 \
+  CATCHNET_DATA_DIR=/data \
   PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
@@ -112,7 +112,7 @@ COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=browsers /ms-playwright /ms-playwright
 
-RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\n' > /etc/apt/apt.conf.d/80-luowang-retries \
+RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\n' > /etc/apt/apt.conf.d/80-catchnet-retries \
   && npx --no-install playwright install-deps chromium
 
 COPY --from=build --chown=node:node /app/dist ./dist

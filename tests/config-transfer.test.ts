@@ -72,13 +72,13 @@ describe('versioned YAML configuration transfer', () => {
   });
 
   it('exports through authenticated API and imports atomically without changing Secret Store', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-config-transfer-'));
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-config-transfer-'));
     cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
     const config = loadConfig({
       NODE_ENV: 'test',
-      LUOWANG_DATA_DIR: dataDir,
-      LUOWANG_ADMIN_PASSWORD: 'configuration-transfer-password!',
-      LUOWANG_MASTER_KEY: 'configuration-transfer-master-key',
+      CATCHNET_DATA_DIR: dataDir,
+      CATCHNET_ADMIN_PASSWORD: 'configuration-transfer-password!',
+      CATCHNET_MASTER_KEY: 'configuration-transfer-master-key',
     });
     const database = initializeDatabase(config);
     const configuration = createConfigurationStore(database.sqlite, {
@@ -169,7 +169,7 @@ function fixtureConfiguration() {
         bucket: 'evidence',
         publicBaseUrl: '',
         accessMode: 'private' as const,
-        objectPrefix: 'luowang',
+        objectPrefix: 'catchnet',
       },
     },
     repository: {

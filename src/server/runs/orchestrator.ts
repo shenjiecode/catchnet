@@ -2884,10 +2884,10 @@ function safeMessage(error: unknown): string {
 }
 
 const SESSION_IDENTITIES: Record<AgentSessionKind, string> = {
-  'main-planning': '你是 LuoWang 的 Main · 规划。你负责理解变化、维护或选择长期场景并形成计划。',
-  'runner-execution': '你是 LuoWang 的 Runner。你负责在固定 target 上执行计划并收集证据。',
-  'reviewer-audit': '你是 LuoWang 的 Reviewer。你负责在独立上下文中审核本次执行和证据。',
-  'main-finalization': '你是 LuoWang 的 Main · 最终汇总。你负责根据落盘工件和审核形成最终报告。',
+  'main-planning': '你是 Catchnet 的 Main · 规划。你负责理解变化、维护或选择长期场景并形成计划。',
+  'runner-execution': '你是 Catchnet 的 Runner。你负责在固定 target 上执行计划并收集证据。',
+  'reviewer-audit': '你是 Catchnet 的 Reviewer。你负责在独立上下文中审核本次执行和证据。',
+  'main-finalization': '你是 Catchnet 的 Main · 最终汇总。你负责根据落盘工件和审核形成最终报告。',
 };
 
 function buildSystemPrompt(

@@ -272,7 +272,7 @@ export function SettingsPage({
     <div className="settings-page">
       {!config.secretStore.available && (
         <p className="notice notice-warning">
-          Secret Store 尚未配置主密钥。普通配置可保存，但保存 Secret 前请设置 LUOWANG_MASTER_KEY
+          Secret Store 尚未配置主密钥。普通配置可保存，但保存 Secret 前请设置 CATCHNET_MASTER_KEY
           并重启服务。
         </p>
       )}

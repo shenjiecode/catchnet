@@ -181,9 +181,9 @@ export function verifyEvidence(reference: unknown, body: Buffer): void {
 }
 
 async function main(): Promise<void> {
-  const manifestPath = process.env.LUOWANG_MP_LIVE_MANIFEST;
-  const password = process.env.LUOWANG_ADMIN_PASSWORD;
-  const origin = process.env.LUOWANG_MP_LIVE_HARNESS_URL;
+  const manifestPath = process.env.CATCHNET_MP_LIVE_MANIFEST;
+  const password = process.env.CATCHNET_ADMIN_PASSWORD;
+  const origin = process.env.CATCHNET_MP_LIVE_HARNESS_URL;
   if (!manifestPath || !password || !origin) {
     process.stdout.write(
       'multi-project live=blocked: manifest, harness URL and admin password required\n',
@@ -262,7 +262,7 @@ async function main(): Promise<void> {
         {
           headers: {
             accept: 'application/vnd.github+json',
-            'user-agent': 'luowang-multi-project-acceptance',
+            'user-agent': 'catchnet-multi-project-acceptance',
           },
           signal: AbortSignal.timeout(120_000),
         },

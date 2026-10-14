@@ -25,7 +25,7 @@ import { createScopedSecretStore } from '../src/server/security/scoped-secret-st
 const RUN_ID = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
 
 it('assembles two project Runs with fixed repository, cleanup, evidence and history scopes', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-project-runs-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-project-runs-'));
   const database = new Database(':memory:');
   database.pragma('foreign_keys = ON');
   try {

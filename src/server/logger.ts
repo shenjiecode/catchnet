@@ -32,7 +32,7 @@ const REDACTED_PATHS = [
 export function createLogger(config: Pick<AppConfig, 'logLevel'>): Logger {
   return pino({
     level: config.logLevel,
-    base: { service: 'luowang' },
+    base: { service: 'catchnet' },
     redact: {
       paths: REDACTED_PATHS,
       censor: '[REDACTED]',

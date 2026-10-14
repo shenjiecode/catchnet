@@ -67,7 +67,7 @@ it('rejects inconsistent generated configuration on manual save without changing
             preparation: preparationFixture,
             files: [
               {
-                path: '.luowang-generated/compose.yml',
+                path: '.catchnet-generated/compose.yml',
                 content: 'services:\n  app:\n    expose: [8080]\n  tools:\n    image: fixture',
               },
             ],

@@ -20,7 +20,7 @@ it('requires a complete preparation plan, rejects old definitions and validates 
   const base = {
     sourceCommit: 'a'.repeat(40),
     summary: 'fixture',
-    files: [{ path: '.luowang-generated/compose.yml', content: 'services: {}' }],
+    files: [{ path: '.catchnet-generated/compose.yml', content: 'services: {}' }],
   };
   assert.throws(() => normalizeGeneratedDefinition(base), /测试准备方案无效/);
   assert.throws(
@@ -102,7 +102,7 @@ it('creates credentials only on explicit application, atomically, retains existi
                   definition: {
                     summary: 'fixture',
                     preparation,
-                    files: [{ path: '.luowang-generated/compose.yml', content: 'services: {}' }],
+                    files: [{ path: '.catchnet-generated/compose.yml', content: 'services: {}' }],
                     runtime: {
                       ...f.configuration.get(f.project.projectId).runtime,
                       initializationSteps: [
@@ -155,7 +155,7 @@ it('creates credentials only on explicit application, atomically, retains existi
     service.apply(f.project.projectId, next.id, next.draft);
     const username = store.get('testUsername')!;
     const password = store.get('testPassword')!;
-    assert.match(username, /^luowang-[a-f0-9]+@example.test$/);
+    assert.match(username, /^catchnet-[a-f0-9]+@example.test$/);
     assert.ok(password.length >= 32);
     const updated = await generate();
     service.apply(f.project.projectId, updated.id, updated.draft);

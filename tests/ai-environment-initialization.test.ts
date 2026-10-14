@@ -10,7 +10,7 @@ import type { DockerRuntime } from '../src/server/projects/execution-container.j
 
 for (const fail of [false, true, 'check'] as const)
   it(`runs initialization before application health and ${fail ? 'stops on failure' : 'reinitializes recreated environments'}`, async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-init-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-init-'));
     const calls: string[][] = [];
     let initialized = 0;
     const server = createServer((_req, res) => {

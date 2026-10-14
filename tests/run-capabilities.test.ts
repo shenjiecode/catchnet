@@ -5,7 +5,7 @@ import { createHttpTestDataCleanupAdapter } from '../src/server/runs/http-test-d
 
 const runId = '01K00000000000000000000000';
 const token = 'synthetic-controlled-cleanup-token-123456789';
-const endpoint = 'http://fixture.test/api/luowang/test-data';
+const endpoint = 'http://fixture.test/api/catchnet/test-data';
 
 describe('current Run capability facts', () => {
   it.each([404, 403, 200])(

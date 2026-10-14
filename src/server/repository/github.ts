@@ -353,7 +353,7 @@ export class GitHubClient {
       const headers: Record<string, string> = {
         accept: 'application/vnd.github+json',
         'x-github-api-version': '2022-11-28',
-        'user-agent': 'luowang-repository-service',
+        'user-agent': 'catchnet-repository-service',
       };
       if (token) headers.authorization = `Bearer ${token}`;
       if (options.body !== undefined) headers['content-type'] = 'application/json';

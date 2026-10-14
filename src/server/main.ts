@@ -10,7 +10,7 @@ import { createLogger } from './logger.js';
 export async function startServer(environment: NodeJS.ProcessEnv = process.env) {
   const config = loadConfig({
     ...environment,
-    LUOWANG_WEB_ROOT: environment.LUOWANG_WEB_ROOT ?? defaultWebRoot(),
+    CATCHNET_WEB_ROOT: environment.CATCHNET_WEB_ROOT ?? defaultWebRoot(),
   });
   const logger = createLogger(config);
   const database = initializeDatabase(config);

@@ -21,7 +21,7 @@ const runId = '01K00000000000000000000099';
 const targetCommit = 'e'.repeat(40);
 const instanceId = randomUUID();
 const database = new Database(':memory:');
-const directory = await mkdtemp(join(tmpdir(), 'luowang-docker-recovery-'));
+const directory = await mkdtemp(join(tmpdir(), 'catchnet-docker-recovery-'));
 let imageId;
 let containerId;
 
@@ -39,7 +39,7 @@ try {
     displayName: 'Docker recovery smoke',
     repository: { githubRepositoryId: String(Date.now()), owner: 'cynos-ai', name: 'smoke' },
   });
-  const tag = `luowang-project-${projectId}:${targetCommit}`;
+  const tag = `catchnet-project-${projectId}:${targetCommit}`;
   await writeFile(join(directory, 'Dockerfile'), 'FROM scratch\n');
   const iidfile = join(directory, 'image-id.txt');
   await docker(
@@ -49,24 +49,24 @@ try {
     '--iidfile',
     iidfile,
     '--label',
-    `luowang.instance-id=${instanceId}`,
+    `catchnet.instance-id=${instanceId}`,
     '--label',
-    `luowang.project-id=${projectId}`,
+    `catchnet.project-id=${projectId}`,
     '--label',
-    `luowang.target-commit=${targetCommit}`,
+    `catchnet.target-commit=${targetCommit}`,
     directory,
   );
   imageId = await docker('image', 'inspect', '--format', '{{.Id}}', tag);
   containerId = await docker(
     'create',
     '--name',
-    `luowang-run-${runId.toLowerCase()}`,
+    `catchnet-run-${runId.toLowerCase()}`,
     '--label',
-    `luowang.instance-id=${instanceId}`,
+    `catchnet.instance-id=${instanceId}`,
     '--label',
-    `luowang.project-id=${projectId}`,
+    `catchnet.project-id=${projectId}`,
     '--label',
-    `luowang.run-id=${runId}`,
+    `catchnet.run-id=${runId}`,
     imageId,
     'true',
   );

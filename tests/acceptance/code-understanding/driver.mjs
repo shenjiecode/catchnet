@@ -30,8 +30,8 @@ export async function runCase(root, input, repository, out, options = {}) {
   };
   save('result.json', result);
   const config = loadConfig({
-    LUOWANG_DATA_DIR: join(out, 'state'),
-    LUOWANG_MASTER_KEY: randomUUID(),
+    CATCHNET_DATA_DIR: join(out, 'state'),
+    CATCHNET_MASTER_KEY: randomUUID(),
   });
   const db = initializeDatabase(config);
   let session;

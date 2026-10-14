@@ -21,10 +21,10 @@ import {
 } from '../src/server/projects/execution-container.js';
 import { injectManagedFiles } from '../src/server/projects/managed-file-runtime.js';
 
-const dockerIt = process.env.LUOWANG_DOCKER_SMOKE === '1' ? it : it.skip;
+const dockerIt = process.env.CATCHNET_DOCKER_SMOKE === '1' ? it : it.skip;
 
 dockerIt('resolves normal Compose features on the selected execution server', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-compose-config-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-compose-config-'));
   try {
     await writeFile(join(root, '.env'), 'IMAGE_TAG=3.20\n');
     await writeFile(join(root, 'runtime.env'), 'VISIBLE=fixture\n');
@@ -65,7 +65,7 @@ dockerIt('resolves normal Compose features on the selected execution server', as
 dockerIt(
   'builds Compose from the fixed product tree and executes tests in the selected service',
   async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-compose-runtime-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-compose-runtime-'));
     const buildSource = join(root, 'fixed');
     const commandSource = join(root, 'run');
     const projectId = '12345678-1234-4123-8123-123456789abc';
@@ -174,7 +174,7 @@ dockerIt(
         publishHost,
       });
       definition.services.runner.environment = {
-        LUOWANG_SECRET_CANARY: 'compose-runtime-secret-canary',
+        CATCHNET_SECRET_CANARY: 'compose-runtime-secret-canary',
       };
       owner = await startComposeApplication({
         docker,
@@ -252,7 +252,7 @@ dockerIt(
         docker,
       );
       const result = await session.run(
-        `test -z "$(find /app -maxdepth 1 -name '.luowang-*.compose.yml' -print -quit)" && test -z "$(grep -R 'compose-runtime-secret-canary' /app 2>/dev/null)" && test -f read-fixture.js && node read-fixture.js`,
+        `test -z "$(find /app -maxdepth 1 -name '.catchnet-*.compose.yml' -print -quit)" && test -z "$(grep -R 'compose-runtime-secret-canary' /app 2>/dev/null)" && test -f read-fixture.js && node read-fixture.js`,
         {
           cwd: commandSource,
           runId,
@@ -372,7 +372,7 @@ dockerIt(
 dockerIt(
   'runs a single-container application from both native and containerized control planes',
   async () => {
-    const source = await mkdtemp(join(tmpdir(), 'luowang-single-runtime-'));
+    const source = await mkdtemp(join(tmpdir(), 'catchnet-single-runtime-'));
     const baseDocker = createDockerRuntime();
     const runId = '01K00000000000000000000004';
     let owner: Awaited<ReturnType<typeof startSingleContainerApplication>> | undefined;
@@ -387,7 +387,7 @@ dockerIt(
       );
       const imageId = (
         await baseDocker.run(
-          ['image', 'inspect', '--format', '{{.Id}}', 'luowang-quality:execution-server'],
+          ['image', 'inspect', '--format', '{{.Id}}', 'catchnet-quality:execution-server'],
           { timeoutMs: 10_000 },
         )
       ).stdout.trim();
@@ -431,7 +431,14 @@ dockerIt(
         'SINGLE_MANAGED=ready',
       );
       const ownership = await baseDocker.run(
-        ['exec', owner.containerId, 'stat', '-c', '%u:%g %a', '/luowang-source/config/runtime.env'],
+        [
+          'exec',
+          owner.containerId,
+          'stat',
+          '-c',
+          '%u:%g %a',
+          '/catchnet-source/config/runtime.env',
+        ],
         { timeoutMs: 10_000 },
       );
       assert.equal(ownership.exitCode, 0);
@@ -451,7 +458,7 @@ dockerIt(
         ],
       });
       const runningFile = await baseDocker.run(
-        ['exec', owner.containerId, 'cat', '/luowang-source/config/running.env'],
+        ['exec', owner.containerId, 'cat', '/catchnet-source/config/running.env'],
         { timeoutMs: 10_000 },
       );
       assert.equal(runningFile.exitCode, 0);

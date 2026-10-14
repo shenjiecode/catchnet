@@ -331,7 +331,7 @@ export async function createProjectApp(options: ProjectAppOptions) {
   });
   app.get('/health', async () => ({
     status: options.database.isHealthy() ? 'ok' : 'degraded',
-    service: 'luowang',
+    service: 'catchnet',
     version: options.config.version,
     database: options.database.isHealthy() ? 'ok' : 'error',
     timestamp: new Date().toISOString(),

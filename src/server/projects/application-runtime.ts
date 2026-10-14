@@ -56,7 +56,7 @@ export async function startSingleContainerApplication(input: {
 }): Promise<ManagedApplicationRuntime> {
   if (!input.runtime.servicePort || input.runtime.startCommand.length === 0)
     throw new ControlledCommandError('COMMAND_INVALID', '单容器启动配置不完整');
-  const name = `luowang-app-${input.runId.toLowerCase()}`;
+  const name = `catchnet-app-${input.runId.toLowerCase()}`;
   input.signal?.throwIfAborted();
   const publishHost = input.publishHost ?? localDockerHostAddress();
   const controlId = input.resolveBaseUrl ? null : containerControlIdentity();
@@ -70,11 +70,11 @@ export async function startSingleContainerApplication(input: {
         'network',
         'create',
         '--label',
-        `luowang.instance-id=${input.instanceId}`,
+        `catchnet.instance-id=${input.instanceId}`,
         '--label',
-        `luowang.project-id=${input.projectId}`,
+        `catchnet.project-id=${input.projectId}`,
         '--label',
-        `luowang.attempt-id=${input.runId}`,
+        `catchnet.attempt-id=${input.runId}`,
         accessNetwork,
       ],
       30_000,
@@ -89,18 +89,18 @@ export async function startSingleContainerApplication(input: {
         '--name',
         name,
         '--label',
-        `luowang.instance-id=${input.instanceId}`,
+        `catchnet.instance-id=${input.instanceId}`,
         '--label',
-        `luowang.project-id=${input.projectId}`,
+        `catchnet.project-id=${input.projectId}`,
         '--label',
-        `luowang.attempt-id=${input.runId}`,
+        `catchnet.attempt-id=${input.runId}`,
         '--label',
-        `luowang.target-commit=${input.targetCommit}`,
+        `catchnet.target-commit=${input.targetCommit}`,
         '--publish',
         `${publishHost}::${input.runtime.servicePort}`,
         ...(accessNetwork ? ['--network', accessNetwork] : []),
         '--workdir',
-        '/luowang-source',
+        '/catchnet-source',
         '--entrypoint',
         'sleep',
         input.imageId,
@@ -120,7 +120,7 @@ export async function startSingleContainerApplication(input: {
     input.onStage?.('initialize');
     await success(
       input.docker,
-      ['cp', `${input.sourceDirectory}/.`, `${containerId}:/luowang-source`],
+      ['cp', `${input.sourceDirectory}/.`, `${containerId}:/catchnet-source`],
       120_000,
       input.signal,
     );
@@ -143,7 +143,7 @@ export async function startSingleContainerApplication(input: {
         [
           'exec',
           '--workdir',
-          `/luowang-source/${input.runtime.workingDirectory === '.' ? '' : input.runtime.workingDirectory}`,
+          `/catchnet-source/${input.runtime.workingDirectory === '.' ? '' : input.runtime.workingDirectory}`,
           containerId,
           ...input.runtime.prepareCommand,
         ],
@@ -158,7 +158,7 @@ export async function startSingleContainerApplication(input: {
         'exec',
         '--detach',
         '--workdir',
-        `/luowang-source/${input.runtime.workingDirectory === '.' ? '' : input.runtime.workingDirectory}`,
+        `/catchnet-source/${input.runtime.workingDirectory === '.' ? '' : input.runtime.workingDirectory}`,
         containerId,
         ...input.runtime.startCommand,
       ],
@@ -211,7 +211,7 @@ export async function startSingleContainerApplication(input: {
     return {
       containerId,
       resourceExternalId: containerId,
-      commandSourceRoot: '/luowang-source',
+      commandSourceRoot: '/catchnet-source',
       imageIds: { app: input.imageId },
       environment: {
         mode: 'managed',
@@ -275,7 +275,7 @@ export async function startComposeApplication(input: {
   input.onStage?.('build');
   const localFile = join(
     dirname(input.buildSourceDirectory),
-    `.luowang-${input.definition.projectName}.compose.yml`,
+    `.catchnet-${input.definition.projectName}.compose.yml`,
   );
   const composePrefix = [
     'compose',
@@ -310,7 +310,7 @@ export async function startComposeApplication(input: {
             ? input.commandSourceDirectory
             : input.buildSourceDirectory;
         const suffix = `${serviceName}-${index}`.toLowerCase().replace(/[^a-z0-9_.-]/g, '-');
-        const volumeKey = `luowang_source_${suffix.replace(/[.-]/g, '_')}`;
+        const volumeKey = `catchnet_source_${suffix.replace(/[.-]/g, '_')}`;
         const volumeName = `${input.definition.projectName}-src-${suffix}`;
         controlled.volumes[volumeKey] = {
           name: volumeName,
@@ -334,10 +334,10 @@ export async function startComposeApplication(input: {
       const build = service.build as Record<string, unknown>;
       const ownership = service.labels as Record<string, string>;
       build.labels = {
-        'luowang.instance-id': ownership['luowang.instance-id'],
-        'luowang.project-id': ownership['luowang.project-id'],
-        'luowang.target-commit': input.targetCommit,
-        'luowang.build-definition': `${input.definition.definitionHash}:${serviceName}`,
+        'catchnet.instance-id': ownership['catchnet.instance-id'],
+        'catchnet.project-id': ownership['catchnet.project-id'],
+        'catchnet.target-commit': input.targetCommit,
+        'catchnet.build-definition': `${input.definition.definitionHash}:${serviceName}`,
       };
       const cachedImageId = input.cachedImageIds?.[serviceName];
       if (
@@ -346,10 +346,10 @@ export async function startComposeApplication(input: {
           input.docker,
           cachedImageId,
           {
-            'luowang.instance-id': ownership['luowang.instance-id'],
-            'luowang.project-id': ownership['luowang.project-id'],
-            'luowang.target-commit': input.targetCommit,
-            'luowang.build-definition': `${input.definition.definitionHash}:${serviceName}`,
+            'catchnet.instance-id': ownership['catchnet.instance-id'],
+            'catchnet.project-id': ownership['catchnet.project-id'],
+            'catchnet.target-commit': input.targetCommit,
+            'catchnet.build-definition': `${input.definition.definitionHash}:${serviceName}`,
           },
           input.signal,
         ))
@@ -357,7 +357,7 @@ export async function startComposeApplication(input: {
         service.image = cachedImageId;
         delete service.build;
       } else {
-        service.image = `luowang-compose-${ownership['luowang.project-id'].slice(0, 8)}:${input.targetCommit.slice(0, 12)}-${input.definition.definitionHash.slice(0, 12)}-${serviceName.toLowerCase()}`;
+        service.image = `catchnet-compose-${ownership['catchnet.project-id'].slice(0, 8)}:${input.targetCommit.slice(0, 12)}-${input.definition.definitionHash.slice(0, 12)}-${serviceName.toLowerCase()}`;
       }
     }
     if (
@@ -452,7 +452,7 @@ export async function startComposeApplication(input: {
                 input.prepareSourceVolume!(
                   sourceVolume.service,
                   helperContainerId,
-                  '/luowang-volume',
+                  '/catchnet-volume',
                 )
             : undefined,
       });
@@ -480,7 +480,7 @@ export async function startComposeApplication(input: {
       ) {
         await success(
           input.docker,
-          ['cp', `${input.commandSourceDirectory}/.`, `${id}:/luowang-source`],
+          ['cp', `${input.commandSourceDirectory}/.`, `${id}:/catchnet-source`],
           120_000,
           input.signal,
         );
@@ -495,7 +495,7 @@ export async function startComposeApplication(input: {
         );
       if (roots.length === 0) {
         const managedFileRoot =
-          service === input.definition.commandService ? '/luowang-source' : null;
+          service === input.definition.commandService ? '/catchnet-source' : null;
         input.signal?.throwIfAborted();
         await input.afterStart?.(service, id, managedFileRoot);
         input.signal?.throwIfAborted();
@@ -633,7 +633,7 @@ export async function startComposeApplication(input: {
       commandSourceRoot:
         sourceVolumes.find(
           (mount) => mount.service === input.definition.commandService && mount.source === '.',
-        )?.target ?? '/luowang-source',
+        )?.target ?? '/catchnet-source',
       imageIds,
       environment: {
         mode: 'managed',
@@ -715,7 +715,7 @@ async function populateSourceVolume(input: {
     createArgs.push('--label', `${key}=${value}`);
   createArgs.push(
     '--mount',
-    `type=volume,source=${input.volumeName},target=/luowang-volume`,
+    `type=volume,source=${input.volumeName},target=/catchnet-volume`,
     '--entrypoint',
     'true',
     input.image,
@@ -726,7 +726,7 @@ async function populateSourceVolume(input: {
   try {
     await success(
       input.docker,
-      ['cp', `${input.sourceDirectory}/.`, `${helper}:/luowang-volume`],
+      ['cp', `${input.sourceDirectory}/.`, `${helper}:/catchnet-volume`],
       120_000,
       input.signal,
     );

@@ -3,7 +3,7 @@ import { describe, it } from 'vitest';
 import { createTestDataManager, createTestDataTools } from '../src/server/runs/test-data.js';
 
 const RUN = '01K00000000000000000000000';
-const ID = `luowang-${RUN}-account`;
+const ID = `catchnet-${RUN}-account`;
 
 describe('Harness-owned test data teardown', () => {
   it('only exposes registration and observation, not cleanup claims or Reviewer confirmation', () => {

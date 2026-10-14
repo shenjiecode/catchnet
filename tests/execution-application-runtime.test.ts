@@ -10,7 +10,7 @@ import { normalizeComposeDefinition } from '../src/server/projects/compose-contr
 import type { DockerRuntime } from '../src/server/projects/execution-container.js';
 
 it('cancels an in-progress Compose build before create or start', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-compose-cancel-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-compose-cancel-'));
   const controller = new AbortController();
   const calls: string[][] = [];
   let markBuildStarted!: () => void;
@@ -22,7 +22,7 @@ it('cancels an in-progress Compose build before create or start', async () => {
       calls.push(args);
       if (args[0] === 'compose' && args.includes('build')) {
         assert.equal(args[args.indexOf('--project-directory') + 1], root);
-        assert.notEqual(args[args.indexOf('--file') + 1], join(root, '.luowang-compose.yml'));
+        assert.notEqual(args[args.indexOf('--file') + 1], join(root, '.catchnet-compose.yml'));
         assert.equal(dirname(args[args.indexOf('--file') + 1] ?? ''), dirname(root));
         markBuildStarted();
         return new Promise((_, reject) => {

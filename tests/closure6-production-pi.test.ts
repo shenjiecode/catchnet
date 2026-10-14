@@ -202,9 +202,9 @@ describe('Closure 6 local production Pi path', () => {
       assert.equal(prompt.split(content).length - 1, 1);
       assert.equal(prompt.split(method).length - 1, index === 0 ? 1 : 0);
       for (const other of resources.filter((id) => id !== resource)) {
-        assert.ok(!prompt.includes(`luowang-role-id: ${other};`));
+        assert.ok(!prompt.includes(`catchnet-role-id: ${other};`));
       }
-      assert.ok(!prompt.includes('luowang-role-id: scenario-initialization;'));
+      assert.ok(!prompt.includes('catchnet-role-id: scenario-initialization;'));
     }
   });
 
@@ -615,7 +615,7 @@ async function createContext(
   behavior: LocalModelBehavior,
   withScenarioBranch = true,
 ): Promise<ProductionContext> {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-closure6-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-closure6-'));
   cleanup.push(async () => rm(root, { recursive: true, force: true }));
   const remote = join(root, 'remote.git');
   const source = join(root, 'source');
@@ -625,8 +625,8 @@ async function createContext(
   await mkdir(source, { recursive: true });
   await git(['init', '--bare', remote], root);
   await git(['init', '--initial-branch=main'], source);
-  await git(['config', 'user.name', 'LuoWang Closure 6'], source);
-  await git(['config', 'user.email', 'luowang-closure6@example.test'], source);
+  await git(['config', 'user.name', 'Catchnet Closure 6'], source);
+  await git(['config', 'user.email', 'catchnet-closure6@example.test'], source);
   await writeFile(join(source, 'README.md'), '# Local Pi target\n', 'utf8');
   if (behavior === 'reuse-existing' || behavior === 'omit-modified') {
     const scenarioDirectory = join(source, 'docs', 'scenario-testing', 'scenarios');
@@ -664,11 +664,11 @@ tags:
 
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPO_DIR: clone,
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_ADMIN_PASSWORD: 'closure6-local-admin-password!',
-    LUOWANG_MASTER_KEY: 'closure6-local-master-key',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPO_DIR: clone,
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_ADMIN_PASSWORD: 'closure6-local-admin-password!',
+    CATCHNET_MASTER_KEY: 'closure6-local-master-key',
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
@@ -683,7 +683,7 @@ tags:
     baseUrl: 'http://127.0.0.1:4173',
   });
   configuration.updateHarness({
-    provider: 'luowang-local',
+    provider: 'catchnet-local',
     agents: {
       main: { model: 'deterministic-tool-model', thinking: 'off' },
       runner: { model: 'deterministic-tool-model', thinking: 'off' },
@@ -817,7 +817,7 @@ function assertSessionSequence(
         'code-understanding',
       ]) {
         assert.equal(
-          session.systemPrompt.includes(`luowang-role-id: ${roleId};`),
+          session.systemPrompt.includes(`catchnet-role-id: ${roleId};`),
           expectedIds.includes(roleId),
           `${session.sessionKind} system prompt role marker mismatch: ${roleId}`,
         );

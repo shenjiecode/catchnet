@@ -1,7 +1,7 @@
 import { ConfigurationError } from '../configuration.js';
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-const PREFIX = '@luowang-file-v1:';
+const PREFIX = '@catchnet-file-v1:';
 export type ProjectFileContent = {
   bytes: Buffer;
   purpose: 'config' | 'data';

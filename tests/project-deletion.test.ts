@@ -233,7 +233,7 @@ it('authenticates deletion, rejects foreign origins, and returns not found after
     });
     const url = `/api/projects/${f.a.projectId}`;
     assert.equal((await app.inject({ method: 'DELETE', url })).statusCode, 401);
-    const headers = { cookie: 'luowang_session=valid' };
+    const headers = { cookie: 'catchnet_session=valid' };
     assert.equal(
       (
         await app.inject({

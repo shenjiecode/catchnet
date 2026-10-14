@@ -41,7 +41,7 @@ export function exportConfigurationYaml(configuration: ImportedConfiguration): s
     { lineWidth: 0 },
   );
   return [
-    '# LuoWang configuration export',
+    '# Catchnet configuration export',
     '# Secrets and connectivity results are intentionally excluded.',
     body.trimEnd(),
     '',

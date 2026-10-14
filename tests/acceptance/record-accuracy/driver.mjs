@@ -32,9 +32,9 @@ export async function runCase(input, out, { live = false, baseUrl, apiKey } = {}
   const save = (name, value) =>
     writeFileSync(join(out, `${name}.json`), JSON.stringify(value, null, 2));
   const config = loadConfig({
-    LUOWANG_DATA_DIR: join(out, 'state'),
-    LUOWANG_MASTER_KEY: randomUUID(),
-    LUOWANG_LOG_LEVEL: 'silent',
+    CATCHNET_DATA_DIR: join(out, 'state'),
+    CATCHNET_MASTER_KEY: randomUUID(),
+    CATCHNET_LOG_LEVEL: 'silent',
   });
   const db = initializeDatabase(config);
   const configuration = createConfigurationStore(db.sqlite, config);

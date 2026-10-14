@@ -155,13 +155,13 @@ describe('Phase 3 Run API', () => {
 });
 
 async function makeApp(options: { runs: RunOrchestrator; provider: ProviderAdapter }) {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase3-api-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase3-api-'));
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDirectory,
-    LUOWANG_ADMIN_PASSWORD: 'phase3-api-password!',
-    LUOWANG_MASTER_KEY: 'phase3-api-master-key',
+    CATCHNET_DATA_DIR: dataDirectory,
+    CATCHNET_ADMIN_PASSWORD: 'phase3-api-password!',
+    CATCHNET_MASTER_KEY: 'phase3-api-master-key',
   });
   const database = initializeDatabase(config);
   const app = await createApp({

@@ -36,7 +36,7 @@ export function LoginPanel({
         </div>
         {!configured && (
           <p className="notice notice-warning">
-            尚未配置管理员初始密码。请通过 LUOWANG_ADMIN_PASSWORD 设置密码后重启服务。
+            尚未配置管理员初始密码。请通过 CATCHNET_ADMIN_PASSWORD 设置密码后重启服务。
           </p>
         )}
         <form className="login-form" onSubmit={onSubmit}>

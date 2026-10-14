@@ -38,7 +38,7 @@ it('fails closed without an explicit state directory and makes no model request'
   });
 });
 it('actually creates the state directory instead of trusting configuration', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-preflight-test-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-preflight-test-'));
   directories.push(root);
   const file = join(root, 'not-a-directory');
   await writeFile(file, 'occupied');

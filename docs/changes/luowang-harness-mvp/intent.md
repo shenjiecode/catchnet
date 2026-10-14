@@ -1,10 +1,10 @@
-# 罗网（LuoWang）场景测试 Harness MVP Intent
+# 罗网（Catchnet）场景测试 Harness MVP Intent
 
 - 状态：MVP Baseline v0.1
 - 关联规格：[spec.md](./spec.md)
 - 实现计划：[plan.md](./plan.md)
 - 项目定位：AI Scenario Testing Harness
-- 正式仓库：公开的 `cynos-ai/luowang`
+- 正式仓库：公开的 `shenjiecode/catchnet`
 - 许可证：GNU Affero General Public License v3.0（`AGPL-3.0`）
 
 ## 1. 当前问题
@@ -60,7 +60,7 @@ MVP 成功的核心不是场景数量或代码覆盖率，而是形成一个**�
 - Runner 的执行结论必须经过独立 Reviewer 审核，不能只相信执行 Agent 的自述；
 - 测试范围由 AI 基于需求、变更、历史事实和场景语义判断，不建立手工维护的测试套件；
 - 受阻、执行中断、证据缺失、清理失败或归档失败不得伪装成通过；
-- 空数据库的管理员密码只从 `LUOWANG_ADMIN_PASSWORD` 初始化，不提供匿名设密或公开默认密码，已有密码不能被环境变量覆盖；
+- 空数据库的管理员密码只从 `CATCHNET_ADMIN_PASSWORD` 初始化，不提供匿名设密或公开默认密码，已有密码不能被环境变量覆盖；
 - Main 只能提出场景目录内的变更；Archiver 只能原样发布已验证场景 patch，并只为当前 Run 新增正式报告，不得改写产品、需求或历史报告；
 - 凭据按最小权限暴露，不能出现在 API 响应、日志、报告或被测命令的继承环境中；
 - MVP 只连接操作者信任的仓库和非生产测试环境，不把单容器执行视为恶意代码安全沙箱；

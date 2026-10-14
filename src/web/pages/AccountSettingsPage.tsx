@@ -62,7 +62,7 @@ export function AccountSettingsContent({ onPasswordChanged }: { onPasswordChange
       });
       setDisplayName(null);
       resource.reload();
-      window.dispatchEvent(new CustomEvent('luowang:profile-changed'));
+      window.dispatchEvent(new CustomEvent('catchnet:profile-changed'));
       setMessage(`显示名称已更新为“${response.profile.displayName}”。`);
     } catch (cause) {
       setError(toUserMessage(cause, '显示名称更新失败'));

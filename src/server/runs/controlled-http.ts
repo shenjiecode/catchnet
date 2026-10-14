@@ -256,7 +256,7 @@ export function createControlledHttpTools(options: ControlledHttpOptions): ToolD
               if (base.origin !== cleanup.origin)
                 return createTextResult('对照验证要求应用与清理端点同源', { error: true });
               const controlRunId = `01${[...randomBytes(24)].map((byte) => RUN_ID_ALPHABET[byte % 32]).join('')}`;
-              const prefix = `luowang-${controlRunId.toLowerCase()}-`;
+              const prefix = `catchnet-${controlRunId.toLowerCase()}-`;
               const password = `synthetic-${randomBytes(24).toString('hex')}`;
               options.registerSensitiveValue(password);
               const result: Record<string, unknown> = {

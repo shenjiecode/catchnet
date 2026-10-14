@@ -46,7 +46,7 @@ describe('claimed project task runtime', () => {
           decisions: [],
           evidence: ['seed script'],
         },
-        files: [{ path: '.luowang-generated/compose.yml', content: 'services: {}\n' }],
+        files: [{ path: '.catchnet-generated/compose.yml', content: 'services: {}\n' }],
       };
       config.update(a.projectId, {
         generatedDefinition,

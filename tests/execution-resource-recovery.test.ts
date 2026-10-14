@@ -42,7 +42,7 @@ it('keeps capacity occupied when Docker resource discovery fails', async () => {
       executionLocationId: `local:${instanceId}`,
       executionLocationRevision: 1,
       resourceType: 'compose-project',
-      ownerLabels: { 'luowang.instance-id': instanceId },
+      ownerLabels: { 'catchnet.instance-id': instanceId },
     });
     const adapter: ExecutionAdapter = {
       locationId: `local:${instanceId}`,
@@ -92,7 +92,7 @@ it('does not recover a manual preparation that is still active in this process',
       executionLocationId: `local:${instanceId}`,
       executionLocationRevision: 1,
       resourceType: 'image-preparation',
-      ownerLabels: { 'luowang.instance-id': instanceId },
+      ownerLabels: { 'catchnet.instance-id': instanceId },
     });
     const unregister = registerActiveExecutionResource(resource.resourceId);
     let adapters = 0;

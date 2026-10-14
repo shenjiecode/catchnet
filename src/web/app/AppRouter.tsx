@@ -121,11 +121,11 @@ export default function AppRouter() {
       setError('登录已过期，请重新登录');
     };
     window.addEventListener('popstate', onPopState);
-    window.addEventListener('luowang:unauthorized', onUnauthorized);
+    window.addEventListener('catchnet:unauthorized', onUnauthorized);
     return () => {
       controller.abort();
       window.removeEventListener('popstate', onPopState);
-      window.removeEventListener('luowang:unauthorized', onUnauthorized);
+      window.removeEventListener('catchnet:unauthorized', onUnauthorized);
     };
   }, [loadProjects, mayNavigate]);
 
