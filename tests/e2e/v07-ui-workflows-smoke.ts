@@ -106,7 +106,7 @@ const environmentDraft = {
     },
     files: [
       {
-        path: '.luowang-generated/compose.yml',
+        path: '.catchnet-generated/compose.yml',
         content: 'services:\n  app:\n    image: node:24\n  tools:\n    image: node:24\n',
       },
     ],
@@ -114,7 +114,7 @@ const environmentDraft = {
   runtime: {
     ...configuration.runtime,
     servicePort: 3000,
-    composeFile: '.luowang-generated/compose.yml',
+    composeFile: '.catchnet-generated/compose.yml',
     composeServices: ['app', 'tools'],
     applicationService: 'app',
     commandService: 'tools',
@@ -185,7 +185,7 @@ const deploymentConfiguration = {
     bucket: 'evidence',
     publicBaseUrl: 'https://evidence.example.test',
     accessMode: 'private',
-    objectPrefix: 'luowang',
+    objectPrefix: 'catchnet',
   },
 };
 const deploymentSecrets = {
@@ -470,7 +470,7 @@ try {
             host: '127.0.0.1',
             port: 3000,
             dataDir: '/data',
-            databasePath: '/data/luowang.db',
+            databasePath: '/data/catchnet.db',
             repoDir: '/data/repos',
             reportDir: '/data/reports',
             logLevel: 'info',
@@ -1119,9 +1119,9 @@ try {
     await page.setViewportSize({ width, height: 1000 });
     const bounds = await progress.boundingBox();
     assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width);
-    if (process.env.LUOWANG_PREPARATION_EVIDENCE_DIR)
+    if (process.env.CATCHNET_PREPARATION_EVIDENCE_DIR)
       await page.screenshot({
-        path: `${process.env.LUOWANG_PREPARATION_EVIDENCE_DIR}/synthetic-loading-overlay-${width}.png`,
+        path: `${process.env.CATCHNET_PREPARATION_EVIDENCE_DIR}/synthetic-loading-overlay-${width}.png`,
         fullPage: false,
       });
   }
@@ -1140,9 +1140,9 @@ try {
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
       true,
     );
-    if (process.env.LUOWANG_PREPARATION_EVIDENCE_DIR)
+    if (process.env.CATCHNET_PREPARATION_EVIDENCE_DIR)
       await page.screenshot({
-        path: `${process.env.LUOWANG_PREPARATION_EVIDENCE_DIR}/synthetic-preparation-${width}.png`,
+        path: `${process.env.CATCHNET_PREPARATION_EVIDENCE_DIR}/synthetic-preparation-${width}.png`,
         fullPage: true,
       });
   }

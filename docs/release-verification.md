@@ -8,10 +8,10 @@
 
 Closure live 入口继续要求 39 项安全/授权输入，名称及校验见 `tests/acceptance/closure.ts` 的 `LIVE_INPUT_NAMES`；资源含义见 [Closure Spec §9](changes/luowang-v07-production-closure/spec.md)。Secret 通过受控进程环境或 Secret Store 提供，不粘贴到 Git、PR、Issue 或报告。报告只保存脱敏事实。
 
-- `LUOWANG_LIVE_PROJECT_ID`：承载本次联合事实的项目。
-- `LUOWANG_LIVE_REPOSITORY`：该项目绑定的 GitHub 目标。
-- `LUOWANG_LIVE_HARNESS_URL`：默认 `http://127.0.0.1:3000`；远程必须使用已授权的 HTTPS origin。
-- `LUOWANG_ACCEPTANCE_ARTIFACT_DIR`：可选的新输出目录，必须尚不存在。不指定时自动按时间戳创建；包括失败/blocked 在内的旧报告不得覆盖。
+- `CATCHNET_LIVE_PROJECT_ID`：承载本次联合事实的项目。
+- `CATCHNET_LIVE_REPOSITORY`：该项目绑定的 GitHub 目标。
+- `CATCHNET_LIVE_HARNESS_URL`：默认 `http://127.0.0.1:3000`；远程必须使用已授权的 HTTPS origin。
+- `CATCHNET_ACCEPTANCE_ARTIFACT_DIR`：可选的新输出目录，必须尚不存在。不指定时自动按时间戳创建；包括失败/blocked 在内的旧报告不得覆盖。
 
 候选实例重建后重新检查执行镜像和项目就绪状态。需要首次建分支的用例，开始前必须证明 `scenario-testing` 不存在；不能删除已有分支或报告来伪造首次创建。
 
@@ -23,7 +23,7 @@ npm run test:acceptance:preflight
 
 预检复用正式 live 的输入、认证、项目归属、五项 readiness 判定和 queue/runs 响应解析，但只读取 `/readiness/status` 的已有结果。可以建立管理员会话，其余为读取；不会入队、创建 Run、调用模型、构建镜像、修改配置或写入 GitHub/OSS。空 Run 历史可以通过准备检查；就绪记录缺失或需要重检时不能通过。
 
-预检保存独立 `luowang.acceptance-preflight.v1` JSON 报告，成功时记录 `readinessCheckedAt`。缺输入为 blocked，读取/就绪/格式错误为 failed，两者均非零退出。成功只说明已有就绪记录与响应满足要求，不证明当前外部环境仍可用、首次分支前置条件、浏览器执行、联合事实或任何 AC，通过后仍需正式验收。
+预检保存独立 `catchnet.acceptance-preflight.v1` JSON 报告，成功时记录 `readinessCheckedAt`。缺输入为 blocked，读取/就绪/格式错误为 failed，两者均非零退出。成功只说明已有就绪记录与响应满足要求，不证明当前外部环境仍可用、首次分支前置条件、浏览器执行、联合事实或任何 AC，通过后仍需正式验收。
 
 镜像未准备时由操作者确认目标提交并使用既有准备入口处理，再执行新的预检。预检不自动恢复环境，以免撤销受控故障或改变被测候选。
 
@@ -64,24 +64,24 @@ npm run test:acceptance:release
 
 工程检查通过后仍需负责人确认实际候选和完整发布证明。实现通过 fix/feat PR 合入 develop，正式发布通过 develop → main PR。负责人明确指定版本并授权本次发布后，AI 可协助合并发布 PR、为合并后的 main 发布提交创建新的 SemVer tag 和 GitHub Release；未经授权不得执行，也不得覆盖、移动已有 tag。执行前核对 PR 检查、目标提交及 tag 不存在；发布后另存一轮 tag/main 与旧 tag 核验，失败不能改写历史。
 
-发布后通过 `LUOWANG_LIVE_RELEASE_TAG` 指定新 SemVer，复核 tag 与 main 发布提交一致并检查历史 tag。既有发布 AC 在 tag 未核验前仍未完成，不能用发布前的 release 汇总状态冒充发布后证明。不得重写历史 tag 或历史报告。
+发布后通过 `CATCHNET_LIVE_RELEASE_TAG` 指定新 SemVer，复核 tag 与 main 发布提交一致并检查历史 tag。既有发布 AC 在 tag 未核验前仍未完成，不能用发布前的 release 汇总状态冒充发布后证明。不得重写历史 tag 或历史报告。
 
 ## 6. 其他诊断入口
 
 ### 多项目历史事实
 
-`npm run test:acceptance:multi-project-live` 使用 `LUOWANG_MP_LIVE_MANIFEST`、`LUOWANG_MP_LIVE_HARNESS_URL` 和 `LUOWANG_ADMIN_PASSWORD`。清单至少列两个项目，每个项目提供 `projectId`、公开仓库 `repository`（`owner/name`）和 `runs`；Run 包括 `queueId`、`runId`、`targetCommit`、`reportCommit`、预期 `result`、`scenarios`、`minScreenshots`、`minCleanup`。
+`npm run test:acceptance:multi-project-live` 使用 `CATCHNET_MP_LIVE_MANIFEST`、`CATCHNET_MP_LIVE_HARNESS_URL` 和 `CATCHNET_ADMIN_PASSWORD`。清单至少列两个项目，每个项目提供 `projectId`、公开仓库 `repository`（`owner/name`）和 `runs`；Run 包括 `queueId`、`runId`、`targetCommit`、`reportCommit`、预期 `result`、`scenarios`、`minScreenshots`、`minCleanup`。
 
 入口只读核对队列/Run/提交、归档、同名场景、截图原件哈希、Harness 清理回执、GitHub 报告和跨项目 404；缺输入返回 blocked。清单保存在操作者受控目录，输出只含项目、Run、提交与计数。它只证明列出的历史事实，不代替 Closure Bug/Issue 条件、发布 tag、旧实例迁移或服务器完整负载证明。
 
 ### GitHub smoke
 
-`npm run test:e2e:github` 需要临时的 `LUOWANG_SMOKE_REPOSITORY` 和 `LUOWANG_SMOKE_GITHUB_TOKEN`，只诊断仓库读取，不属于 live/release。历史 acceptance 中的可选 smoke 还需显式设置 `LUOWANG_ACCEPTANCE_LIVE=1`，默认不执行。固定官网测试目标为 `https://github.com/cynos-ai/cynos-website`；更换目标须获得授权。不要在命令历史中直接填写真实 Token。
+`npm run test:e2e:github` 需要临时的 `CATCHNET_SMOKE_REPOSITORY` 和 `CATCHNET_SMOKE_GITHUB_TOKEN`，只诊断仓库读取，不属于 live/release。历史 acceptance 中的可选 smoke 还需显式设置 `CATCHNET_ACCEPTANCE_LIVE=1`，默认不执行。固定官网测试目标为 `https://github.com/cynos-ai/cynos-website`；更换目标须获得授权。不要在命令历史中直接填写真实 Token。
 
 ### 原生浏览器零模型预检
 
 ```bash
-bash scripts/run-browser-sandbox.sh --network none --entrypoint node luowang:runtime dist/server/browser/preflight-cli.js
+bash scripts/run-browser-sandbox.sh --network none --entrypoint node catchnet:runtime dist/server/browser/preflight-cli.js
 ```
 
 使用已构建 runtime 镜像。脚本为隔离容器挂载 Pi 状态、临时目录、npm 与 Chromium 配置/缓存 tmpfs，保留非 root 和只读根目录。实际验证目录写读、文件系统余量、生产 Pi factory/MCP、导航、snapshot、PNG 和释放，失败非零；不调用模型、不操作日常实例，也不证明业务通过。

@@ -353,7 +353,7 @@ export class GitRepository {
             '--no-ff',
             '--no-edit',
             '-m',
-            `luowang merge request #${queueId}`,
+            `catchnet merge request #${queueId}`,
             sourceCommit,
           ]);
         } catch (error) {
@@ -487,11 +487,11 @@ export class GitRepository {
     const output = await this.run([
       'for-each-ref',
       '--format=%(refname)',
-      'refs/luowang/merge-requests/',
+      'refs/catchnet/merge-requests/',
     ]);
     return output.stdout
       .split(/\r?\n/)
-      .map((line) => line.trim().match(/^refs\/luowang\/merge-requests\/(\d+)$/)?.[1])
+      .map((line) => line.trim().match(/^refs\/catchnet\/merge-requests\/(\d+)$/)?.[1])
       .filter((value): value is string => value !== undefined)
       .map(Number)
       .filter((value) => Number.isSafeInteger(value) && value > 0)
@@ -721,7 +721,7 @@ export class GitRepository {
       assertBranchName(branch);
       assertRunId(runId);
       const metadata = validateScenarioPatchText(patch);
-      const branchName = mode === 'pull-request' ? `luowang/scenario/${runId}` : null;
+      const branchName = mode === 'pull-request' ? `catchnet/scenario/${runId}` : null;
       if (branchName) assertBranchName(branchName);
 
       await this.fetch();
@@ -992,7 +992,7 @@ export class GitRepository {
       );
     }
     const baseFiles = await this.readScenarioFilesAtCommit(baseCommit);
-    const patchDirectory = await mkdtemp(join(tmpdir(), 'luowang-scenario-patch-'));
+    const patchDirectory = await mkdtemp(join(tmpdir(), 'catchnet-scenario-patch-'));
     const patchPath = join(patchDirectory, 'changes.patch');
     try {
       await writeFile(patchPath, patch, { encoding: 'utf8', mode: 0o600 });
@@ -1020,7 +1020,7 @@ export class GitRepository {
   }
 
   private async canApplyPatch(patch: string, reverse: boolean): Promise<boolean> {
-    const patchDirectory = await mkdtemp(join(tmpdir(), 'luowang-scenario-patch-check-'));
+    const patchDirectory = await mkdtemp(join(tmpdir(), 'catchnet-scenario-patch-check-'));
     const patchPath = join(patchDirectory, 'changes.patch');
     try {
       await writeFile(patchPath, patch, { encoding: 'utf8', mode: 0o600 });
@@ -1187,7 +1187,7 @@ export class GitRepository {
 
   private async resolvePublishedSourceCommit(sourceRef: string): Promise<string> {
     assertRef(sourceRef);
-    if (sourceRef.startsWith('refs/luowang/') || sourceRef.startsWith('refs/remotes/')) {
+    if (sourceRef.startsWith('refs/catchnet/') || sourceRef.startsWith('refs/remotes/')) {
       throw new RepositoryError('TARGET_INVALID', '无法解析或验证远端来源 Git ref', 400);
     }
 
@@ -1289,7 +1289,7 @@ export class GitRepository {
       'update-ref',
       '--create-reflog',
       '-m',
-      `luowang-${mode}`,
+      `catchnet-${mode}`,
       ref,
       normalizeSha(commit),
       '0000000000000000000000000000000000000000',
@@ -1318,7 +1318,7 @@ export class GitRepository {
       env.GIT_TERMINAL_PROMPT = '0';
       if (token) {
         authDir = await mkdtemp(
-          join(process.env.TEMP ?? process.env.TMP ?? tmpdir(), 'luowang-askpass-'),
+          join(process.env.TEMP ?? process.env.TMP ?? tmpdir(), 'catchnet-askpass-'),
         );
         if (process.platform === 'win32') {
           const scriptFile = join(authDir, 'askpass.js');
@@ -1495,7 +1495,7 @@ function looksBinaryDiff(value: string): boolean {
 
 function mergeRequestRef(queueId: number): string {
   assertQueueId(queueId);
-  return `refs/luowang/merge-requests/${queueId}`;
+  return `refs/catchnet/merge-requests/${queueId}`;
 }
 
 function assertQueueId(queueId: number): void {

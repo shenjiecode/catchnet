@@ -10,7 +10,7 @@ import { GitRepository } from '../src/server/repository/git-repository.js';
 
 it('bounds a stalled ls-remote, kills it, redacts diagnostics, and removes askpass files', async () => {
   if (process.platform === 'win32') return;
-  const root = await mkdtemp(join(tmpdir(), 'luowang-git-timeout-test-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-git-timeout-test-'));
   const bin = join(root, 'bin');
   const repositoryPath = join(root, 'repo');
   const temporary = join(root, 'tmp');
@@ -67,7 +67,7 @@ exit 2
     assert.equal(serialized.includes(repositoryPath), false);
     assert.equal(serialized.includes(remoteUrl), false);
     assert.deepEqual(
-      (await readdir(temporary)).filter((name) => name.startsWith('luowang-askpass-')),
+      (await readdir(temporary)).filter((name) => name.startsWith('catchnet-askpass-')),
       [],
     );
   } finally {

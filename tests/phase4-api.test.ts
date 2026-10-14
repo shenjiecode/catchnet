@@ -61,13 +61,13 @@ describe('Phase 4 evidence Gateway', () => {
 });
 
 async function makeApp(): Promise<{ app: Awaited<ReturnType<typeof createApp>> }> {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase4-api-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-api-'));
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDirectory,
-    LUOWANG_ADMIN_PASSWORD: 'phase4-api-password!',
-    LUOWANG_MASTER_KEY: 'phase4-api-master-key',
+    CATCHNET_DATA_DIR: dataDirectory,
+    CATCHNET_ADMIN_PASSWORD: 'phase4-api-password!',
+    CATCHNET_MASTER_KEY: 'phase4-api-master-key',
   });
   const database = initializeDatabase(config);
   const app = await createApp({

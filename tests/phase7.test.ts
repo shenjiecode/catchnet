@@ -344,13 +344,13 @@ class LifecycleRepository {
 }
 
 async function createArchiveContext(): Promise<ArchiveContext> {
-  const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase7-data-'));
+  const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase7-data-'));
   const reportDir = join(dataDir, 'report');
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_REPO_DIR: join(dataDir, 'repo'),
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_REPO_DIR: join(dataDir, 'repo'),
   });
   const database = initializeDatabase(config);
   const store = createRunStore(database.sqlite, { now: () => '2026-08-30T00:10:00Z' });
@@ -367,7 +367,7 @@ async function createArchiveContext(): Promise<ArchiveContext> {
 }
 
 async function createGitFixture(): Promise<GitFixture> {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-phase7-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-phase7-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
@@ -376,7 +376,7 @@ async function createGitFixture(): Promise<GitFixture> {
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
   await git(['config', 'user.name', 'Catchnet Phase 7 Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang-phase7@example.test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-phase7@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'fixture product\n');
   await git(['add', 'README.md'], sourceDir);
   await git(['commit', '-m', 'initial product'], sourceDir);

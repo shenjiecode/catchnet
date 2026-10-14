@@ -36,8 +36,8 @@ afterEach(async () => {
 
 describe('Closure 2 merge queue migration', () => {
   it('migrates legacy pending and historical rows without treating target_ref as merge authority', async () => {
-    const root = await temporaryDirectory('luowang-closure2-migration-');
-    const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: root });
+    const root = await temporaryDirectory('catchnet-closure2-migration-');
+    const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: root });
     const database = openDatabase(config);
     cleanup.push(async () => database.close());
     runMigrations(
@@ -398,7 +398,7 @@ describe('Closure 2 persistent Git prepared refs', () => {
       20,
       false,
     );
-    const internalSource = 'refs/luowang/merge-requests/20';
+    const internalSource = 'refs/catchnet/merge-requests/20';
     await assert.rejects(
       fixture.repository.prepareMergeRequest('scenario-testing', internalSource, 21, false),
       (error: unknown) =>
@@ -869,12 +869,12 @@ function insertLegacyQueue(
 }
 
 async function databaseContext() {
-  const root = await temporaryDirectory('luowang-closure2-db-');
+  const root = await temporaryDirectory('catchnet-closure2-db-');
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: root,
-    LUOWANG_REPO_DIR: join(root, 'repo'),
-    LUOWANG_REPORT_DIR: join(root, 'report'),
+    CATCHNET_DATA_DIR: root,
+    CATCHNET_REPO_DIR: join(root, 'repo'),
+    CATCHNET_REPORT_DIR: join(root, 'report'),
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
@@ -893,7 +893,7 @@ interface GitFixture {
 }
 
 async function gitFixture(withScenarioBranch: boolean): Promise<GitFixture> {
-  const root = await temporaryDirectory('luowang-closure2-git-');
+  const root = await temporaryDirectory('catchnet-closure2-git-');
   const remote = join(root, 'remote.git');
   const author = join(root, 'author');
   const clone = join(root, 'managed');
@@ -1066,7 +1066,7 @@ async function writeAndCommit(
 }
 
 async function remoteInternalRefs(remote: string): Promise<string[]> {
-  const output = await git(remote, ['for-each-ref', '--format=%(refname)', 'refs/luowang/']);
+  const output = await git(remote, ['for-each-ref', '--format=%(refname)', 'refs/catchnet/']);
   return output.split(/\r?\n/).filter(Boolean);
 }
 

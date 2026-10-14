@@ -2,6 +2,8 @@
 
 > 本文件由 Cynos 项目理解流程维护。它记录跨代码和需求的稳定项目理解，不代替具体需求的 intent、spec 或 plan。
 
+当前开发版的英文名为 Catchnet，仓库为 `shenjiecode/catchnet`；内部环境变量、数据库、资源和协议标识已同步更名，不兼容旧开发实例。中文名与 Logo 不变，历史需求路径和验收记录保持可追溯。新部署与旧实例备份/重建规则见 `README.zh.md`“名称与迁移”。
+
 ## 项目解决的问题
 
 罗网是一个独立部署的 AI 场景测试 Harness。它面向已经使用 AI 参与需求和开发的软件项目，把分散在需求、代码、运行行为、临时测试和人工判断中的信息，收敛为可持续维护的业务场景、可审核的测试执行和可追溯的正式结果。
@@ -49,7 +51,7 @@
 - 场景变更需要人工确认时通过短生命周期 Run 产生 PR，不让 Agent 进程跨小时等待审批。
 - 浏览器执行需求由 Main 随计划显式声明；零场景理由由 Reviewer 独立判断。Harness 不用计划关键词决定业务含义，只核验真实能力、结构和安全边界，按 `docs/changes/luowang-model-semantic-decisions/spec.md` 执行。
 - Main 只产生场景目录内的 patch；Archiver 只原样发布已验证场景 patch，并只为当前 Run 新增正式报告，不能改写产品、需求或历史报告。
-- 管理员初始密码只从 `LUOWANG_ADMIN_PASSWORD` 建立 Argon2id 哈希，不提供匿名初始化或默认密码，已有哈希不被环境变量覆盖。
+- 管理员初始密码只从 `CATCHNET_ADMIN_PASSWORD` 建立 Argon2id 哈希，不提供匿名初始化或默认密码，已有哈希不被环境变量覆盖。
 - 不引入完整 Gitflow 的 release/hotfix 分支；正式版本紧急修复仍使用 `fix/*`，合入 `main` 后同步回 `develop`。
 - MVP 验收使用独立样例仓库和独立本地或非生产样例应用，不把罗网项目仓库纳入目标仓库配置，也不建立实例互测架构。
 - Playwright 浏览器不是宿主机依赖：`Dockerfile` 在构建时依据 lockfile 安装精确 Chromium，`quality` 与 `runtime` 镜像复用同一份浏览器；Node 基础镜像、npm 包和 Playwright 浏览器默认走可覆盖的国内镜像源，以降低 CI 和服务器环境差异。

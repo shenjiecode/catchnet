@@ -249,7 +249,7 @@ class DefaultPlaywrightMcpAdapter implements BrowserMcpAdapter {
 
     let evidenceDirectory: string | undefined;
     try {
-      evidenceDirectory = await mkdtemp(join(tmpdir(), 'luowang-mcp-check-'));
+      evidenceDirectory = await mkdtemp(join(tmpdir(), 'catchnet-mcp-check-'));
       const definition = this.serverDefinition(evidenceDirectory);
       const probe = this.options.probe ?? probeWithMcpClient;
       const result = await withTimeout(

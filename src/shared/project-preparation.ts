@@ -29,4 +29,4 @@ export type RunTestPreparation = {
 };
 
 /** Relative to the command service's private source root; never a build input. */
-export const TEST_ACCOUNT_FILE = '.luowang-runtime/test-account.json';
+export const TEST_ACCOUNT_FILE = '.catchnet-runtime/test-account.json';

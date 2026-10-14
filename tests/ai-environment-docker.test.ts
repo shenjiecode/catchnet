@@ -33,12 +33,12 @@ import {
 import { createConfigurationStore } from '../src/server/configuration.js';
 
 const exec = promisify(execFile);
-const dockerIt = process.env.LUOWANG_DOCKER_SMOKE === '1' ? it : it.skip;
+const dockerIt = process.env.CATCHNET_DOCKER_SMOKE === '1' ? it : it.skip;
 
 dockerIt(
   'runs a product without Dockerfile from generated Compose, imports real SQL, reuses images and resets Run data',
   async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-ai-docker-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-ai-docker-'));
     const database = new Database(':memory:');
     database.pragma('foreign_keys=ON');
     runMigrations(database);
@@ -102,13 +102,13 @@ dockerIt(
       },
       files: [
         {
-          path: '.luowang-generated/app.Dockerfile',
+          path: '.catchnet-generated/app.Dockerfile',
           content:
             'FROM docker.m.daocloud.io/library/node:24.14.1-bookworm-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c\nWORKDIR /app\nCOPY . .\nCMD ["node","app.js"]\n',
         },
         {
-          path: '.luowang-generated/compose.yml',
-          content: `services:\n  app:\n    build:\n      context: ..\n      dockerfile: .luowang-generated/app.Dockerfile\n    volumes: ["proof:/proof:ro"]\n  db:\n    image: ${pgImage}\n    environment: {POSTGRES_HOST_AUTH_METHOD: trust}\n    volumes: ["data:/var/lib/postgresql/data"]\n  tools:\n    image: ${pgImage}\n    entrypoint: ["sleep","infinity"]\n    volumes: ["../:/workspace:ro", "proof:/proof"]\nvolumes:\n  data: {}\n  proof: {}\n`,
+          path: '.catchnet-generated/compose.yml',
+          content: `services:\n  app:\n    build:\n      context: ..\n      dockerfile: .catchnet-generated/app.Dockerfile\n    volumes: ["proof:/proof:ro"]\n  db:\n    image: ${pgImage}\n    environment: {POSTGRES_HOST_AUTH_METHOD: trust}\n    volumes: ["data:/var/lib/postgresql/data"]\n  tools:\n    image: ${pgImage}\n    entrypoint: ["sleep","infinity"]\n    volumes: ["../:/workspace:ro", "proof:/proof"]\nvolumes:\n  data: {}\n  proof: {}\n`,
         },
       ],
     };
@@ -117,7 +117,7 @@ dockerIt(
       servicePort: 8080,
       healthPath: '/',
       healthTimeoutSeconds: 60,
-      composeFile: '.luowang-generated/compose.yml',
+      composeFile: '.catchnet-generated/compose.yml',
       composeServices: ['app', 'db', 'tools'],
       applicationService: 'app',
       commandService: 'tools',
@@ -134,7 +134,7 @@ dockerIt(
           label: '主身份登录',
           service: 'tools',
           command:
-            'wget -q -O /tmp/login-proof --header="Content-Type: application/json" --post-file=/workspace/.luowang-runtime/test-account.json http://app:8080/login && grep -q authenticated /tmp/login-proof',
+            'wget -q -O /tmp/login-proof --header="Content-Type: application/json" --post-file=/workspace/.catchnet-runtime/test-account.json http://app:8080/login && grep -q authenticated /tmp/login-proof',
           timeoutSeconds: 30,
         },
       ],
@@ -143,7 +143,7 @@ dockerIt(
           service: 'tools',
           timeoutSeconds: 60,
           command:
-            'set -eu; cp /workspace/.luowang-runtime/test-account.json /proof/account.json; until pg_isready -h db -U postgres; do sleep 1; done; psql -v ON_ERROR_STOP=1 -h db -U postgres -f /workspace/seed-upload.sql; psql -At -h db -U postgres -c \'SELECT name FROM items WHERE id=42\' > /proof/value; test "$(cat /proof/value)" = initial',
+            'set -eu; cp /workspace/.catchnet-runtime/test-account.json /proof/account.json; until pg_isready -h db -U postgres; do sleep 1; done; psql -v ON_ERROR_STOP=1 -h db -U postgres -f /workspace/seed-upload.sql; psql -At -h db -U postgres -c \'SELECT name FROM items WHERE id=42\' > /proof/value; test "$(cat /proof/value)" = initial',
         },
       ],
     });
@@ -242,7 +242,7 @@ dockerIt(
         'sh',
         JSON.parse(first).serviceImages.app,
         '-c',
-        'test ! -e /app/.luowang-runtime/test-account.json && test ! -e /app/seed-upload.sql',
+        'test ! -e /app/.catchnet-runtime/test-account.json && test ! -e /app/seed-upload.sql',
       ]);
       const attached = target! as {
         docker: DockerRuntime;
@@ -358,7 +358,7 @@ dockerIt(
       }
     } finally {
       await owner?.close();
-      const filter = `label=luowang.project-id=${project.projectId}`;
+      const filter = `label=catchnet.project-id=${project.projectId}`;
       for (const kind of ['container', 'network', 'volume']) {
         const listed = (
           await exec('docker', [kind, 'ls', '--quiet', '--filter', filter])

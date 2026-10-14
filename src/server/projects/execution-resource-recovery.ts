@@ -59,9 +59,9 @@ export async function reconcileExecutionResourceLedger(
       const docker = createDockerRuntimeFromAdapter(adapter);
       const filters = [
         '--filter',
-        `label=luowang.instance-id=${readInstanceId(database)}`,
+        `label=catchnet.instance-id=${readInstanceId(database)}`,
         '--filter',
-        `label=luowang.project-id=${resource.projectId}`,
+        `label=catchnet.project-id=${resource.projectId}`,
       ];
       const containerList = await docker.run(['ps', '--all', '--quiet', ...filters], {
         timeoutMs: 20_000,
@@ -130,7 +130,7 @@ async function ownedByAttempt(
   if (inspected.exitCode !== 0) throw new Error('资源归属无法核验');
   try {
     const labels = JSON.parse(inspected.stdout) as Record<string, string>;
-    return labels['luowang.run-id'] === attemptId || labels['luowang.attempt-id'] === attemptId;
+    return labels['catchnet.run-id'] === attemptId || labels['catchnet.attempt-id'] === attemptId;
   } catch {
     throw new Error('资源标签无效');
   }

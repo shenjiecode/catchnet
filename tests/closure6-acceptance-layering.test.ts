@@ -51,16 +51,16 @@ describe('Closure 6 acceptance status layering', () => {
 
   it('lists every missing live input by name without exposing configured values', () => {
     const environment: NodeJS.ProcessEnv = {
-      LUOWANG_LIVE_REPOSITORY: 'https://github.com/example/private-target',
-      LUOWANG_LIVE_GITHUB_TOKEN: 'canary-live-secret-value',
+      CATCHNET_LIVE_REPOSITORY: 'https://github.com/example/private-target',
+      CATCHNET_LIVE_GITHUB_TOKEN: 'canary-live-secret-value',
     };
     const missing = missingLiveInputs(environment);
-    assert.equal(missing.includes('LUOWANG_LIVE_REPOSITORY'), false);
-    assert.equal(missing.includes('LUOWANG_LIVE_GITHUB_TOKEN'), false);
+    assert.equal(missing.includes('CATCHNET_LIVE_REPOSITORY'), false);
+    assert.equal(missing.includes('CATCHNET_LIVE_GITHUB_TOKEN'), false);
     assert.deepEqual(
       missing,
       LIVE_INPUT_NAMES.filter(
-        (name) => name !== 'LUOWANG_LIVE_REPOSITORY' && name !== 'LUOWANG_LIVE_GITHUB_TOKEN',
+        (name) => name !== 'CATCHNET_LIVE_REPOSITORY' && name !== 'CATCHNET_LIVE_GITHUB_TOKEN',
       ),
     );
     assert.doesNotMatch(JSON.stringify(missing), /canary-live-secret-value/);
@@ -68,39 +68,39 @@ describe('Closure 6 acceptance status layering', () => {
 
   it('treats explicit safety confirmations as missing unless they equal true', () => {
     const environment = Object.fromEntries(LIVE_INPUT_NAMES.map((name) => [name, 'provided']));
-    environment.LUOWANG_LIVE_NON_PRODUCTION_CONFIRMED = 'false';
-    environment.LUOWANG_LIVE_REVIEWER_VISION_CONFIRMED = 'TRUE';
-    environment.LUOWANG_LIVE_MAIN_THINKING = 'unsupported';
-    environment.LUOWANG_LIVE_RUNNER_THINKING = 'high';
+    environment.CATCHNET_LIVE_NON_PRODUCTION_CONFIRMED = 'false';
+    environment.CATCHNET_LIVE_REVIEWER_VISION_CONFIRMED = 'TRUE';
+    environment.CATCHNET_LIVE_MAIN_THINKING = 'unsupported';
+    environment.CATCHNET_LIVE_RUNNER_THINKING = 'high';
     const missing = missingLiveInputs(environment);
-    assert.equal(missing.includes('LUOWANG_LIVE_NON_PRODUCTION_CONFIRMED'), true);
-    assert.equal(missing.includes('LUOWANG_LIVE_REVIEWER_VISION_CONFIRMED'), false);
-    assert.equal(missing.includes('LUOWANG_LIVE_MAIN_THINKING'), true);
-    assert.equal(missing.includes('LUOWANG_LIVE_RUNNER_THINKING'), false);
-    assert.equal(missing.includes('LUOWANG_LIVE_OSS_PRIVATE_CONFIRMED'), true);
+    assert.equal(missing.includes('CATCHNET_LIVE_NON_PRODUCTION_CONFIRMED'), true);
+    assert.equal(missing.includes('CATCHNET_LIVE_REVIEWER_VISION_CONFIRMED'), false);
+    assert.equal(missing.includes('CATCHNET_LIVE_MAIN_THINKING'), true);
+    assert.equal(missing.includes('CATCHNET_LIVE_RUNNER_THINKING'), false);
+    assert.equal(missing.includes('CATCHNET_LIVE_OSS_PRIVATE_CONFIRMED'), true);
   });
 
   it('builds local subprocess environment from a non-secret allowlist', () => {
     const original = {
       github: process.env.GITHUB_TOKEN,
       aws: process.env.AWS_SECRET_ACCESS_KEY,
-      master: process.env.LUOWANG_MASTER_KEY,
+      master: process.env.CATCHNET_MASTER_KEY,
     };
     process.env.GITHUB_TOKEN = 'canary-github-value';
     process.env.AWS_SECRET_ACCESS_KEY = 'canary-aws-value';
-    process.env.LUOWANG_MASTER_KEY = 'canary-master-value';
+    process.env.CATCHNET_MASTER_KEY = 'canary-master-value';
     try {
-      const environment = localOnlyEnvironment('/tmp/luowang-closure6-environment');
+      const environment = localOnlyEnvironment('/tmp/catchnet-closure6-environment');
       assert.equal(environment.GITHUB_TOKEN, undefined);
       assert.equal(environment.AWS_SECRET_ACCESS_KEY, undefined);
-      assert.equal(environment.LUOWANG_MASTER_KEY, undefined);
+      assert.equal(environment.CATCHNET_MASTER_KEY, undefined);
       assert.equal(environment.NODE_ENV, 'test');
-      assert.equal(environment.HOME, join('/tmp/luowang-closure6-environment', 'isolated-home'));
+      assert.equal(environment.HOME, join('/tmp/catchnet-closure6-environment', 'isolated-home'));
       assert.doesNotMatch(JSON.stringify(environment), /canary-(?:github|aws|master)-value/);
     } finally {
       restoreEnvironment('GITHUB_TOKEN', original.github);
       restoreEnvironment('AWS_SECRET_ACCESS_KEY', original.aws);
-      restoreEnvironment('LUOWANG_MASTER_KEY', original.master);
+      restoreEnvironment('CATCHNET_MASTER_KEY', original.master);
     }
   });
 
@@ -143,7 +143,7 @@ describe('Closure 6 acceptance status layering', () => {
       live: {
         status: 'blocked',
         message: 'live inputs missing',
-        missing: ['LUOWANG_LIVE_PROVIDER_API_KEY'],
+        missing: ['CATCHNET_LIVE_PROVIDER_API_KEY'],
       },
       proofs: proofStatuses(),
     });
@@ -458,7 +458,14 @@ describe('Closure 6 acceptance status layering', () => {
   });
 
   it('documents Docker priority, native build dependencies, and honest acceptance boundaries', async () => {
-    const readme = await readFile('README.md', 'utf8');
+    const readme = await readFile('README.zh.md', 'utf8');
+    const english = await readFile('README.md', 'utf8');
+    assert.match(english, /\[简体中文\]\(README\.zh\.md\)/);
+    assert.match(readme, /\[English\]\(README\.md\)/);
+    assert.match(english, /Prefer Docker Compose/);
+    assert.match(english, /python3.*make.*g\+\+/s);
+    assert.match(english, /Local test doubles can prove only `local\.status=passed`/);
+    assert.match(english, /`release\.status` remains blocked/);
     assert.match(readme, /优先使用.*Docker/s);
     assert.match(readme, /python3.*make.*g\+\+/s);
     assert.match(readme, /test:acceptance:local/);
@@ -486,7 +493,7 @@ describe('Closure 6 acceptance status layering', () => {
       return;
     }
     for (const [index, content] of contents.entries()) {
-      assert.match(content, new RegExp(`luowang-role-id: ${files[index]?.replace(/\.md$/, '')}`));
+      assert.match(content, new RegExp(`catchnet-role-id: ${files[index]?.replace(/\.md$/, '')}`));
       for (const heading of ['目标', '硬边界', '顺序', '输出契约', '失败规则', '反模式']) {
         assert.match(content, new RegExp(`## ${heading}`));
       }

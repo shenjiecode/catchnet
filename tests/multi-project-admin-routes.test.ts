@@ -25,7 +25,7 @@ import {
 } from '../src/server/projects/readiness.js';
 import { createScopedSecretStore } from '../src/server/security/scoped-secret-store.js';
 
-const cookie = { cookie: 'luowang_session=valid' };
+const cookie = { cookie: 'catchnet_session=valid' };
 
 describe('project administration routes', () => {
   it('requires authentication, verifies identity and keeps project configuration and Secrets scoped', async () => {

@@ -186,13 +186,13 @@ describe('Phase 8 operations console read model', () => {
 });
 
 async function makeFixture(options: { repositoryStatus?: Partial<RepositoryStatusResponse> } = {}) {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase8-api-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase8-api-'));
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDirectory,
-    LUOWANG_ADMIN_PASSWORD: 'phase8-api-password!',
-    LUOWANG_MASTER_KEY: 'phase8-api-master-key',
+    CATCHNET_DATA_DIR: dataDirectory,
+    CATCHNET_ADMIN_PASSWORD: 'phase8-api-password!',
+    CATCHNET_MASTER_KEY: 'phase8-api-master-key',
   });
   const database = initializeDatabase(config);
   const configuration = createConfigurationStore(database.sqlite, {

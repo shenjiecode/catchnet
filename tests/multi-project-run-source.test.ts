@@ -16,12 +16,12 @@ const RUN = '01K00000000000000000000001';
 const SCENARIO = 'docs/scenario-testing/scenarios/CHECK-001.md';
 
 it('exports the pinned commit plus this Run patch without modifying the repository checkout', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-run-source-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-run-source-'));
   try {
     const repo = join(root, 'repo');
     await git(['init', '-b', 'main', repo], root);
     await git(['config', 'user.name', 'Catchnet Test'], repo);
-    await git(['config', 'user.email', 'luowang@example.test'], repo);
+    await git(['config', 'user.email', 'catchnet@example.test'], repo);
     await mkdir(join(repo, 'docs/scenario-testing/scenarios'), { recursive: true });
     await writeFile(join(repo, 'value.txt'), 'fixed commit\n');
     await writeFile(join(repo, SCENARIO), scenario('old description'));

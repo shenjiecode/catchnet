@@ -124,8 +124,8 @@ class DefaultControlledCommandRunner implements ControlledCommandRunner {
     const args = parseControlledCommand(command);
 
     const childEnvironment = makeExplicitEnvironment(this.sourceEnvironment, {
-      LUOWANG_RUN_ID: options.runId,
-      LUOWANG_TARGET_COMMIT: options.targetCommit,
+      CATCHNET_RUN_ID: options.runId,
+      CATCHNET_TARGET_COMMIT: options.targetCommit,
     });
     if (options.signal?.aborted) {
       throw new ControlledCommandError('COMMAND_FAILED', '受控命令已被取消');
@@ -193,14 +193,14 @@ export function parseControlledCommand(command: string): string[] {
 
 export function makeExplicitEnvironment(
   source: NodeJS.ProcessEnv,
-  runValues: { LUOWANG_RUN_ID: string; LUOWANG_TARGET_COMMIT: string },
+  runValues: { CATCHNET_RUN_ID: string; CATCHNET_TARGET_COMMIT: string },
 ): NodeJS.ProcessEnv {
   const result: NodeJS.ProcessEnv = {};
   for (const key of SAFE_PROCESS_ENV_KEYS) {
     if (source[key] !== undefined) result[key] = source[key];
   }
-  result.LUOWANG_RUN_ID = runValues.LUOWANG_RUN_ID;
-  result.LUOWANG_TARGET_COMMIT = runValues.LUOWANG_TARGET_COMMIT;
+  result.CATCHNET_RUN_ID = runValues.CATCHNET_RUN_ID;
+  result.CATCHNET_TARGET_COMMIT = runValues.CATCHNET_TARGET_COMMIT;
   result.GIT_CONFIG_NOSYSTEM = '1';
   result.GIT_CONFIG_GLOBAL = process.platform === 'win32' ? 'NUL' : '/dev/null';
   return result;

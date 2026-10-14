@@ -6,7 +6,7 @@ import type { SecretKey, SecretMetadata, SecretMetadataMap } from '../../shared/
 
 const CIPHER = 'aes-256-gcm';
 const NONCE_BYTES = 12;
-const DERIVATION_SALT = 'luowang-secret-store-v1';
+const DERIVATION_SALT = 'catchnet-secret-store-v1';
 const MASK = '••••••••';
 
 export const SECRET_KEYS: readonly SecretKey[] = [

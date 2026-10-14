@@ -1,5 +1,5 @@
 services:
-  luowang:
+  catchnet:
     build:
       context: .
       args:
@@ -11,22 +11,22 @@ services:
     image: catchnet:local
     environment:
       NODE_ENV: production
-      LUOWANG_HOST: 0.0.0.0
-      LUOWANG_PORT: 3000
-      LUOWANG_MAX_CONCURRENT_PROJECTS: ${LUOWANG_MAX_CONCURRENT_PROJECTS-2}
-      LUOWANG_DATA_DIR: /data
-      LUOWANG_ADMIN_PASSWORD: ${LUOWANG_ADMIN_PASSWORD:-}
-      LUOWANG_MASTER_KEY: ${LUOWANG_MASTER_KEY:-}
-      LUOWANG_ALLOWED_ORIGIN: ${LUOWANG_ALLOWED_ORIGIN:-}
-      LUOWANG_TEST_DATA_CLEANUP_URL: ${LUOWANG_TEST_DATA_CLEANUP_URL:-}
+      CATCHNET_HOST: 0.0.0.0
+      CATCHNET_PORT: 3000
+      CATCHNET_MAX_CONCURRENT_PROJECTS: ${CATCHNET_MAX_CONCURRENT_PROJECTS-2}
+      CATCHNET_DATA_DIR: /data
+      CATCHNET_ADMIN_PASSWORD: ${CATCHNET_ADMIN_PASSWORD:-}
+      CATCHNET_MASTER_KEY: ${CATCHNET_MASTER_KEY:-}
+      CATCHNET_ALLOWED_ORIGIN: ${CATCHNET_ALLOWED_ORIGIN:-}
+      CATCHNET_TEST_DATA_CLEANUP_URL: ${CATCHNET_TEST_DATA_CLEANUP_URL:-}
       DOCKER_HOST: unix:///var/run/docker.sock
     ports:
-      - '127.0.0.1:${LUOWANG_PORT:-3000}:3000'
+      - '127.0.0.1:${CATCHNET_PORT:-3000}:3000'
     volumes:
-      - luowang-data:/data
+      - catchnet-data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     group_add:
-      - '${LUOWANG_DOCKER_GID:-0}'
+      - '${CATCHNET_DOCKER_GID:-0}'
     init: true
     shm_size: 1gb
     healthcheck:
@@ -43,4 +43,4 @@ services:
       retries: 3
 
 volumes:
-  luowang-data:
+  catchnet-data:

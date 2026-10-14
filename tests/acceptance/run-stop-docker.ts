@@ -14,10 +14,10 @@ import { randomBytes } from 'node:crypto';
 
 // Explicit native proof: requires Docker and a locally available, immutable Node image.
 // Never uses a production project, an existing Run, or global Docker cleanup.
-const base = process.env.LUOWANG_STOP_PROOF_BASE_IMAGE;
+const base = process.env.CATCHNET_STOP_PROOF_BASE_IMAGE;
 assert.match(base ?? '', /^sha256:[a-f0-9]{64}$/);
 const docker = createDockerRuntime();
-const root = await mkdtemp(join(tmpdir(), 'luowang-stop-docker-'));
+const root = await mkdtemp(join(tmpdir(), 'catchnet-stop-docker-'));
 const instanceId = randomUUID();
 const sessions: ProjectCommandSession[] = [];
 const images: string[] = [];
@@ -37,11 +37,11 @@ try {
       imageId = await command([
         'commit',
         '--change',
-        `LABEL luowang.instance-id=${instanceId}`,
+        `LABEL catchnet.instance-id=${instanceId}`,
         '--change',
-        `LABEL luowang.project-id=${projectId}`,
+        `LABEL catchnet.project-id=${projectId}`,
         '--change',
-        `LABEL luowang.target-commit=${targetCommit}`,
+        `LABEL catchnet.target-commit=${targetCommit}`,
         seed,
       ]);
     } finally {
@@ -94,13 +94,13 @@ try {
     cwd: join(
       root,
       'projects',
-      bindings[i]['luowang.project-id'],
+      bindings[i]['catchnet.project-id'],
       'run-sources',
       'source-proof',
       'context',
     ),
-    runId: bindings[i]['luowang.run-id'],
-    targetCommit: bindings[i]['luowang.target-commit'],
+    runId: bindings[i]['catchnet.run-id'],
+    targetCommit: bindings[i]['catchnet.target-commit'],
   });
   const a = assert.rejects(
     sessions[0].run('node wait.cjs', { ...options(0), signal: abort.signal }),

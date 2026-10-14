@@ -195,7 +195,7 @@ User Message
 `manual-merge-source` 在罗网的**本地持久 Git 仓库**中为每个队列请求使用确定性 internal ref：
 
 ```text
-refs/luowang/merge-requests/<queue-id>
+refs/catchnet/merge-requests/<queue-id>
 ```
 
 该 ref 不是业务分支，只用于让 prepared commit object 在进程重启、临时工作区清理和本地 Git GC 后仍可达；它不得被 push 到目标仓库，也不得加入任何默认 push refspec。
@@ -502,9 +502,9 @@ https://github.com/cynos-ai/cynos-website
 
 候选实例需要：
 
-- `LUOWANG_ADMIN_PASSWORD`；
-- `LUOWANG_MASTER_KEY`；
-- 可选 `LUOWANG_ALLOWED_ORIGIN`；
+- `CATCHNET_ADMIN_PASSWORD`；
+- `CATCHNET_MASTER_KEY`；
+- 可选 `CATCHNET_ALLOWED_ORIGIN`；
 - 持久化卷、仅本地或非生产入口、访问 GitHub/Provider/OSS/样例应用的网络；
 - `shenjiecode/catchnet` 的 PR 和最终 tag 权限。
 
@@ -513,23 +513,23 @@ https://github.com/cynos-ai/cynos-website
 实现 live runner 时使用以下稳定名称，或提供一一对应的受控配置文件；示例文件只能包含字段名和假值：
 
 ```text
-LUOWANG_LIVE_REPOSITORY
-LUOWANG_LIVE_INITIAL_REF
-LUOWANG_LIVE_GITHUB_TOKEN
-LUOWANG_LIVE_BASE_URL
-LUOWANG_LIVE_TEST_USERNAME
-LUOWANG_LIVE_TEST_PASSWORD
-LUOWANG_LIVE_PROVIDER
-LUOWANG_LIVE_PROVIDER_API_KEY
-LUOWANG_LIVE_MAIN_MODEL
-LUOWANG_LIVE_RUNNER_MODEL
-LUOWANG_LIVE_REVIEWER_MODEL
-LUOWANG_LIVE_OSS_ENDPOINT
-LUOWANG_LIVE_OSS_REGION
-LUOWANG_LIVE_OSS_BUCKET
-LUOWANG_LIVE_OSS_PREFIX
-LUOWANG_LIVE_OSS_ACCESS_KEY_ID
-LUOWANG_LIVE_OSS_ACCESS_KEY_SECRET
+CATCHNET_LIVE_REPOSITORY
+CATCHNET_LIVE_INITIAL_REF
+CATCHNET_LIVE_GITHUB_TOKEN
+CATCHNET_LIVE_BASE_URL
+CATCHNET_LIVE_TEST_USERNAME
+CATCHNET_LIVE_TEST_PASSWORD
+CATCHNET_LIVE_PROVIDER
+CATCHNET_LIVE_PROVIDER_API_KEY
+CATCHNET_LIVE_MAIN_MODEL
+CATCHNET_LIVE_RUNNER_MODEL
+CATCHNET_LIVE_REVIEWER_MODEL
+CATCHNET_LIVE_OSS_ENDPOINT
+CATCHNET_LIVE_OSS_REGION
+CATCHNET_LIVE_OSS_BUCKET
+CATCHNET_LIVE_OSS_PREFIX
+CATCHNET_LIVE_OSS_ACCESS_KEY_ID
+CATCHNET_LIVE_OSS_ACCESS_KEY_SECRET
 ```
 
 thinking level、环境说明、额外账号和外部 allowlist 可以使用非 Secret 配置或 JSON 输入。所有 Secret 变量必须从子进程环境和报告中脱敏；CI 不保存这些值，fork PR 不运行 live。
@@ -556,7 +556,7 @@ thinking level、环境说明、额外账号和外部 allowlist 可以使用非 
 - SQLite schema 变更使用版本化、可重复执行 migration；现有队列、Run 和归档数据必须前向升级；
 - API 删除或拒绝 `targetCommit` 时更新网站和测试；如保留过渡字段，只能明确报错，不能继续执行旧的不安全语义；旧 `/api/repository/scenario-branch` 同样不得保留同步写分支语义；
 - 已有 completed/、报告、Issues、场景 PR、last completed target 和 `v0.1.0` tag 不修改；特殊场景审核 Run 继续只以 patch + report 识别；
-- `refs/luowang/merge-requests/*` 只存在于罗网本地持久 Git 仓库，不迁移为目标仓库分支、不写入远端；升级启动时只对账和清理没有对应请求的孤儿 ref；
+- `refs/catchnet/merge-requests/*` 只存在于罗网本地持久 Git 仓库，不迁移为目标仓库分支、不写入远端；升级启动时只对账和清理没有对应请求的孤儿 ref；
 - 内置角色指令资源属于罗网发布物，不是 Pi Skills，不写目标仓库；
 - 本地 acceptance 结果命名变化要提供 README 迁移说明；
 - 原生 `better-sqlite3` 在没有匹配预编译包时需要 `python3`、`make`、`g++`，README 优先推荐 Docker 并说明本地依赖。
@@ -575,7 +575,7 @@ thinking level、环境说明、额外账号和外部 allowlist 可以使用非 
 1. **AC-CLOSURE-INSTR-01**：Main Planning、Runner、Reviewer、Main Finalization 四类 Session 只装载对应的罗网 Built-in Role Instructions；ambient Skills、Prompt、Context 和用户/宿主机/目标仓库资源不会进入 Session；配置仍只有 Main、Runner、Reviewer 三组；
 2. **AC-CLOSURE-INSTR-02**：固定角色指令只进入 system prompt 一次，user message 只包含当前任务和角色裁剪的动态上下文；角色工具权限与上游安全边界不变；
 3. **AC-CLOSURE-INSTR-03**：Role Instructions 内容包含证据优先级、代码不得反推期望、独立审核、清理、偏差和反模式，但没有引入 suite/catalog/checkpoint/新结果状态/发布 gate；
-4. **AC-CLOSURE-MERGE-01**：人工 branch/tag/SHA 请求进入 FIFO；远端场景分支已存在时按顺序生成 `merge --no-ff` commit，尚不存在且 `initialization=true` 时把解析后的 source commit 作为 prepared；两者都先创建本地 `refs/luowang/merge-requests/<queue-id>`、持久化 `prepared_merge_commit`、non-force 发布、持久化同值 `resolved_target_commit`，并且只创建一个以该不可变 commit 为 target 的 Run；首次路径的 Run 保留 initialization，internal ref 从不推送；
+4. **AC-CLOSURE-MERGE-01**：人工 branch/tag/SHA 请求进入 FIFO；远端场景分支已存在时按顺序生成 `merge --no-ff` commit，尚不存在且 `initialization=true` 时把解析后的 source commit 作为 prepared；两者都先创建本地 `refs/catchnet/merge-requests/<queue-id>`、持久化 `prepared_merge_commit`、non-force 发布、持久化同值 `resolved_target_commit`，并且只创建一个以该不可变 commit 为 target 的 Run；首次路径的 Run 保留 initialization，internal ref 从不推送；
 5. **AC-CLOSURE-TARGET-01**：普通人工/API Run 不能直接指定任意 target；自动、人工和初始化 Run 的 target 都是远端场景测试分支历史上的不可变 commit；场景分支不存在时 automatic/current-head 不创建 Run，首次建分支不能在队列外发生；
 6. **AC-CLOSURE-MERGE-02**：internal ref 保证普通 merge 和首次建分支的 prepared object 经重启、临时工作区清理和 Git GC 后仍可达；结合 `prepared_merge_commit`、`resolved_target_commit` 和唯一 Run 关联，使 merge 冲突、首次创建时远端不含 prepared 的竞争、push 前后重启恢复不重复 merge/建分支、不改用其他 HEAD、不改变本次 target、不创建错误 Run；请求 terminal 后幂等清理 internal ref；
 7. **AC-CLOSURE-DATA-01**：Runner 可以登记并实际删除测试数据，但只有受控 adapter 独立核验，或 Reviewer 读取 Harness 直接捕获的 adapter/API/只读查询输出或 Playwright 截图并确认，才能成为 `verified-cleaned`；无 adapter 时全部经 Reviewer 确认的生产 Run 可以完成；

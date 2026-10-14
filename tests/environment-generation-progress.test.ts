@@ -59,7 +59,7 @@ it('reads bounded source ranges, records invalid submissions and completes immed
                       preparation: preparationFixture,
                       files: [
                         {
-                          path: '.luowang-generated/compose.yml',
+                          path: '.catchnet-generated/compose.yml',
                           content:
                             'services:\n  app:\n    expose: [5173]\n  tools:\n    image: fixture',
                         },
@@ -79,7 +79,7 @@ it('reads bounded source ranges, records invalid submissions and completes immed
                 definition: {
                   summary: 'fixture',
                   preparation: preparationFixture,
-                  files: [{ path: '.luowang-generated/compose.yml', content: 'services: {}' }],
+                  files: [{ path: '.catchnet-generated/compose.yml', content: 'services: {}' }],
                   runtime: f.configuration.get(f.project.projectId).runtime,
                 },
               },

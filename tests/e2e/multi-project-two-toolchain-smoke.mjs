@@ -20,7 +20,7 @@ import { createProjectStore } from '../../dist/server/projects/store.js';
 import { GitRepository } from '../../dist/server/repository/git-repository.js';
 
 const exec = promisify(execFile);
-const root = await mkdtemp(join(tmpdir(), 'luowang-two-toolchains-'));
+const root = await mkdtemp(join(tmpdir(), 'catchnet-two-toolchains-'));
 const database = new Database(':memory:');
 const instanceId = randomUUID();
 const imageIds = new Set();
@@ -35,9 +35,9 @@ async function makeProject(label, dockerfile, sourceFile, sourceText, githubId) 
   const directory = join(root, `repo-${label}`);
   await command('git', ['init', '-b', 'main', directory]);
   await command('git', ['config', 'user.name', 'Catchnet Smoke'], directory);
-  await command('git', ['config', 'user.email', 'luowang@example.test'], directory);
+  await command('git', ['config', 'user.email', 'catchnet@example.test'], directory);
   await mkdir(join(directory, 'docs/scenario-testing/scenarios'), { recursive: true });
-  await writeFile(join(directory, 'Dockerfile.luowang'), dockerfile);
+  await writeFile(join(directory, 'Dockerfile.catchnet'), dockerfile);
   await writeFile(join(directory, sourceFile), sourceText);
   await writeFile(join(directory, scenarioPath), scenario('before'));
   await command('git', ['add', '.'], directory);
@@ -64,7 +64,7 @@ async function prepareImage(project, targetCommit = project.targetCommit) {
     projectId: project.projectId,
     instanceId,
     targetCommit,
-    dockerfilePath: 'Dockerfile.luowang',
+    dockerfilePath: 'Dockerfile.catchnet',
     storageRoot: root,
     state: createProjectImageStateStore(database),
   });
@@ -101,7 +101,7 @@ async function executeRun(project, imageId, runId, commandText, expected) {
       });
       assert.equal(result.exitCode, 0);
       assert.equal(result.stdout.trim(), expected);
-      assert.deepEqual(result.environmentKeys, ['LUOWANG_RUN_ID', 'LUOWANG_TARGET_COMMIT']);
+      assert.deepEqual(result.environmentKeys, ['CATCHNET_RUN_ID', 'CATCHNET_TARGET_COMMIT']);
     } finally {
       await session.close();
       containerIds.delete(session.containerId);
@@ -165,7 +165,7 @@ try {
       '--all',
       '--quiet',
       '--filter',
-      `label=luowang.instance-id=${instanceId}`,
+      `label=catchnet.instance-id=${instanceId}`,
     ]),
     '',
   );
@@ -178,8 +178,8 @@ try {
   assert.notEqual(rebuilt.imageId, nodeImage.imageId);
   assert.equal((await prepareImage(node, newCommit)).reused, true);
 
-  await writeFile(join(node.directory, 'Dockerfile.luowang'), 'INVALID DOCKERFILE\n');
-  await command('git', ['add', 'Dockerfile.luowang'], node.directory);
+  await writeFile(join(node.directory, 'Dockerfile.catchnet'), 'INVALID DOCKERFILE\n');
+  await command('git', ['add', 'Dockerfile.catchnet'], node.directory);
   await command('git', ['commit', '-m', 'broken image'], node.directory);
   const brokenCommit = await command('git', ['rev-parse', 'HEAD'], node.directory);
   await assert.rejects(() => prepareImage(node, brokenCommit), /BUILD_FAILED/);

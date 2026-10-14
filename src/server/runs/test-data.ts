@@ -173,7 +173,7 @@ class DefaultTestDataManager implements TestDataManager {
   }
 
   prefix(runId: string): string {
-    return `luowang-${runId}-`;
+    return `catchnet-${runId}-`;
   }
 
   async register(runId: string, entry: TestDataEntry): Promise<void> {

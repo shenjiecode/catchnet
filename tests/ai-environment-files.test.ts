@@ -80,7 +80,7 @@ it('keeps recommendations separate from saved definitions and hides reminders fo
     const definition = {
       sourceCommit: 'a'.repeat(40),
       summary: 'saved',
-      files: [{ path: '.luowang-generated/compose.yml', content: 'services: {}' }],
+      files: [{ path: '.catchnet-generated/compose.yml', content: 'services: {}' }],
     };
     const before = JSON.stringify(definition);
     recordEnvironmentRecommendation(database, project.projectId, definition, {

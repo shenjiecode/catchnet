@@ -33,7 +33,7 @@ export function createBrowserObservationExtension(options: {
     }
   >();
   return {
-    name: 'luowang-browser-observation',
+    name: 'catchnet-browser-observation',
     hidden: true,
     factory: (pi) => {
       pi.on('tool_call', async (event) => {

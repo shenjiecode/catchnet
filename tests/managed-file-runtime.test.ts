@@ -52,7 +52,7 @@ it('accepts a hidden project file and creates remote staging before docker cp', 
     ],
   });
   assert.match(events[0], /^upload:.*\/inspection$/);
-  assert.match(events[1], /^docker:cp .*:\/luowang-source\/\. /);
+  assert.match(events[1], /^docker:cp .*:\/catchnet-source\/\. /);
   assert.equal(
     events.some((event) => event.includes('/payload')),
     true,
@@ -60,7 +60,7 @@ it('accepts a hidden project file and creates remote staging before docker cp', 
 });
 
 it('rejects an aborted controlled file transfer before writing', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-transfer-cancel-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-transfer-cancel-'));
   try {
     const controller = new AbortController();
     controller.abort();

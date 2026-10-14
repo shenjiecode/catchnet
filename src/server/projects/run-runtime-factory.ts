@@ -113,14 +113,14 @@ export function createProjectRunRuntimeEnvironmentFactory(input: {
     const imageDependencies = createProjectImagePreparationDependencies(selectedDocker);
     if (input.task.executionLocationId.startsWith('server:'))
       imageDependencies.build = async (build) => {
-        const remote = `/tmp/luowang/${readInstanceId(input.database)}/${input.task.projectId}/image-${context.targetCommit}`;
+        const remote = `/tmp/catchnet/${readInstanceId(input.database)}/${input.task.projectId}/image-${context.targetCommit}`;
         await adapter.uploadTree(build.source.directory, remote, {
           signal: build.signal,
           timeoutMs: 10 * 60_000,
         });
         try {
           const dockerfile = `${remote}/${build.source.dockerfilePath}`;
-          const iid = `${remote}/.luowang-iid`;
+          const iid = `${remote}/.catchnet-iid`;
           const result = await adapter.execute(
             'docker',
             [
@@ -130,13 +130,13 @@ export function createProjectRunRuntimeEnvironmentFactory(input: {
               '--iidfile',
               iid,
               '--label',
-              `luowang.project-id=${build.projectId}`,
+              `catchnet.project-id=${build.projectId}`,
               '--label',
-              `luowang.instance-id=${build.instanceId}`,
+              `catchnet.instance-id=${build.instanceId}`,
               '--label',
-              `luowang.target-commit=${build.source.targetCommit}`,
+              `catchnet.target-commit=${build.source.targetCommit}`,
               '--label',
-              `luowang.build-definition=${build.source.buildDefinition ?? build.source.dockerfilePath}`,
+              `catchnet.build-definition=${build.source.buildDefinition ?? build.source.dockerfilePath}`,
               remote,
             ],
             { timeoutMs: 30 * 60_000, signal: build.signal },
@@ -165,7 +165,7 @@ export function createProjectRunRuntimeEnvironmentFactory(input: {
         }
       };
     const remoteSource = input.task.executionLocationId.startsWith('server:')
-      ? `/tmp/luowang/${readInstanceId(input.database)}/${input.task.projectId}/run-${context.runId}`
+      ? `/tmp/catchnet/${readInstanceId(input.database)}/${input.task.projectId}/run-${context.runId}`
       : null;
     const acquisition = await (async () => {
       let source: Awaited<ReturnType<typeof prepareProjectRunSource>> | null = null;
@@ -278,9 +278,9 @@ export function createProjectRunRuntimeEnvironmentFactory(input: {
               resourceType:
                 input.task.startType === 'compose' ? 'compose-stack' : 'application-container',
               ownerLabels: {
-                'luowang.instance-id': readInstanceId(input.database),
-                'luowang.project-id': input.task.projectId,
-                'luowang.attempt-id': context.runId,
+                'catchnet.instance-id': readInstanceId(input.database),
+                'catchnet.project-id': input.task.projectId,
+                'catchnet.attempt-id': context.runId,
               },
             });
         return { platform, image, source, files, ledger, resource };
@@ -330,7 +330,7 @@ export function createProjectRunRuntimeEnvironmentFactory(input: {
               try {
                 onStage('parse');
                 if (input.task.executionLocationId.startsWith('server:')) {
-                  remoteBuildSource = `/tmp/luowang/${readInstanceId(input.database)}/${input.task.projectId}/build-${context.runId}`;
+                  remoteBuildSource = `/tmp/catchnet/${readInstanceId(input.database)}/${input.task.projectId}/build-${context.runId}`;
                   await adapter.uploadTree(composeBuildSource.directory, remoteBuildSource, {
                     signal: context.signal,
                     timeoutMs: 10 * 60_000,
@@ -410,7 +410,7 @@ export function createProjectRunRuntimeEnvironmentFactory(input: {
                       await (
                         await import('node:fs/promises')
                       ).writeFile(local, content, { flag: 'wx', mode: 0o600 });
-                      const remote = `${posix.dirname(remoteBuildSource!)}/.luowang-${definition.projectName}.compose.yml`;
+                      const remote = `${posix.dirname(remoteBuildSource!)}/.catchnet-${definition.projectName}.compose.yml`;
                       try {
                         await adapter.upload(local, remote, {
                           signal: context.signal,

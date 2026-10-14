@@ -167,7 +167,7 @@ async function verifyBackupMatches(
   backupDir: string,
 ): Promise<string> {
   await verifyLegacyBackup(backupDir);
-  const backup = new Database(join(resolve(backupDir), 'luowang.db'), {
+  const backup = new Database(join(resolve(backupDir), 'catchnet.db'), {
     readonly: true,
     fileMustExist: true,
   });

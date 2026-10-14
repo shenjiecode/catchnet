@@ -159,9 +159,9 @@ it('rejects mismatched image labels and distinguishes a missing image from a Doc
       async run() {
         return {
           stdout: JSON.stringify({
-            'luowang.project-id': key.projectId,
-            'luowang.target-commit': key.targetCommit,
-            'luowang.build-definition': 'other',
+            'catchnet.project-id': key.projectId,
+            'catchnet.target-commit': key.targetCommit,
+            'catchnet.build-definition': 'other',
           }),
           stderr: '',
           exitCode: 0,

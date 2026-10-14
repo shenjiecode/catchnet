@@ -10,7 +10,7 @@ const PROJECT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 const COMMIT_SHA = /^[0-9a-f]{40}$/i;
 const MAX_ARCHIVE_BYTES = 512 * 1024 * 1024;
 export const BUILTIN_IMAGE_DEFINITION = '@builtin/node-24.14.1-v1';
-const BUILTIN_DOCKERFILE = '.luowang-executor.Dockerfile';
+const BUILTIN_DOCKERFILE = '.catchnet-executor.Dockerfile';
 const BUILTIN_DOCKERFILE_CONTENT =
   'FROM docker.m.daocloud.io/library/node:24.14.1-bookworm-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c\nWORKDIR /workspace\n';
 

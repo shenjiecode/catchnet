@@ -342,7 +342,7 @@ const QUALITY_COMMANDS: Array<[string, string[]]> = [
 const main = async (): Promise<void> => {
   const startedAt = new Date();
   const artifactDirectory =
-    process.env.LUOWANG_ACCEPTANCE_ARTIFACT_DIR ??
+    process.env.CATCHNET_ACCEPTANCE_ARTIFACT_DIR ??
     join(process.cwd(), '.cynos', 'acceptance', acceptanceTimestamp(startedAt));
   await mkdir(artifactDirectory, { recursive: true });
 
@@ -365,7 +365,7 @@ const main = async (): Promise<void> => {
     const qualityPassed = await runQualityCommands(commands);
     proofs.regression = qualityPassed;
 
-    const rootDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase9-acceptance-'));
+    const rootDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase9-acceptance-'));
     let sampleApp: SampleApp | undefined;
     let browser: Browser | undefined;
     try {
@@ -417,7 +417,7 @@ const main = async (): Promise<void> => {
   const localAcceptanceFailed = cases.some((item) => item.status === 'failed');
   const liveSmokeFailed = live.status === 'failed';
   const report = {
-    schema: 'luowang.phase9.acceptance.v1',
+    schema: 'catchnet.phase9.acceptance.v1',
     startedAt: startedAt.toISOString(),
     finishedAt: new Date().toISOString(),
     targetProject: 'cynos-ai/cynos-website',
@@ -486,18 +486,18 @@ async function runOptionalGithubSmoke(commands: CommandEvidence[]): Promise<{
   status: 'passed' | 'failed' | 'blocked';
   reason?: string;
 }> {
-  if (process.env.LUOWANG_ACCEPTANCE_LIVE !== '1') {
+  if (process.env.CATCHNET_ACCEPTANCE_LIVE !== '1') {
     return {
       status: 'blocked',
-      reason: '未设置 LUOWANG_ACCEPTANCE_LIVE=1；默认不执行外部副作用 smoke',
+      reason: '未设置 CATCHNET_ACCEPTANCE_LIVE=1；默认不执行外部副作用 smoke',
     };
   }
-  const repository = process.env.LUOWANG_SMOKE_REPOSITORY;
-  const token = process.env.LUOWANG_SMOKE_GITHUB_TOKEN;
+  const repository = process.env.CATCHNET_SMOKE_REPOSITORY;
+  const token = process.env.CATCHNET_SMOKE_GITHUB_TOKEN;
   if (!repository || !token) {
     return {
       status: 'blocked',
-      reason: '缺少 LUOWANG_SMOKE_REPOSITORY 或 LUOWANG_SMOKE_GITHUB_TOKEN',
+      reason: '缺少 CATCHNET_SMOKE_REPOSITORY 或 CATCHNET_SMOKE_GITHUB_TOKEN',
     };
   }
   if (repository !== 'https://github.com/cynos-ai/cynos-website') {
@@ -508,8 +508,8 @@ async function runOptionalGithubSmoke(commands: CommandEvidence[]): Promise<{
   const npm = npmCommand();
   try {
     const result = await runCommand(npm.executable, [...npm.prefix, 'run', 'test:e2e:github'], {
-      LUOWANG_SMOKE_REPOSITORY: repository,
-      LUOWANG_SMOKE_GITHUB_TOKEN: token,
+      CATCHNET_SMOKE_REPOSITORY: repository,
+      CATCHNET_SMOKE_GITHUB_TOKEN: token,
     });
     commands.push({
       command: 'npm run test:e2e:github (live)',
@@ -552,7 +552,7 @@ async function createGitFixture(parentDirectory: string): Promise<GitFixture> {
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
   await git(['config', 'user.name', 'Catchnet Phase 9 Fixture'], sourceDir);
-  await git(['config', 'user.email', 'luowang-phase9@example.test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-phase9@example.test'], sourceDir);
   await mkdir(join(sourceDir, 'docs'), { recursive: true });
   await mkdir(join(sourceDir, 'src'), { recursive: true });
   await writeFile(
@@ -586,11 +586,11 @@ async function createRepositoryProofContext(
   const reportDir = join(dataDir, 'report');
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPO_DIR: fixture.cloneDir,
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_ADMIN_PASSWORD: SAMPLE_ADMIN_PASSWORD,
-    LUOWANG_MASTER_KEY: SAMPLE_MASTER_KEY,
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPO_DIR: fixture.cloneDir,
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_ADMIN_PASSWORD: SAMPLE_ADMIN_PASSWORD,
+    CATCHNET_MASTER_KEY: SAMPLE_MASTER_KEY,
   });
   const database = initializeDatabase(config);
   try {
@@ -823,7 +823,7 @@ async function runRunProof(context: RepositoryProofContext): Promise<void> {
 
 async function runSecurityProof(parentDirectory: string): Promise<void> {
   const missingDataDir = join(parentDirectory, 'missing-admin-data');
-  const missingConfig = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: missingDataDir });
+  const missingConfig = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: missingDataDir });
   const missingDatabase = initializeDatabase(missingConfig);
   let missingApp: Awaited<ReturnType<typeof createApp>> | undefined;
   try {
@@ -849,9 +849,9 @@ async function runSecurityProof(parentDirectory: string): Promise<void> {
   const dataDir = join(parentDirectory, 'secure-console-data');
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_ADMIN_PASSWORD: SAMPLE_ADMIN_PASSWORD,
-    LUOWANG_MASTER_KEY: SAMPLE_MASTER_KEY,
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_ADMIN_PASSWORD: SAMPLE_ADMIN_PASSWORD,
+    CATCHNET_MASTER_KEY: SAMPLE_MASTER_KEY,
   });
   const database = initializeDatabase(config);
   let app: Awaited<ReturnType<typeof createApp>> | undefined;
@@ -943,8 +943,8 @@ async function runSecurityProof(parentDirectory: string): Promise<void> {
   const restoredDir = join(parentDirectory, 'restored-data');
   const restoredConfig = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: restoredDir,
-    LUOWANG_DATABASE_PATH: join(restoredDir, 'luowang.db'),
+    CATCHNET_DATA_DIR: restoredDir,
+    CATCHNET_DATABASE_PATH: join(restoredDir, 'catchnet.db'),
   });
   await mkdir(restoredDir, { recursive: true });
   await copyFile(backupPath, restoredConfig.databasePath);
@@ -967,8 +967,8 @@ async function runSecurityProof(parentDirectory: string): Promise<void> {
   );
   const commandRunner = createControlledCommandRunner({
     ...process.env,
-    LUOWANG_ADMIN_PASSWORD: SAMPLE_ADMIN_PASSWORD,
-    LUOWANG_MASTER_KEY: SAMPLE_MASTER_KEY,
+    CATCHNET_ADMIN_PASSWORD: SAMPLE_ADMIN_PASSWORD,
+    CATCHNET_MASTER_KEY: SAMPLE_MASTER_KEY,
     PHASE9_SECRET: SAMPLE_SECRET,
   });
   const envResult = await commandRunner.run('node print-env.js', {
@@ -977,11 +977,11 @@ async function runSecurityProof(parentDirectory: string): Promise<void> {
     targetCommit: SAMPLE_TARGET,
   });
   const childEnvironment = JSON.parse(envResult.stdout) as Record<string, string>;
-  assert.equal(childEnvironment.LUOWANG_ADMIN_PASSWORD, undefined);
-  assert.equal(childEnvironment.LUOWANG_MASTER_KEY, undefined);
+  assert.equal(childEnvironment.CATCHNET_ADMIN_PASSWORD, undefined);
+  assert.equal(childEnvironment.CATCHNET_MASTER_KEY, undefined);
   assert.equal(childEnvironment.PHASE9_SECRET, undefined);
-  assert.equal(childEnvironment.LUOWANG_RUN_ID, SAMPLE_RUN_ID);
-  assert.equal(childEnvironment.LUOWANG_TARGET_COMMIT, SAMPLE_TARGET);
+  assert.equal(childEnvironment.CATCHNET_RUN_ID, SAMPLE_RUN_ID);
+  assert.equal(childEnvironment.CATCHNET_TARGET_COMMIT, SAMPLE_TARGET);
 }
 
 async function runAutomationProof(
@@ -1118,7 +1118,7 @@ async function runAutomationProof(
   assert.equal(matchesCron('*/5 * * * *', new Date('2026-08-30T00:05:00.000Z')), true);
 
   const recoveryDir = join(parentDirectory, 'recovery-data');
-  const recoveryConfig = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: recoveryDir });
+  const recoveryConfig = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: recoveryDir });
   const recoveryDatabase = initializeDatabase(recoveryConfig);
   try {
     const recoveryStore = createRunRecoveryStore(recoveryDatabase.sqlite);
@@ -1171,7 +1171,7 @@ async function runBrowserProof(browser: Browser, sampleApp: SampleApp): Promise<
 
 async function runArchiveProof(parentDirectory: string): Promise<void> {
   const archiveDir = join(parentDirectory, 'archive-data');
-  const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: archiveDir });
+  const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: archiveDir });
   const database = initializeDatabase(config);
   try {
     const store = createRunStore(database.sqlite);
@@ -1443,8 +1443,8 @@ class ArchiveRepositoryDouble {
       throw new Error('fixture issue endpoint temporarily unavailable');
     }
     const number = ++this.createdIssues;
-    const runMarker = body.match(/- (luowang-run:[^\n]+)/)?.[1] ?? '';
-    const bugMarker = body.match(/- (luowang-bug:[^\n]+)/)?.[1] ?? '';
+    const runMarker = body.match(/- (catchnet-run:[^\n]+)/)?.[1] ?? '';
+    const bugMarker = body.match(/- (catchnet-bug:[^\n]+)/)?.[1] ?? '';
     const issue = {
       number,
       title: `${title} ${runMarker} ${bugMarker}`.trim(),
@@ -1806,8 +1806,8 @@ function summarizeOutput(value: string, lineCount = 3): string {
 function redact(value: string): string {
   let result = value;
   for (const secret of [
-    process.env.LUOWANG_ADMIN_PASSWORD,
-    process.env.LUOWANG_MASTER_KEY,
+    process.env.CATCHNET_ADMIN_PASSWORD,
+    process.env.CATCHNET_MASTER_KEY,
     process.env.GITHUB_TOKEN,
     process.env.DEEPSEEK_API_KEY,
     process.env.OSS_ACCESS_KEY_SECRET,

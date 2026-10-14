@@ -50,7 +50,7 @@ export function environmentFixture() {
     startType: 'compose',
     runtime: {
       servicePort: 8080,
-      composeFile: '.luowang-generated/compose.yml',
+      composeFile: '.catchnet-generated/compose.yml',
       composeServices: ['app', 'tools'],
       applicationService: 'app',
       commandService: 'tools',

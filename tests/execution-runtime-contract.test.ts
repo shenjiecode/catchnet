@@ -230,8 +230,8 @@ describe('execution runtime safety contracts', () => {
         if (args[0] === 'inspect' && args.includes('{{json .Config.Labels}}'))
           return {
             stdout: JSON.stringify({
-              'luowang.project-id': identity.projectId,
-              'luowang.run-id': identity.attemptId,
+              'catchnet.project-id': identity.projectId,
+              'catchnet.run-id': identity.attemptId,
             }),
             stderr: '',
             exitCode: 0,
@@ -248,8 +248,8 @@ describe('execution runtime safety contracts', () => {
         targetCommit: 'a'.repeat(40),
         repositoryDirectory: '/tmp/project',
         containerId: 'b'.repeat(64),
-        sourceRoot: '/luowang-source',
-        workingDirectory: '/luowang-source',
+        sourceRoot: '/catchnet-source',
+        workingDirectory: '/catchnet-source',
       },
       docker,
     );
@@ -269,8 +269,8 @@ describe('execution runtime safety contracts', () => {
         if (args[0] === 'inspect' && args.includes('{{json .Config.Labels}}'))
           return {
             stdout: JSON.stringify({
-              'luowang.project-id': identity.projectId,
-              'luowang.run-id': identity.attemptId,
+              'catchnet.project-id': identity.projectId,
+              'catchnet.run-id': identity.attemptId,
             }),
             stderr: '',
             exitCode: 0,
@@ -288,8 +288,8 @@ describe('execution runtime safety contracts', () => {
         targetCommit: 'a'.repeat(40),
         repositoryDirectory: '/tmp/project',
         containerId: 'b'.repeat(64),
-        sourceRoot: '/luowang-source',
-        workingDirectory: '/luowang-source',
+        sourceRoot: '/catchnet-source',
+        workingDirectory: '/catchnet-source',
       },
       docker,
     );
@@ -314,8 +314,8 @@ describe('execution runtime safety contracts', () => {
         if (args[0] === 'inspect')
           return {
             stdout: JSON.stringify({
-              'luowang.project-id': identity.projectId,
-              'luowang.run-id': identity.attemptId,
+              'catchnet.project-id': identity.projectId,
+              'catchnet.run-id': identity.attemptId,
             }),
             stderr: '',
             exitCode: 0,
@@ -330,8 +330,8 @@ describe('execution runtime safety contracts', () => {
         targetCommit: 'a'.repeat(40),
         repositoryDirectory: '/tmp/project',
         containerId: 'b'.repeat(64),
-        sourceRoot: '/luowang-source',
-        workingDirectory: '/luowang-source',
+        sourceRoot: '/catchnet-source',
+        workingDirectory: '/catchnet-source',
       },
       docker,
     );

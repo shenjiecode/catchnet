@@ -112,14 +112,14 @@ it('generates an isolated draft from a fixed commit and never saves or starts a 
                   preparation: preparationFixture,
                   files: [
                     {
-                      path: '.luowang-generated/compose.yml',
+                      path: '.catchnet-generated/compose.yml',
                       content:
                         'services:\n  app:\n    image: node:24\n  tools:\n    image: node:24',
                     },
                   ],
                   runtime: {
                     servicePort: 3000,
-                    composeFile: '.luowang-generated/compose.yml',
+                    composeFile: '.catchnet-generated/compose.yml',
                     composeServices: ['app', 'tools'],
                     applicationService: 'app',
                     commandService: 'tools',
@@ -230,7 +230,7 @@ it('persists missing inputs and draft decisions, carries manual runtime and fail
                       preparation: preparationFixture,
                       files: [
                         {
-                          path: '.luowang-generated/compose.yml',
+                          path: '.catchnet-generated/compose.yml',
                           content:
                             'services:\n  app:\n    image: node:24\n  tools:\n    image: node:24',
                         },

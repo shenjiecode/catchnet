@@ -15,10 +15,10 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('offline multi-project upgrade command', () => {
   it('backs up schema 0017 before reliability migration and leaves a readable rollback copy', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-upgrade-stop-'));
-    const databasePath = join(root, 'luowang.db');
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-upgrade-stop-'));
+    const databasePath = join(root, 'catchnet.db');
     const database = new Database(databasePath);
-    const environment = { LUOWANG_DATA_DIR: root, LUOWANG_DATABASE_PATH: databasePath };
+    const environment = { CATCHNET_DATA_DIR: root, CATCHNET_DATABASE_PATH: databasePath };
     try {
       runMigrations(database);
       await runUpgradeCli(['backup', join(root, 'legacy')], environment);
@@ -61,7 +61,7 @@ describe('offline multi-project upgrade command', () => {
         'already_complete',
       );
       assert.equal(existsSync(join(root, 'unused')), false);
-      const old = new Database(join(backup, 'luowang-before-reliability-0020.db'), {
+      const old = new Database(join(backup, 'catchnet-before-reliability-0020.db'), {
         readonly: true,
       });
       try {
@@ -81,10 +81,10 @@ describe('offline multi-project upgrade command', () => {
   });
 
   it('backs up an empty file database, upgrades it and blocks the legacy service', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-upgrade-cli-'));
-    const databasePath = join(root, 'luowang.db');
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-upgrade-cli-'));
+    const databasePath = join(root, 'catchnet.db');
     const database = new Database(databasePath);
-    const environment = { LUOWANG_DATA_DIR: root, LUOWANG_DATABASE_PATH: databasePath };
+    const environment = { CATCHNET_DATA_DIR: root, CATCHNET_DATABASE_PATH: databasePath };
     try {
       runMigrations(database);
       assert.equal((await runUpgradeCli(['inspect'], environment)).status, 'empty');
@@ -112,10 +112,10 @@ describe('offline multi-project upgrade command', () => {
   });
 
   it('verifies the repository identity and requires review of the exact historical snapshot', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-upgrade-cli-'));
-    const databasePath = join(root, 'luowang.db');
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-upgrade-cli-'));
+    const databasePath = join(root, 'catchnet.db');
     const database = new Database(databasePath);
-    const environment = { LUOWANG_DATA_DIR: root, LUOWANG_DATABASE_PATH: databasePath };
+    const environment = { CATCHNET_DATA_DIR: root, CATCHNET_DATABASE_PATH: databasePath };
     try {
       runMigrations(database);
       database
@@ -161,10 +161,10 @@ describe('offline multi-project upgrade command', () => {
   });
 
   it('backs up an already cut over database before applying the report index change', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-upgrade-index-'));
-    const databasePath = join(root, 'luowang.db');
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-upgrade-index-'));
+    const databasePath = join(root, 'catchnet.db');
     const database = new Database(databasePath);
-    const environment = { LUOWANG_DATA_DIR: root, LUOWANG_DATABASE_PATH: databasePath };
+    const environment = { CATCHNET_DATA_DIR: root, CATCHNET_DATABASE_PATH: databasePath };
     try {
       runMigrations(database);
       const backupDir = join(root, 'legacy-backup');
@@ -186,7 +186,7 @@ describe('offline multi-project upgrade command', () => {
         backupDir: indexBackup,
         reports: 0,
       });
-      assert.equal(existsSync(join(indexBackup, 'luowang-before-index-0017.db')), true);
+      assert.equal(existsSync(join(indexBackup, 'catchnet-before-index-0017.db')), true);
       assert.equal((await runUpgradeCli(['verify'], environment)).status, 'complete');
       assert.equal(
         (await runUpgradeCli(['upgrade-index', join(root, 'unused')], environment)).status,

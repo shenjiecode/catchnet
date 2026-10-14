@@ -20,7 +20,7 @@ const bindingSchema = Type.Object({
 });
 export type ReliabilityBinding = Static<typeof bindingSchema>;
 const proofSchema = Type.Object({
-  schema: Type.Literal('luowang.run-reliability-live.v1'),
+  schema: Type.Literal('catchnet.run-reliability-live.v1'),
   binding: bindingSchema,
   caseId: Type.String({ minLength: 1 }),
   projectId: Type.String({ pattern: '^[a-f0-9-]{36}$' }),

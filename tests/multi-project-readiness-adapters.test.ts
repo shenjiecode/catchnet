@@ -90,9 +90,9 @@ describe('live project readiness adapters', () => {
                 code: 0,
                 stderr: '',
                 stdout: JSON.stringify({
-                  'luowang.project-id': project.projectId,
-                  'luowang.target-commit': commit,
-                  'luowang.build-definition': BUILTIN_IMAGE_DEFINITION,
+                  'catchnet.project-id': project.projectId,
+                  'catchnet.target-commit': commit,
+                  'catchnet.build-definition': BUILTIN_IMAGE_DEFINITION,
                 }),
               };
             },

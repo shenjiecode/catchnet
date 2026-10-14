@@ -808,7 +808,7 @@ function normalizeSourceRef(value: string | null | undefined): string {
     !SOURCE_REF_PATTERN.test(normalized) ||
     normalized.includes('..') ||
     normalized.includes('@{') ||
-    normalized.startsWith('refs/luowang/') ||
+    normalized.startsWith('refs/catchnet/') ||
     normalized.startsWith('refs/remotes/') ||
     CREDENTIAL_LIKE_SOURCE.test(normalized) ||
     URL_LIKE_SOURCE.test(normalized) ||

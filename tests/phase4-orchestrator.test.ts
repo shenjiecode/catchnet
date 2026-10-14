@@ -268,7 +268,7 @@ class FailureBoundarySessionFactory implements AgentSessionFactory {
           }
           const context = parsePromptContext(input.userMessage);
           if (this.mode === 'cleanup-failure' || this.mode === 'cleanup-review') {
-            this.cleanupDataId = `luowang-${context.runId}-test-user-1`;
+            this.cleanupDataId = `catchnet-${context.runId}-test-user-1`;
             await invokeTool(input, 'register_test_data', {
               id: this.cleanupDataId,
               description: 'fixture user',
@@ -381,16 +381,16 @@ async function createRunContext(
   preparationError?: GitCommandError,
   environmentRecommendation?: RunOrchestratorOptions['environmentRecommendation'],
 ): Promise<RunContextFixture> {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase4-orchestrator-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-orchestrator-'));
   const reportDir = join(dataDirectory, 'report');
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDirectory,
-    LUOWANG_REPO_DIR: join(dataDirectory, 'target'),
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_ADMIN_PASSWORD: 'phase4-orchestrator-password!',
-    LUOWANG_MASTER_KEY: 'phase4-orchestrator-master-key',
+    CATCHNET_DATA_DIR: dataDirectory,
+    CATCHNET_REPO_DIR: join(dataDirectory, 'target'),
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_ADMIN_PASSWORD: 'phase4-orchestrator-password!',
+    CATCHNET_MASTER_KEY: 'phase4-orchestrator-master-key',
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
@@ -555,7 +555,7 @@ function fakeOss(mode: FailureMode): OssAdapter {
 }
 
 async function createGitFixture(): Promise<Fixture> {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-phase4-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-phase4-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
@@ -563,7 +563,7 @@ async function createGitFixture(): Promise<Fixture> {
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
   await git(['config', 'user.name', 'Catchnet Phase 4 Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang-phase4@example.test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-phase4@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'fixture product\n');
   await mkdir(join(sourceDir, 'docs/scenario-testing/scenarios'), { recursive: true });
   await writeFile(

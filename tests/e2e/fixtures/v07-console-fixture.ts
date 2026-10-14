@@ -66,7 +66,7 @@ export function createV07ConsoleFixture(
       'Closure 7 Fixture',
       '1002',
       'cynos-ai',
-      'luowang-closure7-fixture',
+      'catchnet-closure7-fixture',
       'paused',
       now,
     ),

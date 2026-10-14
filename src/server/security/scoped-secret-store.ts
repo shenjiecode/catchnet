@@ -44,7 +44,7 @@ export function createScopedSecretStore(
   masterKey: string | undefined,
 ): ScopedSecretStore {
   const encryptionKey =
-    masterKey === undefined ? undefined : scryptSync(masterKey, 'luowang-secret-store-v1', 32);
+    masterKey === undefined ? undefined : scryptSync(masterKey, 'catchnet-secret-store-v1', 32);
   return {
     deployment: () =>
       new BoundSqliteSecretStore(database, encryptionKey, 'deployment', null, DEPLOYMENT_KEYS),
@@ -204,7 +204,7 @@ class BoundSqliteSecretStore<K extends string> implements BoundSecretStore<K> {
 
   private aad(key: K): Buffer {
     this.assertAllowed(key);
-    return Buffer.from(JSON.stringify(['luowang-secret-v2', this.scope, this.projectId, key]));
+    return Buffer.from(JSON.stringify(['catchnet-secret-v2', this.scope, this.projectId, key]));
   }
 
   private assertAllowed(key: K): void {

@@ -75,7 +75,7 @@ interface NextTool {
 export async function startLocalModelProtocol(
   behavior: LocalModelBehavior = 'normal',
 ): Promise<LocalModelProtocol> {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-local-model-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-local-model-'));
   const server = createServer((request, response) => {
     void handleRequest(request, response, behavior, protocolState);
   });
@@ -90,7 +90,7 @@ export async function startLocalModelProtocol(
     modelsPath,
     JSON.stringify({
       providers: {
-        'luowang-local': {
+        'catchnet-local': {
           baseUrl: `http://127.0.0.1:${address.port}/v1`,
           api: 'openai-completions',
           apiKey: 'local-protocol-placeholder',
@@ -122,7 +122,7 @@ export async function startLocalModelProtocol(
     refreshOnCreate: false,
     allowModelNetwork: false,
   });
-  const model = runtime.getModel('luowang-local', 'deterministic-tool-model');
+  const model = runtime.getModel('catchnet-local', 'deterministic-tool-model');
   if (!model) throw new Error('本地模型未注册');
   const provider = new LocalProvider(runtime, model);
   const productionFactory = createPiAgentSessionFactory({ provider });
@@ -491,7 +491,7 @@ function nextTool(
     ) {
       const context = parseRunContext(prompt);
       return tool('register_test_data', {
-        id: `luowang-${context.runId}-special-review-data`,
+        id: `catchnet-${context.runId}-special-review-data`,
         description: 'special review cleanup fixture',
       });
     }

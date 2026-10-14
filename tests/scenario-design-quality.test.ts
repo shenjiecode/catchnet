@@ -317,7 +317,7 @@ interface Fixture {
 }
 
 async function createGitFixture(): Promise<Fixture> {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-sdq-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-sdq-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
@@ -326,7 +326,7 @@ async function createGitFixture(): Promise<Fixture> {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--initial-branch=main'], sourceDir);
   await git(['config', 'user.name', 'Catchnet SDQ Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang-sdq@example.test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-sdq@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'modified.txt'), 'old\n');
   await writeFile(join(sourceDir, 'deleted.txt'), 'deleted before\n');
   await writeFile(join(sourceDir, 'rename-old.txt'), 'rename survives\n');

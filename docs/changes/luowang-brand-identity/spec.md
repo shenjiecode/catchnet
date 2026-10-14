@@ -13,7 +13,7 @@
 - `public/brand/favicon-white.png`：独立黑白母版的 32 px 白色图标，用于浏览器深色偏好。
 - `docs/brand/design-rationale.png`：设计构思、配色与应用说明，不随网站静态资源发布。
 
-上述文件原样取自本次用户已确认的透明素材包及设计说明图。包内对应文件分别为 `luowang-bilingual-color-light-600.png`、`luowang-bilingual-mono-white-600.png`、`luowang-color-light.ico`、`luowang-mark-mono-white-32.png`。素材源自用户的 `jimeng-2026-10-06-9200` 提案图，经确定性裁切和去底生成；不是恢复的原始矢量图。放大不增加原生细节，网站不得将 Logo 拉伸、旋转、裁切或滤镜换色。
+上述文件原样取自本次用户已确认的透明素材包及设计说明图。包内对应文件分别为 `catchnet-bilingual-color-light-600.png`、`catchnet-bilingual-mono-white-600.png`、`catchnet-color-light.ico`、`catchnet-mark-mono-white-32.png`。素材源自用户的 `jimeng-2026-10-06-9200` 提案图，经确定性裁切和去底生成；不是恢复的原始矢量图。放大不增加原生细节，网站不得将 Logo 拉伸、旋转、裁切或滤镜换色。
 
 ## 界面行为
 

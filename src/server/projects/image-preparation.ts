@@ -159,9 +159,9 @@ export async function inspectProjectImage(
   try {
     const labels = JSON.parse(result.stdout.trim()) as Record<string, unknown> | null;
     return (
-      labels?.['luowang.project-id'] === input.projectId &&
-      labels?.['luowang.target-commit'] === input.targetCommit &&
-      labels?.['luowang.build-definition'] === input.dockerfilePath
+      labels?.['catchnet.project-id'] === input.projectId &&
+      labels?.['catchnet.target-commit'] === input.targetCommit &&
+      labels?.['catchnet.build-definition'] === input.dockerfilePath
     );
   } catch {
     return false;

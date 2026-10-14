@@ -476,7 +476,7 @@ function scenarioPullRequestBody(runId: string, details: ScenarioPublicationDeta
   return [
     '由 Catchnet 生成的场景测试资产变更。',
     '',
-    `- luowang-run:${runId}`,
+    `- catchnet-run:${runId}`,
     `- target_commit: ${safeDetailsText(details.targetCommit) || 'unknown'}`,
     `- 变更理由：${reason}`,
     `- 覆盖缺口：${gaps.length > 0 ? gaps.join('；') : '无'}`,

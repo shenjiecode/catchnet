@@ -19,8 +19,8 @@ const READY = `sha256:${'b'.repeat(64)}`;
 const ORPHAN = `sha256:${'c'.repeat(64)}`;
 const BUSY = `sha256:${'d'.repeat(64)}`;
 const DERIVED = `sha256:${'f'.repeat(64)}`;
-const orphanTag = (projectId: string) => `luowang-project-${projectId}:${'c'.repeat(40)}`;
-const busyTag = (projectId: string) => `luowang-project-${projectId}:${'d'.repeat(40)}`;
+const orphanTag = (projectId: string) => `catchnet-project-${projectId}:${'c'.repeat(40)}`;
+const busyTag = (projectId: string) => `catchnet-project-${projectId}:${'d'.repeat(40)}`;
 
 function fixture() {
   const database = new Database(':memory:');
@@ -54,12 +54,12 @@ it('removes only verified own orphan containers and unreferenced images before q
       if (args[0] === 'inspect')
         return ok(
           JSON.stringify({
-            Name: `/luowang-run-${RUN.toLowerCase()}`,
+            Name: `/catchnet-run-${RUN.toLowerCase()}`,
             Config: {
               Labels: {
-                'luowang.instance-id': INSTANCE,
-                'luowang.project-id': projectId,
-                'luowang.run-id': RUN,
+                'catchnet.instance-id': INSTANCE,
+                'catchnet.project-id': projectId,
+                'catchnet.run-id': RUN,
               },
             },
           }),
@@ -71,9 +71,9 @@ it('removes only verified own orphan containers and unreferenced images before q
           JSON.stringify({
             Config: {
               Labels: {
-                'luowang.instance-id': INSTANCE,
-                'luowang.project-id': projectId,
-                'luowang.target-commit': args[4] === ORPHAN ? 'c'.repeat(40) : 'd'.repeat(40),
+                'catchnet.instance-id': INSTANCE,
+                'catchnet.project-id': projectId,
+                'catchnet.target-commit': args[4] === ORPHAN ? 'c'.repeat(40) : 'd'.repeat(40),
               },
             },
             RepoTags: [
@@ -104,7 +104,7 @@ it('removes only verified own orphan containers and unreferenced images before q
       calls.filter((args) => args[0] === 'image' && args[1] === 'rm').map((args) => args[2]),
       [ORPHAN, BUSY],
     );
-    assert.ok(calls[0].includes(`label=luowang.instance-id=${INSTANCE}`));
+    assert.ok(calls[0].includes(`label=catchnet.instance-id=${INSTANCE}`));
   } finally {
     database.close();
   }
@@ -126,9 +126,9 @@ it('stops without deleting a container whose identity does not match its Run', a
                   Name: '/unrelated',
                   Config: {
                     Labels: {
-                      'luowang.instance-id': INSTANCE,
-                      'luowang.project-id': projectId,
-                      'luowang.run-id': RUN,
+                      'catchnet.instance-id': INSTANCE,
+                      'catchnet.project-id': projectId,
+                      'catchnet.run-id': RUN,
                     },
                   },
                 }),

@@ -30,9 +30,9 @@ export async function recoverProjectDockerResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
     '--filter',
-    'name=luowang-run-',
+    'name=catchnet-run-',
   ]);
   let removedContainers = 0;
   for (const containerId of new Set(containers.trim().split(/\s+/).filter(Boolean))) {
@@ -44,13 +44,13 @@ export async function recoverProjectDockerResources(
       Config?: { Labels?: Record<string, string> };
     };
     const labels = details.Config?.Labels;
-    const runId = labels?.['luowang.run-id'];
+    const runId = labels?.['catchnet.run-id'];
     if (
-      labels?.['luowang.instance-id'] !== instanceId ||
-      !projects.has(labels?.['luowang.project-id'] ?? '') ||
+      labels?.['catchnet.instance-id'] !== instanceId ||
+      !projects.has(labels?.['catchnet.project-id'] ?? '') ||
       !runId ||
       !RUN_ID.test(runId) ||
-      details.Name !== `/luowang-run-${runId.toLowerCase()}`
+      details.Name !== `/catchnet-run-${runId.toLowerCase()}`
     ) {
       throw new Error('Docker 容器归属核验失败，停止恢复以避免误删');
     }
@@ -68,7 +68,7 @@ export async function recoverProjectDockerResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
   ]);
   let removedImages = 0;
   let retainedImages = 0;
@@ -79,8 +79,8 @@ export async function recoverProjectDockerResources(
     ) as { Config?: { Labels?: Record<string, string> }; RepoTags?: string[] };
     const labels = details.Config?.Labels;
     if (
-      labels?.['luowang.instance-id'] !== instanceId ||
-      !projects.has(labels?.['luowang.project-id'] ?? '')
+      labels?.['catchnet.instance-id'] !== instanceId ||
+      !projects.has(labels?.['catchnet.project-id'] ?? '')
     ) {
       throw new Error('Docker 镜像归属核验失败，停止清理以避免误删');
     }
@@ -90,8 +90,8 @@ export async function recoverProjectDockerResources(
     }
     // Inherited Docker labels are not proof that a derived image belongs to Catchnet.
     // Only an exact tag created by our builder is eligible; dangling images stay untouched.
-    const legacyTag = `luowang-project-${labels['luowang.project-id']}:${labels['luowang.target-commit']}`;
-    const composePrefix = `luowang-compose-${labels['luowang.project-id'].slice(0, 8)}:`;
+    const legacyTag = `catchnet-project-${labels['catchnet.project-id']}:${labels['catchnet.target-commit']}`;
+    const composePrefix = `catchnet-compose-${labels['catchnet.project-id'].slice(0, 8)}:`;
     if (
       !details.RepoTags?.includes(legacyTag) &&
       !details.RepoTags?.some((tag) => tag.startsWith(composePrefix))

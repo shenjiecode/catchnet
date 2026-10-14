@@ -8,9 +8,11 @@ export function readScreenshotReceipt(raw: string): {
   filename: string;
   inspection: ScreenshotInspection;
 } {
-  const lines = raw.split(/\r?\n/).filter((line) => line.startsWith('LUOWANG_SCREENSHOT_CAPTURE '));
+  const lines = raw
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith('CATCHNET_SCREENSHOT_CAPTURE '));
   if (lines.length !== 1) throw new Error('截图采集标签缺失或重复');
-  const value = JSON.parse(lines[0].slice('LUOWANG_SCREENSHOT_CAPTURE '.length));
+  const value = JSON.parse(lines[0].slice('CATCHNET_SCREENSHOT_CAPTURE '.length));
   if (
     !value ||
     typeof value.filename !== 'string' ||
@@ -36,11 +38,11 @@ export function appendScreenshotLabels(
     (ref, index) =>
       `- [截图 ${index + 1}](<${ref.url}>)：${screenshotInspectionLabel(ref.screenshotInspection ?? { status: 'unknown' })}；检测范围为页面，不代表图片整体安全或人工审核通过。`,
   );
-  const section = `\n\n<!-- luowang-screenshot-inspection -->\n## 截图采集标签\n\n${lines.join('\n')}\n<!-- /luowang-screenshot-inspection -->\n`;
+  const section = `\n\n<!-- catchnet-screenshot-inspection -->\n## 截图采集标签\n\n${lines.join('\n')}\n<!-- /catchnet-screenshot-inspection -->\n`;
   return (
     content
       .replace(
-        /\n*<!-- luowang-screenshot-inspection -->[\s\S]*?<!-- \/luowang-screenshot-inspection -->\n*/g,
+        /\n*<!-- catchnet-screenshot-inspection -->[\s\S]*?<!-- \/catchnet-screenshot-inspection -->\n*/g,
         '',
       )
       .trimEnd() + section

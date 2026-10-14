@@ -11,8 +11,8 @@ import { createLegacyBackup, verifyLegacyBackup } from '../src/server/projects/l
 
 describe('offline legacy instance backup', () => {
   it('copies a consistent SQLite snapshot and both work trees without overwriting', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-upgrade-backup-'));
-    const databasePath = join(root, 'data', 'luowang.db');
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-upgrade-backup-'));
+    const databasePath = join(root, 'data', 'catchnet.db');
     const repoDir = join(root, 'data', 'repo');
     const reportDir = join(root, 'data', 'report');
     const backupDir = join(root, 'backups', 'snapshot-1');
@@ -41,7 +41,7 @@ describe('offline legacy instance backup', () => {
         await readFile(join(backupDir, 'report', 'marker.txt'), 'utf8'),
         'report-before',
       );
-      const copied = new Database(join(backupDir, 'luowang.db'), {
+      const copied = new Database(join(backupDir, 'catchnet.db'), {
         readonly: true,
         fileMustExist: true,
       });

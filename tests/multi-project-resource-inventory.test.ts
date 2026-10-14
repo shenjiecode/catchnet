@@ -42,12 +42,12 @@ it('previews owned containers and image references without calling destructive D
       if (args[0] === 'inspect')
         return ok(
           JSON.stringify({
-            Name: `/luowang-run-${RUN.toLowerCase()}`,
+            Name: `/catchnet-run-${RUN.toLowerCase()}`,
             Config: {
               Labels: {
-                'luowang.instance-id': INSTANCE,
-                'luowang.project-id': projectId,
-                'luowang.run-id': RUN,
+                'catchnet.instance-id': INSTANCE,
+                'catchnet.project-id': projectId,
+                'catchnet.run-id': RUN,
               },
             },
           }),
@@ -61,13 +61,13 @@ it('previews owned containers and image references without calling destructive D
           JSON.stringify({
             Config: {
               Labels: {
-                'luowang.instance-id': INSTANCE,
-                'luowang.project-id': projectId,
-                'luowang.target-commit': commit,
+                'catchnet.instance-id': INSTANCE,
+                'catchnet.project-id': projectId,
+                'catchnet.target-commit': commit,
               },
             },
             RepoTags: [
-              imageId === DERIVED ? 'other:tag' : `luowang-project-${projectId}:${commit}`,
+              imageId === DERIVED ? 'other:tag' : `catchnet-project-${projectId}:${commit}`,
             ],
             Size: imageId === ORPHAN ? 1024 : 2048,
           }),

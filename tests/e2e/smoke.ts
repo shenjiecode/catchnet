@@ -41,7 +41,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
   throw new Error(`server did not become healthy: ${lastError}`);
 }
 
-const dataDir = await mkdtemp(join(tmpdir(), 'luowang-e2e-'));
+const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-e2e-'));
 const port = await getAvailablePort();
 const adminPassword = 'e2e-admin-password!';
 const child = spawn(process.execPath, ['dist/server/main.js'], {
@@ -49,12 +49,12 @@ const child = spawn(process.execPath, ['dist/server/main.js'], {
   env: {
     ...process.env,
     NODE_ENV: 'production',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_HOST: '127.0.0.1',
-    LUOWANG_PORT: String(port),
-    LUOWANG_LOG_LEVEL: 'silent',
-    LUOWANG_ADMIN_PASSWORD: adminPassword,
-    LUOWANG_MASTER_KEY: 'e2e-master-key-material',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_HOST: '127.0.0.1',
+    CATCHNET_PORT: String(port),
+    CATCHNET_LOG_LEVEL: 'silent',
+    CATCHNET_ADMIN_PASSWORD: adminPassword,
+    CATCHNET_MASTER_KEY: 'e2e-master-key-material',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });

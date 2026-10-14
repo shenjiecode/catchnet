@@ -48,7 +48,7 @@ export class ConfigError extends Error {
 export function readMaxConcurrentProjects(value: string | undefined): number {
   if (value === undefined) return 2;
   if (!/^[1-8]$/.test(value)) {
-    throw new ConfigError('LUOWANG_MAX_CONCURRENT_PROJECTS must be an integer between 1 and 8');
+    throw new ConfigError('CATCHNET_MAX_CONCURRENT_PROJECTS must be an integer between 1 and 8');
   }
   return Number(value);
 }
@@ -68,7 +68,7 @@ function readPort(value: string | undefined): number {
 
   const port = Number(value);
   if (!Number.isInteger(port) || port < 0 || port > 65535) {
-    throw new ConfigError('LUOWANG_PORT must be an integer between 0 and 65535');
+    throw new ConfigError('CATCHNET_PORT must be an integer between 0 and 65535');
   }
   return port;
 }
@@ -76,7 +76,7 @@ function readPort(value: string | undefined): number {
 function readLogLevel(value: string | undefined): LevelWithSilent {
   const level = value ?? 'info';
   if (!LOG_LEVELS.has(level as LevelWithSilent)) {
-    throw new ConfigError('LUOWANG_LOG_LEVEL is not a supported log level');
+    throw new ConfigError('CATCHNET_LOG_LEVEL is not a supported log level');
   }
   return level as LevelWithSilent;
 }
@@ -112,37 +112,37 @@ function readSecret(
 }
 
 export function loadConfig(environment: NodeJS.ProcessEnv = process.env): AppConfig {
-  const dataDir = readPath(environment.LUOWANG_DATA_DIR ?? environment.DATA_DIR, DEFAULT_DATA_DIR);
+  const dataDir = readPath(environment.CATCHNET_DATA_DIR ?? environment.DATA_DIR, DEFAULT_DATA_DIR);
   const databasePath = readPath(
-    environment.LUOWANG_DATABASE_PATH ?? environment.DATABASE_PATH,
-    join(dataDir, 'luowang.db'),
+    environment.CATCHNET_DATABASE_PATH ?? environment.DATABASE_PATH,
+    join(dataDir, 'catchnet.db'),
   );
-  const repoDir = readPath(environment.LUOWANG_REPO_DIR, join(dataDir, 'repo'));
-  const reportDir = readPath(environment.LUOWANG_REPORT_DIR, join(dataDir, 'report'));
-  const webRoot = readPath(environment.LUOWANG_WEB_ROOT, resolve(process.cwd(), 'dist/web'));
+  const repoDir = readPath(environment.CATCHNET_REPO_DIR, join(dataDir, 'repo'));
+  const reportDir = readPath(environment.CATCHNET_REPORT_DIR, join(dataDir, 'report'));
+  const webRoot = readPath(environment.CATCHNET_WEB_ROOT, resolve(process.cwd(), 'dist/web'));
 
   return {
     environment: readEnvironment(environment.NODE_ENV),
-    host: environment.LUOWANG_HOST ?? environment.HOST ?? '127.0.0.1',
-    port: readPort(environment.LUOWANG_PORT ?? environment.PORT),
+    host: environment.CATCHNET_HOST ?? environment.HOST ?? '127.0.0.1',
+    port: readPort(environment.CATCHNET_PORT ?? environment.PORT),
     dataDir,
     databasePath,
     repoDir,
     reportDir,
     webRoot,
-    logLevel: readLogLevel(environment.LUOWANG_LOG_LEVEL ?? environment.LOG_LEVEL),
-    version: environment.LUOWANG_VERSION ?? DEFAULT_VERSION,
-    maxConcurrentProjects: readMaxConcurrentProjects(environment.LUOWANG_MAX_CONCURRENT_PROJECTS),
-    testDataCleanupUrl: environment.LUOWANG_TEST_DATA_CLEANUP_URL?.trim() || undefined,
+    logLevel: readLogLevel(environment.CATCHNET_LOG_LEVEL ?? environment.LOG_LEVEL),
+    version: environment.CATCHNET_VERSION ?? DEFAULT_VERSION,
+    maxConcurrentProjects: readMaxConcurrentProjects(environment.CATCHNET_MAX_CONCURRENT_PROJECTS),
+    testDataCleanupUrl: environment.CATCHNET_TEST_DATA_CLEANUP_URL?.trim() || undefined,
     initialAdminPassword: readSecret(
       environment,
-      'LUOWANG_ADMIN_PASSWORD',
-      'LUOWANG_ADMIN_PASSWORD_FILE',
+      'CATCHNET_ADMIN_PASSWORD',
+      'CATCHNET_ADMIN_PASSWORD_FILE',
     ),
-    masterKey: readSecret(environment, 'LUOWANG_MASTER_KEY', 'LUOWANG_MASTER_KEY_FILE'),
+    masterKey: readSecret(environment, 'CATCHNET_MASTER_KEY', 'CATCHNET_MASTER_KEY_FILE'),
     allowedOrigin:
-      environment.LUOWANG_ALLOWED_ORIGIN && environment.LUOWANG_ALLOWED_ORIGIN.trim() !== ''
-        ? environment.LUOWANG_ALLOWED_ORIGIN.trim()
+      environment.CATCHNET_ALLOWED_ORIGIN && environment.CATCHNET_ALLOWED_ORIGIN.trim() !== ''
+        ? environment.CATCHNET_ALLOWED_ORIGIN.trim()
         : undefined,
   };
 }

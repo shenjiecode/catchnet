@@ -64,7 +64,7 @@ export async function inspectProjectResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
   ]);
   for (const containerId of ids(containerIds)) {
     if (!CONTAINER_ID.test(containerId)) throw new Error('Docker 返回无效容器 ID');
@@ -72,9 +72,9 @@ export async function inspectProjectResources(
       await command(docker, ['inspect', '--format', '{{json .}}', containerId]),
     ) as { Name?: string; Config?: { Labels?: Record<string, string> } };
     const labels = details.Config?.Labels;
-    const projectId = labels?.['luowang.project-id'] ?? '';
-    const legacyRunId = labels?.['luowang.run-id'] ?? '';
-    const runId = legacyRunId || labels?.['luowang.attempt-id'] || '';
+    const projectId = labels?.['catchnet.project-id'] ?? '';
+    const legacyRunId = labels?.['catchnet.run-id'] ?? '';
+    const runId = legacyRunId || labels?.['catchnet.attempt-id'] || '';
     const runtimeOwned =
       !legacyRunId &&
       Boolean(runtimeCache) &&
@@ -88,10 +88,10 @@ export async function inspectProjectResources(
           .get(projectId, runId, `local:${instanceId}`),
       );
     if (
-      labels?.['luowang.instance-id'] !== instanceId ||
+      labels?.['catchnet.instance-id'] !== instanceId ||
       !owned.has(projectId) ||
       !RUN_ID.test(runId) ||
-      (legacyRunId ? details.Name !== `/luowang-run-${runId.toLowerCase()}` : !runtimeOwned)
+      (legacyRunId ? details.Name !== `/catchnet-run-${runId.toLowerCase()}` : !runtimeOwned)
     ) {
       throw new Error('Docker 容器归属核验失败，不能生成清理预览');
     }
@@ -105,7 +105,7 @@ export async function inspectProjectResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
   ]);
   for (const imageId of ids(imageIds)) {
     if (!IMAGE_ID.test(imageId)) throw new Error('Docker 返回无效镜像 ID');
@@ -117,12 +117,12 @@ export async function inspectProjectResources(
       Size?: number;
     };
     const labels = details.Config?.Labels;
-    const projectId = labels?.['luowang.project-id'] ?? '';
-    if (labels?.['luowang.instance-id'] !== instanceId || !owned.has(projectId)) {
+    const projectId = labels?.['catchnet.project-id'] ?? '';
+    if (labels?.['catchnet.instance-id'] !== instanceId || !owned.has(projectId)) {
       throw new Error('Docker 镜像归属核验失败，不能生成清理预览');
     }
-    const tag = `luowang-project-${projectId}:${labels['luowang.target-commit']}`;
-    const composePrefix = `luowang-compose-${projectId.slice(0, 8)}:`;
+    const tag = `catchnet-project-${projectId}:${labels['catchnet.target-commit']}`;
+    const composePrefix = `catchnet-compose-${projectId.slice(0, 8)}:`;
     const disposition = referenced.has(imageId)
       ? 'referenced'
       : details.RepoTags?.includes(tag) ||

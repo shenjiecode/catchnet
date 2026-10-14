@@ -94,7 +94,7 @@
 4. **测试账号和清理能力**：专用账号及角色、测试数据命名约束、通过 UI/API 删除本次数据的方式，以及可独立证明数据已不存在的脱敏查询/截图/API 证据；如果环境不能删除或不能验证临时数据已清理，则不能完成 live 验收；
 5. **模型 Provider**：Provider 标识、API Key、Main/Runner/Reviewer 模型 ID、thinking level；Reviewer 模型必须支持本次截图审核所需的图像输入；
 6. **OSS**：S3-compatible endpoint、region、私有 bucket、专用 object prefix、Access Key ID/Secret；权限只覆盖该 prefix 的 put/get/head/delete；
-7. **候选罗网实例**：`LUOWANG_ADMIN_PASSWORD`、`LUOWANG_MASTER_KEY`、本地或非生产访问地址，以及需要时的 `LUOWANG_ALLOWED_ORIGIN`；
+7. **候选罗网实例**：`CATCHNET_ADMIN_PASSWORD`、`CATCHNET_MASTER_KEY`、本地或非生产访问地址，以及需要时的 `CATCHNET_ALLOWED_ORIGIN`；
 8. **网络和费用授权**：确认候选容器能访问 GitHub、Provider、OSS 和样例应用，并接受本次真实模型、浏览器和 OSS 调用产生的有限费用；
 9. **发布权限与版本**：具备向 `shenjiecode/catchnet` 创建 PR/tag 的权限，并在验收通过后确认下一个版本使用 `v0.1.1` 还是 `v0.2.0`。
 

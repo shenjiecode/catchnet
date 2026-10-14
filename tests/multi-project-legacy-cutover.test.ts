@@ -27,7 +27,7 @@ const verifiedRepository = { githubRepositoryId: '101', owner: 'example', name: 
 
 describe('offline legacy project cutover', () => {
   it('rehearses backup, historical ownership, a second project, rollback and repeat upgrade', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-upgrade-rehearsal-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-upgrade-rehearsal-'));
     const databasePath = join(root, 'legacy.db');
     const backupDir = join(root, 'backup');
     const repoDir = join(root, 'repository');
@@ -219,12 +219,12 @@ describe('offline legacy project cutover', () => {
 
       const config = loadConfig({
         NODE_ENV: 'test',
-        LUOWANG_DATA_DIR: root,
-        LUOWANG_DATABASE_PATH: databasePath,
-        LUOWANG_REPO_DIR: repoDir,
-        LUOWANG_REPORT_DIR: reportDir,
-        LUOWANG_ADMIN_PASSWORD: 'rehearsal-admin-password',
-        LUOWANG_MASTER_KEY: masterKey,
+        CATCHNET_DATA_DIR: root,
+        CATCHNET_DATABASE_PATH: databasePath,
+        CATCHNET_REPO_DIR: repoDir,
+        CATCHNET_REPORT_DIR: reportDir,
+        CATCHNET_ADMIN_PASSWORD: 'rehearsal-admin-password',
+        CATCHNET_MASTER_KEY: masterKey,
       });
       const appDatabase = openDatabase(config);
       try {
@@ -270,7 +270,7 @@ describe('offline legacy project cutover', () => {
       }
 
       // Roll back all three matching artifacts together, never the migrated DB alone.
-      await copyFile(join(backupDir, 'luowang.db'), databasePath);
+      await copyFile(join(backupDir, 'catchnet.db'), databasePath);
       await rm(repoDir, { recursive: true });
       await rm(reportDir, { recursive: true });
       await cp(join(backupDir, 'repo'), repoDir, { recursive: true });
@@ -308,7 +308,7 @@ describe('offline legacy project cutover', () => {
     }
   });
   it('keeps a backed-up empty instance at zero projects', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-cutover-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-cutover-'));
     const databasePath = join(root, 'old.db');
     const backupDir = join(root, 'backup');
     const database = new Database(databasePath);
@@ -354,7 +354,7 @@ describe('offline legacy project cutover', () => {
   });
 
   it('requires a matching backup and rolls back bad Secrets before a successful retry', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-cutover-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-cutover-'));
     const databasePath = join(root, 'old.db');
     const backupDir = join(root, 'backup');
     const database = new Database(databasePath);
@@ -397,7 +397,7 @@ describe('offline legacy project cutover', () => {
   });
 
   it('rejects source changes made after the backup', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-cutover-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-cutover-'));
     const databasePath = join(root, 'old.db');
     const backupDir = join(root, 'backup');
     const database = new Database(databasePath);
@@ -437,7 +437,7 @@ describe('offline legacy project cutover', () => {
   });
 
   it('requires an exact reviewed snapshot before assigning historical progress', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-cutover-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-cutover-'));
     const databasePath = join(root, 'old.db');
     const backupDir = join(root, 'backup');
     const database = new Database(databasePath);

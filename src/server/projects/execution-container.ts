@@ -74,8 +74,8 @@ export async function createAttachedProjectCommandSession(
     throw new ControlledCommandError('COMMAND_FAILED', '测试服务归属无法核验');
   }
   if (
-    labels['luowang.project-id'] !== input.projectId ||
-    (labels['luowang.run-id'] !== input.runId && labels['luowang.attempt-id'] !== input.runId)
+    labels['catchnet.project-id'] !== input.projectId ||
+    (labels['catchnet.run-id'] !== input.runId && labels['catchnet.attempt-id'] !== input.runId)
   )
     throw new ControlledCommandError('COMMAND_NOT_ALLOWED', '测试服务不属于当前 Run');
   return {
@@ -97,9 +97,9 @@ export async function createAttachedProjectCommandSession(
             '--workdir',
             input.workingDirectory,
             '--env',
-            `LUOWANG_RUN_ID=${input.runId}`,
+            `CATCHNET_RUN_ID=${input.runId}`,
             '--env',
-            `LUOWANG_TARGET_COMMIT=${input.targetCommit}`,
+            `CATCHNET_TARGET_COMMIT=${input.targetCommit}`,
             input.containerId,
             ...args,
           ],
@@ -115,7 +115,7 @@ export async function createAttachedProjectCommandSession(
         stdout: result.stdout,
         stderr: result.stderr,
         exitCode: result.exitCode,
-        environmentKeys: ['LUOWANG_RUN_ID', 'LUOWANG_TARGET_COMMIT'],
+        environmentKeys: ['CATCHNET_RUN_ID', 'CATCHNET_TARGET_COMMIT'],
       };
     },
     async close() {},
@@ -232,7 +232,7 @@ export async function startProjectCommandSession(
   const sourceDirectory = input.executionSourceDirectory ?? resolve(input.runSource.directory);
   const expectedRoot = resolve(input.sourceRoot, 'projects', input.projectId, 'run-sources');
   if (input.executionSourceDirectory) {
-    const expected = `/tmp/luowang/${input.instanceId}/${input.projectId}/command-${input.runId}`;
+    const expected = `/tmp/catchnet/${input.instanceId}/${input.projectId}/command-${input.runId}`;
     if (sourceDirectory !== expected)
       throw new ControlledCommandError('COMMAND_NOT_ALLOWED', '远程 Run 源码路径不受控');
   } else {
@@ -261,12 +261,12 @@ export async function startProjectCommandSession(
     throw new ControlledCommandError('COMMAND_FAILED', '项目镜像标签无法核验');
   }
   if (
-    labels?.['luowang.project-id'] !== input.projectId ||
-    labels?.['luowang.target-commit'] !== input.targetCommit
+    labels?.['catchnet.project-id'] !== input.projectId ||
+    labels?.['catchnet.target-commit'] !== input.targetCommit
   ) {
     throw new ControlledCommandError('COMMAND_FAILED', '项目镜像与 Run 归属或目标提交不符');
   }
-  const name = `luowang-run-${input.runId.toLowerCase()}`;
+  const name = `catchnet-run-${input.runId.toLowerCase()}`;
   input.signal?.throwIfAborted();
   const created = await requireDockerSuccess(
     docker,
@@ -275,17 +275,17 @@ export async function startProjectCommandSession(
       '--name',
       name,
       '--label',
-      `luowang.project-id=${input.projectId}`,
+      `catchnet.project-id=${input.projectId}`,
       '--label',
-      `luowang.instance-id=${input.instanceId}`,
+      `catchnet.instance-id=${input.instanceId}`,
       '--label',
-      `luowang.run-id=${input.runId}`,
+      `catchnet.run-id=${input.runId}`,
       '--label',
-      `luowang.target-commit=${input.targetCommit}`,
+      `catchnet.target-commit=${input.targetCommit}`,
       '--label',
-      `luowang.scenario-patch-sha256=${input.runSource.scenarioPatchSha256 ?? 'none'}`,
+      `catchnet.scenario-patch-sha256=${input.runSource.scenarioPatchSha256 ?? 'none'}`,
       '--workdir',
-      '/luowang-source',
+      '/catchnet-source',
       '--entrypoint',
       'sleep',
       input.imageId,
@@ -313,10 +313,10 @@ export async function startProjectCommandSession(
           );
           const labels = JSON.parse(inspected.stdout) as Record<string, string>;
           if (
-            labels['luowang.instance-id'] !== input.instanceId ||
-            labels['luowang.project-id'] !== input.projectId ||
-            labels['luowang.run-id'] !== input.runId ||
-            labels['luowang.target-commit'] !== input.targetCommit
+            labels['catchnet.instance-id'] !== input.instanceId ||
+            labels['catchnet.project-id'] !== input.projectId ||
+            labels['catchnet.run-id'] !== input.runId ||
+            labels['catchnet.target-commit'] !== input.targetCommit
           )
             throw new Error('准备容器归属尚未确认');
           await requireDockerSuccess(docker, ['rm', '--force', id], 30_000);
@@ -337,7 +337,7 @@ export async function startProjectCommandSession(
     input.signal?.throwIfAborted();
     await requireDockerSuccess(
       docker,
-      ['cp', `${sourceDirectory}/.`, `${containerId}:/luowang-source`],
+      ['cp', `${sourceDirectory}/.`, `${containerId}:/catchnet-source`],
       120_000,
     );
     input.signal?.throwIfAborted();
@@ -403,11 +403,11 @@ class BoundProjectCommandSession implements ProjectCommandSession {
         [
           'exec',
           '--workdir',
-          '/luowang-source',
+          '/catchnet-source',
           '--env',
-          `LUOWANG_RUN_ID=${this.binding.runId}`,
+          `CATCHNET_RUN_ID=${this.binding.runId}`,
           '--env',
-          `LUOWANG_TARGET_COMMIT=${this.binding.targetCommit}`,
+          `CATCHNET_TARGET_COMMIT=${this.binding.targetCommit}`,
           this.containerId,
           ...args,
         ],
@@ -417,7 +417,7 @@ class BoundProjectCommandSession implements ProjectCommandSession {
         stdout: result.stdout,
         stderr: result.stderr,
         exitCode: result.exitCode,
-        environmentKeys: ['LUOWANG_RUN_ID', 'LUOWANG_TARGET_COMMIT'],
+        environmentKeys: ['CATCHNET_RUN_ID', 'CATCHNET_TARGET_COMMIT'],
       };
     } catch (error) {
       await this.close().catch(() => undefined);

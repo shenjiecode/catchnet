@@ -104,12 +104,12 @@ export async function runUpgradeCli(
       const databaseBackupPath = join(
         backupPath,
         runtime
-          ? 'luowang-before-execution-runtime-0022.db'
+          ? 'catchnet-before-execution-runtime-0022.db'
           : connections
-            ? 'luowang-before-connections-0021.db'
+            ? 'catchnet-before-connections-0021.db'
             : reliability
-              ? 'luowang-before-reliability-0020.db'
-              : 'luowang-before-index-0017.db',
+              ? 'catchnet-before-reliability-0020.db'
+              : 'catchnet-before-index-0017.db',
       );
       await database.backup(databaseBackupPath);
       const backup = new Database(databaseBackupPath, { readonly: true, fileMustExist: true });

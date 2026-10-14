@@ -78,7 +78,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
   throw new Error(`server did not become healthy: ${lastError}`);
 }
 
-const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase8-ui-'));
+const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase8-ui-'));
 const port = await getAvailablePort();
 const baseUrl = `http://127.0.0.1:${port}`;
 const child = spawn(process.execPath, ['dist/server/main.js'], {
@@ -86,12 +86,12 @@ const child = spawn(process.execPath, ['dist/server/main.js'], {
   env: {
     ...process.env,
     NODE_ENV: 'production',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_HOST: '127.0.0.1',
-    LUOWANG_PORT: String(port),
-    LUOWANG_LOG_LEVEL: 'silent',
-    LUOWANG_ADMIN_PASSWORD: ADMIN_PASSWORD,
-    LUOWANG_MASTER_KEY: 'phase8-ui-smoke-master-key-material',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_HOST: '127.0.0.1',
+    CATCHNET_PORT: String(port),
+    CATCHNET_LOG_LEVEL: 'silent',
+    CATCHNET_ADMIN_PASSWORD: ADMIN_PASSWORD,
+    CATCHNET_MASTER_KEY: 'phase8-ui-smoke-master-key-material',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -235,13 +235,13 @@ try {
     await page.getByRole('button', { name: '场景', exact: true }).click();
     await page.getByRole('heading', { name: '长期场景' }).waitFor();
     await page.locator('details.scenario-detail summary').click();
-    await page.getByText('window.__luowangXss = true', { exact: false }).waitFor();
+    await page.getByText('window.__catchnetXss = true', { exact: false }).waitFor();
     assert.equal(
-      await page.locator('script').filter({ hasText: 'window.__luowangXss' }).count(),
+      await page.locator('script').filter({ hasText: 'window.__catchnetXss' }).count(),
       0,
     );
     assert.equal(
-      await page.evaluate(() => (window as Window & { __luowangXss?: boolean }).__luowangXss),
+      await page.evaluate(() => (window as Window & { __catchnetXss?: boolean }).__catchnetXss),
       undefined,
     );
     await page.getByPlaceholder('ID、名称、描述、正文或标签').fill('不存在的场景');
@@ -612,7 +612,7 @@ function makeScenario(): OperationsScenario {
     description: '验证用户登录后刷新页面仍保持登录状态',
     status: 'approved',
     tags: ['core', 'flow:登录'],
-    content: '<script>window.__luowangXss = true</script>',
+    content: '<script>window.__catchnetXss = true</script>',
     commitSha: HASHES.indexed,
     indexedAt: '2026-08-30T02:00:00.000Z',
   };

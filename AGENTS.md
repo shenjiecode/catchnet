@@ -17,6 +17,9 @@
 
 ## 仓库与分支
 
+- 当前开发版已统一为 Catchnet：使用 `CATCHNET_*` 环境变量、`catchnet.db` 和 `catchnet` 资源/协议标识，不新增旧英文名兼容层。中文“罗网”和 Logo 不变；历史需求目录、原型文件名、验收记录及独立样例仓库保留原名。旧实例备份与重建边界见 `README.zh.md`“名称与迁移”；历史 Plan 中的旧命令不作为当前部署入口。
+- GitHub Issue、PR、评论及评审使用整体双语：完整英文在前、完整中文在后。说明文档按语言拆分，英文使用 `.md`、中文使用 `.zh.md`，提供相互切换链接；项目入口为 `README.md` 与 `README.zh.md`，详细说明优先放在 `docs/`。
+
 - 执行服务器、应用启动和 Compose 的规则位于 `docs/changes/luowang-execution-server-redesign/`。执行链与本机工程验证已接入，各服务器使用自己的 Docker；真实远程和模型联合验收进度以 Plan 为准，不把保存服务器资源当作已经验证远程运行。
 - AI 启动配置、文件/脚本初始化和项目设置调整位于 `docs/changes/luowang-ai-test-environment/`。生成/更新只由用户点击并手动保存；正常分析只提醒。最新最高思考等级、30 分钟生成时限、准备边界贯穿初始化/正式 Run、项目 Mock 与已知 Issue 复测规则见该目录 Spec §11；不由罗网补写被测业务或把已知失败变成通过。用户明确当前没有正式上线或外部用户，项目测试准备只支持完整的新方案格式，不保留旧草案/旧生成定义兼容或旧内容展示；开发预览中的旧准备数据按该目录 Spec 一次性清理，不扩展为兼容层。实现范围与本机、真实模型和远程验证分别见该目录 Spec/Plan，不增加数据库同步平台或另一条 Run 执行链。
 
@@ -44,7 +47,7 @@
 
 ## 固定安全边界
 
-- 空数据库的管理员密码只从 `LUOWANG_ADMIN_PASSWORD` 初始化；不提供匿名设密或默认密码，已有哈希不被环境变量覆盖。
+- 空数据库的管理员密码只从 `CATCHNET_ADMIN_PASSWORD` 初始化；不提供匿名设密或默认密码，已有哈希不被环境变量覆盖。
 - Main 的场景 patch 只能修改 `docs/scenario-testing/scenarios/**`，必须拒绝产品/需求/历史报告变更、越界 rename、symlink、submodule、二进制和无效场景。
 - Archiver 只原样发布已验证场景 patch，并只为当前 Run 新增 `docs/scenario-testing/reports/<current-run-id>/**`；不得改写其他历史报告。
 

@@ -180,9 +180,9 @@ export function normalizeComposeDefinition(input: {
       image: normalized.image ?? null,
     };
     normalized.labels = {
-      'luowang.instance-id': input.instanceId,
-      'luowang.project-id': input.projectId,
-      'luowang.attempt-id': input.attemptId,
+      'catchnet.instance-id': input.instanceId,
+      'catchnet.project-id': input.projectId,
+      'catchnet.attempt-id': input.attemptId,
     };
     services[name] = normalized;
   }
@@ -192,9 +192,9 @@ export function normalizeComposeDefinition(input: {
   for (const resource of [...Object.values(networks), ...Object.values(volumes)])
     resource.labels = {
       ...(record(resource.labels) ? resource.labels : {}),
-      'luowang.instance-id': input.instanceId,
-      'luowang.project-id': input.projectId,
-      'luowang.attempt-id': input.attemptId,
+      'catchnet.instance-id': input.instanceId,
+      'catchnet.project-id': input.projectId,
+      'catchnet.attempt-id': input.attemptId,
     };
   for (const [name, service] of Object.entries(services)) {
     const selectedNetworks = normalizeServiceNetworks(service.networks, name);

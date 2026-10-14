@@ -206,9 +206,9 @@ async function makeAdapter(options: {
   baseUrl?: string;
   thinking?: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 }) {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase3-provider-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase3-provider-'));
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
-  const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDirectory });
+  const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDirectory });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
   const configuration = createConfigurationStore(database.sqlite, {

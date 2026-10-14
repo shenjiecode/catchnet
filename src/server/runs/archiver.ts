@@ -343,8 +343,8 @@ class DefaultRunArchiver implements RunArchiver {
 
     assertMarkerPart(run.runId);
     assertMarkerPart(issue.bugKey);
-    const runMarker = `luowang-run:${run.runId}`;
-    const bugMarker = `luowang-bug:${issue.bugKey}`;
+    const runMarker = `catchnet-run:${run.runId}`;
+    const bugMarker = `catchnet-bug:${issue.bugKey}`;
     const matches = await this.options.repository.findIssuesByMarkers([runMarker, bugMarker]);
     const existing = matches.sort((left, right) => left.number - right.number)[0];
     if (existing) return { number: existing.number, url: existing.url };

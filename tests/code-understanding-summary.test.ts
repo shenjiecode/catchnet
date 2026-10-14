@@ -13,7 +13,7 @@ const summarize = (directory: string) =>
   spawnSync(process.execPath, [script, directory], { encoding: 'utf8' });
 
 it('recalculates paired quality and all request costs, then rejects a changed audited plan', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-eval-summary-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-eval-summary-'));
   try {
     const manifest = Buffer.from('{}');
     await writeFile(join(directory, 'manifest.json'), manifest);

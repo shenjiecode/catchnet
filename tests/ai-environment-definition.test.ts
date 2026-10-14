@@ -16,12 +16,12 @@ import {
 } from '../src/server/projects/file-content.js';
 
 it('materializes generated files without a product Dockerfile and changes cache identity for same target edits', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-generated-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-generated-'));
   const definition = normalizeGeneratedDefinition({
     sourceCommit: 'a'.repeat(40),
     summary: 'fixture',
     preparation: preparationFixture,
-    files: [{ path: '.luowang-generated/app.Dockerfile', content: 'FROM node:24\n' }],
+    files: [{ path: '.catchnet-generated/app.Dockerfile', content: 'FROM node:24\n' }],
   })!;
   const changed = {
     ...definition,
@@ -75,7 +75,7 @@ it('preserves binary database bytes and accepts SQL larger than the text configu
 });
 
 it('rejects generated paths outside the reserved preparation directory', () => {
-  for (const path of ['Dockerfile', '.luowang-generated/../../app.ts', '.git/config'])
+  for (const path of ['Dockerfile', '.catchnet-generated/../../app.ts', '.git/config'])
     assert.throws(() =>
       normalizeGeneratedDefinition({
         sourceCommit: 'a'.repeat(40),

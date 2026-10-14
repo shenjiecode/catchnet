@@ -21,7 +21,7 @@ afterEach(async () => {
   for (const dir of cleanup.splice(0)) await rm(dir, { recursive: true, force: true });
 });
 async function fixture(secrets: string[] = []) {
-  const dir = await mkdtemp(join(tmpdir(), 'luowang-browser-evidence-'));
+  const dir = await mkdtemp(join(tmpdir(), 'catchnet-browser-evidence-'));
   cleanup.push(dir);
   const workspace = new RunWorkspace('01K00000000000000000000000', dir);
   await workspace.create();

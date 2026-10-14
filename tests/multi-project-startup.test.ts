@@ -11,19 +11,19 @@ import { startProjectServer } from '../src/server/projects/main.js';
 import { runUpgradeCli } from '../src/server/projects/upgrade-cli.js';
 
 it('starts only after offline upgrade and serves the new console without legacy business routes', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-project-start-'));
-  const databasePath = join(root, 'luowang.db');
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-project-start-'));
+  const databasePath = join(root, 'catchnet.db');
   const webRoot = join(root, 'web');
   const environment = {
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: root,
-    LUOWANG_DATABASE_PATH: databasePath,
-    LUOWANG_WEB_ROOT: webRoot,
-    LUOWANG_HOST: '127.0.0.1',
-    LUOWANG_PORT: '0',
-    LUOWANG_LOG_LEVEL: 'silent',
-    LUOWANG_ADMIN_PASSWORD: 'startup-test-password-123',
-    LUOWANG_MASTER_KEY: 'startup-test-master-key',
+    CATCHNET_DATA_DIR: root,
+    CATCHNET_DATABASE_PATH: databasePath,
+    CATCHNET_WEB_ROOT: webRoot,
+    CATCHNET_HOST: '127.0.0.1',
+    CATCHNET_PORT: '0',
+    CATCHNET_LOG_LEVEL: 'silent',
+    CATCHNET_ADMIN_PASSWORD: 'startup-test-password-123',
+    CATCHNET_MASTER_KEY: 'startup-test-master-key',
   };
   try {
     await assert.rejects(startProjectServer(environment), /已完成离线升级/);
