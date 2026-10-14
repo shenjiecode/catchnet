@@ -13,7 +13,7 @@ from urllib.request import Request, urlopen
 
 
 ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-BASE = os.environ.get("LUOWANG_FIXTURE_BASE_URL", "http://127.0.0.1:3100").rstrip("/")
+BASE = os.environ.get("CATCHNET_FIXTURE_BASE_URL", "http://127.0.0.1:3100").rstrip("/")
 TOKEN = os.environ["CYNOS_TEST_DATA_CLEANUP_TOKEN"]
 if len(TOKEN) < 32:
     raise SystemExit("The fixture cleanup token is unavailable")
@@ -36,21 +36,21 @@ def run_id():
 
 
 def count(identity):
-    status, body = request("GET", f"/api/luowang/test-data/{identity}", authorized=True)
+    status, body = request("GET", f"/api/catchnet/test-data/{identity}", authorized=True)
     if status != 200 or body.get("runId") != identity:
         raise AssertionError(f"Count request failed: HTTP {status}")
     return body["remaining"]
 
 
 def delete(identity):
-    status, body = request("DELETE", f"/api/luowang/test-data/{identity}", authorized=True)
+    status, body = request("DELETE", f"/api/catchnet/test-data/{identity}", authorized=True)
     if status != 200 or body.get("runId") != identity:
         raise AssertionError(f"Cleanup request failed: HTTP {status}")
     return body["deleted"], body["remaining"]
 
 
 def register(identity):
-    prefix = f"luowang-{identity.lower()}-"
+    prefix = f"catchnet-{identity.lower()}-"
     status, _ = request("POST", "/api/auth/register", {
         "email": f"{prefix}scope@example.test",
         "displayName": f"{prefix}scope",

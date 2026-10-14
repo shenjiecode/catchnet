@@ -25,7 +25,7 @@ import { localEvidenceTransport } from './acceptance/local-evidence.js';
 it.each(['mcp', 'mcp__playwright'])(
   'captures real SDK/%s cookie replay and the actual request header with zero model requests',
   async (proxyName) => {
-    const directory = await mkdtemp(join(tmpdir(), 'luowang-native-observation-'));
+    const directory = await mkdtemp(join(tmpdir(), 'catchnet-native-observation-'));
     const cookie = 'synthetic-native-session-evidence';
     let observedCookie: string | undefined;
     const server = createServer((request, response) => {

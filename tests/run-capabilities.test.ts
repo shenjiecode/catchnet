@@ -5,7 +5,7 @@ import { createHttpTestDataCleanupAdapter } from '../src/server/runs/http-test-d
 
 const runId = '01K00000000000000000000000';
 const token = 'synthetic-controlled-cleanup-token-123456789';
-const endpoint = 'http://fixture.test/api/luowang/test-data';
+const endpoint = 'http://fixture.test/api/catchnet/test-data';
 
 describe('current Run capability facts', () => {
   it.each([404, 403, 200])(
@@ -115,5 +115,28 @@ describe('current Run capability facts', () => {
       reason: 'invalid_url',
     });
     expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('checks the current Run dynamic address instead of the saved project address', async () => {
+    const checked: string[] = [];
+    const facts = await collectRunCapabilities({
+      runId,
+      baseUrl: 'http://run-network.test:43127',
+      browserConfigured: true,
+      testData: createTestDataManager(),
+      checkEnvironment: async (baseUrl) => {
+        checked.push(baseUrl);
+        return {
+          status: 'reachable',
+          checkedAt: '2026-10-05T00:00:00.000Z',
+          reason: 'http_response',
+          statusCode: 200,
+        };
+      },
+      now: () => new Date('2026-10-05T00:00:00.000Z'),
+    });
+    expect(checked).toEqual(['http://run-network.test:43127']);
+    expect(facts.environment.status).toBe('reachable');
+    expect(facts.controlledHttp.available).toBe(true);
   });
 });

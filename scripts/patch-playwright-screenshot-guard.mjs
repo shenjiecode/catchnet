@@ -11,8 +11,8 @@ const path = join(root, 'lib/coreBundle.js');
 const source = await readFile(path, 'utf8');
 const before =
   '        const data = target ? await target.locator.screenshot(options) : await tab2.page.screenshot(options);';
-const guard = `        // LUOWANG_SCREENSHOT_CAPTURE_V2: detect fields without altering the page.
-        let luowangFieldStatus = "not_detected";
+const guard = `        // CATCHNET_SCREENSHOT_CAPTURE_V2: detect fields without altering the page.
+        let catchnetFieldStatus = "not_detected";
         for (const frame of tab2.page.frames()) {
           let containsFilledField;
           try {
@@ -23,16 +23,16 @@ const guard = `        // LUOWANG_SCREENSHOT_CAPTURE_V2: detect fields without a
               return element.isContentEditable && (element.textContent || '').length > 0;
             }));
           } catch {
-            luowangFieldStatus = 'unknown';
+            catchnetFieldStatus = 'unknown';
             break;
           }
-          if (containsFilledField) luowangFieldStatus = 'detected';
+          if (containsFilledField) catchnetFieldStatus = 'detected';
         }
 `;
 const receiptBefore =
   '        await response2.addFileResult(resolvedFile, data);\n        if (!params2.filename)';
 const receiptAfter = `        await response2.addFileResult(resolvedFile, data);
-        response2.addTextResult("LUOWANG_SCREENSHOT_CAPTURE " + JSON.stringify({ filename: resolvedFile.relativeName, status: luowangFieldStatus, sha256: require("node:crypto").createHash("sha256").update(data).digest("hex"), scope: "page" }));
+        response2.addTextResult("CATCHNET_SCREENSHOT_CAPTURE " + JSON.stringify({ filename: resolvedFile.relativeName, status: catchnetFieldStatus, sha256: require("node:crypto").createHash("sha256").update(data).digest("hex"), scope: "page" }));
         response2.addTextResult("Screenshot retains original page state. Field detection is not an image safety review. Do not clear or alter the page for evidence.");
         if (!params2.filename)`;
 const after = guard + before;
@@ -40,7 +40,7 @@ if (source.split(after).length - 1 === 1 && source.split(receiptAfter).length - 
   // Repeated build/test invocations are idempotent.
 } else {
   if (
-    source.includes('LUOWANG_SCREENSHOT_') ||
+    source.includes('CATCHNET_SCREENSHOT_') ||
     source.split(before).length - 1 !== 1 ||
     source.split(receiptBefore).length - 1 !== 1
   )

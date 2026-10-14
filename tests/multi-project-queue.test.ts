@@ -56,7 +56,7 @@ describe('project-bound request queues', () => {
         /待处理请求/,
       );
       assert.throws(
-        () => config.update(a.projectId, { executionDockerfile: 'test/Dockerfile.luowang' }),
+        () => config.update(a.projectId, { executionDockerfile: 'test/Dockerfile.catchnet' }),
         /待处理请求/,
       );
       assert.throws(

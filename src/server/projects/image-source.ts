@@ -10,7 +10,7 @@ const PROJECT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 const COMMIT_SHA = /^[0-9a-f]{40}$/i;
 const MAX_ARCHIVE_BYTES = 512 * 1024 * 1024;
 export const BUILTIN_IMAGE_DEFINITION = '@builtin/node-24.14.1-v1';
-const BUILTIN_DOCKERFILE = '.luowang-executor.Dockerfile';
+const BUILTIN_DOCKERFILE = '.catchnet-executor.Dockerfile';
 const BUILTIN_DOCKERFILE_CONTENT =
   'FROM docker.m.daocloud.io/library/node:24.14.1-bookworm-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c\nWORKDIR /workspace\n';
 
@@ -22,12 +22,13 @@ export interface ProjectImageSource {
   cleanup(): Promise<void>;
 }
 
-/** LuoWang's versioned Node baseline; projects needing other tools use their own Dockerfile. */
+/** Catchnet's versioned Node baseline; projects needing other tools use their own Dockerfile. */
 export async function prepareBuiltInProjectImageSource(input: {
   repository: GitRepository;
   projectId: string;
   targetCommit: string;
   storageRoot: string;
+  signal?: AbortSignal;
 }): Promise<ProjectImageSource> {
   const source = await prepareProjectCommitTree(input);
   try {
@@ -59,10 +60,14 @@ export async function prepareProjectImageSource(input: {
   targetCommit: string;
   dockerfilePath: string;
   storageRoot: string;
+  signal?: AbortSignal;
 }): Promise<ProjectImageSource> {
+  input.signal?.throwIfAborted();
   assertRelativeSourcePath(input.dockerfilePath);
   const tree = await checkedCommitTree(input);
+  input.signal?.throwIfAborted();
   const targetCommit = await input.repository.resolveCommit(input.targetCommit);
+  input.signal?.throwIfAborted();
   const dockerfile = tree.find((entry) => entry.path === input.dockerfilePath);
   if (!dockerfile || !isRegularTreeEntry(dockerfile)) {
     throw new Error('固定提交中不存在普通 Dockerfile');
@@ -80,8 +85,11 @@ export async function prepareProjectCommitTree(input: {
   targetCommit: string;
   storageRoot: string;
   sourceKind?: 'image-sources' | 'run-sources';
+  signal?: AbortSignal;
 }): Promise<ProjectCommitTree> {
+  input.signal?.throwIfAborted();
   const targetCommit = await input.repository.resolveCommit(input.targetCommit);
+  input.signal?.throwIfAborted();
   const tree = await checkedCommitTree(input);
 
   const root = resolve(input.storageRoot);
@@ -99,6 +107,7 @@ export async function prepareProjectCommitTree(input: {
   try {
     await mkdir(directory);
     await input.repository.archiveCommit(targetCommit, archive);
+    input.signal?.throwIfAborted();
     const archiveInfo = await lstat(archive);
     if (!archiveInfo.isFile() || archiveInfo.size > MAX_ARCHIVE_BYTES) {
       throw new Error('镜像构建源码归档超出限制');
@@ -106,9 +115,11 @@ export async function prepareProjectCommitTree(input: {
     await execFileAsync('tar', ['-xf', archive, '-C', directory], {
       windowsHide: true,
       maxBuffer: 64 * 1024,
+      signal: input.signal,
     });
     await rm(archive);
     for (const entry of tree) {
+      input.signal?.throwIfAborted();
       const path = resolve(directory, entry.path);
       assertWithin(directory, path);
       const info = await lstat(path).catch(() => {
@@ -139,12 +150,15 @@ async function checkedCommitTree(input: {
   repository: GitRepository;
   projectId: string;
   targetCommit: string;
+  signal?: AbortSignal;
 }): Promise<GitTreeEntry[]> {
   if (!PROJECT_ID.test(input.projectId) || !COMMIT_SHA.test(input.targetCommit)) {
     throw new Error('项目或镜像目标提交无效');
   }
   const targetCommit = await input.repository.resolveCommit(input.targetCommit);
+  input.signal?.throwIfAborted();
   const tree = await input.repository.listTree(targetCommit);
+  input.signal?.throwIfAborted();
   for (const entry of tree) assertBuildTreeEntry(entry);
   return tree;
 }

@@ -75,7 +75,7 @@ interface NextTool {
 export async function startLocalModelProtocol(
   behavior: LocalModelBehavior = 'normal',
 ): Promise<LocalModelProtocol> {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-local-model-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-local-model-'));
   const server = createServer((request, response) => {
     void handleRequest(request, response, behavior, protocolState);
   });
@@ -90,7 +90,7 @@ export async function startLocalModelProtocol(
     modelsPath,
     JSON.stringify({
       providers: {
-        'luowang-local': {
+        'catchnet-local': {
           baseUrl: `http://127.0.0.1:${address.port}/v1`,
           api: 'openai-completions',
           apiKey: 'local-protocol-placeholder',
@@ -98,7 +98,7 @@ export async function startLocalModelProtocol(
             {
               id: 'deterministic-tool-model',
               name: 'Deterministic local tool model',
-              reasoning: false,
+              reasoning: true,
               input: ['text'],
               contextWindow: 128000,
               maxTokens: 4096,
@@ -122,7 +122,7 @@ export async function startLocalModelProtocol(
     refreshOnCreate: false,
     allowModelNetwork: false,
   });
-  const model = runtime.getModel('luowang-local', 'deterministic-tool-model');
+  const model = runtime.getModel('catchnet-local', 'deterministic-tool-model');
   if (!model) throw new Error('本地模型未注册');
   const provider = new LocalProvider(runtime, model);
   const productionFactory = createPiAgentSessionFactory({ provider });
@@ -176,7 +176,13 @@ class LocalProvider implements ProviderAdapter {
         name: this.model.name,
         reasoning: this.model.reasoning,
         input: [...this.model.input],
-        thinkingLevels: ['off' as const],
+        thinkingLevels: [
+          'off' as const,
+          'minimal' as const,
+          'low' as const,
+          'medium' as const,
+          'high' as const,
+        ],
         available: true,
       },
     ];
@@ -199,7 +205,14 @@ class RecordingProductionFactory implements AgentSessionFactory {
   ) {}
 
   async create(input: AgentSessionInput): Promise<AgentSession> {
-    const session = await this.delegate.create(input);
+    let resolvedThinking = input.config.thinking;
+    const session = await this.delegate.create({
+      ...input,
+      onThinkingResolved: (level) => {
+        resolvedThinking = level;
+        input.onThinkingResolved?.(level);
+      },
+    });
     const instructionInput = input as AgentSessionInput & {
       sessionKind?: string;
       roleInstructionVersions?: LocalPiSessionRecord['roleInstructionVersions'];
@@ -208,7 +221,7 @@ class RecordingProductionFactory implements AgentSessionFactory {
       id: session.sessionId ?? `pi-session-${this.records.length + 1}`,
       role: input.role,
       model: input.config.model,
-      thinking: input.config.thinking,
+      thinking: resolvedThinking,
       tools: input.customTools.map((tool) => tool.name),
       systemPrompt: input.systemPrompt,
       sessionKind: instructionInput.sessionKind ?? null,
@@ -478,7 +491,7 @@ function nextTool(
     ) {
       const context = parseRunContext(prompt);
       return tool('register_test_data', {
-        id: `luowang-${context.runId}-special-review-data`,
+        id: `catchnet-${context.runId}-special-review-data`,
         description: 'special review cleanup fixture',
       });
     }

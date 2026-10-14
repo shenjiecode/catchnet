@@ -3,6 +3,7 @@ import type { OperationsQueueItem, OperationsRunDetail } from '../../shared/type
 import { diagnoseRun } from '../../shared/run-diagnostics';
 import { requestJson, toUserMessage } from '../api';
 import { AppLink } from '../app/navigation';
+import { AppMessageFeedback } from './AppMessageProvider';
 import { ConfirmDialog } from './ConfirmDialog';
 
 export function RunFollowupActions({
@@ -69,10 +70,10 @@ export function RunFollowupActions({
       setConfirm(false);
       setMessage(
         action === 'retest'
-          ? `已创建关联请求 #${result.queue?.queueId}，认领时固定当前场景分支提交。`
+          ? `已创建关联请求 #${result.queue?.queueId}`
           : action === 'archive/retry'
-            ? `归档重试已结束：${result.queue?.archiveStatus ?? '请刷新查看'}；原测试结论保持。`
-            : '依赖检查已完成，请查看项目检查结果；本 Run 的历史结论保持。',
+            ? `归档重试已结束：${result.queue?.archiveStatus ?? '请刷新查看'}`
+            : '依赖检查已完成',
       );
       if (action === 'retest') token.current = null;
       onChanged();
@@ -106,7 +107,7 @@ export function RunFollowupActions({
           </p>
         </div>
       ))}
-      {!problems.length && <p>当前没有已记录的问题。运行、正式结论与归档分别以下方事实为准。</p>}
+      {!problems.length && <p>暂无记录的问题</p>}
       <div className="form-actions">
         {terminal && (
           <button
@@ -146,8 +147,7 @@ export function RunFollowupActions({
           项目环境配置
         </AppLink>
       </div>
-      {message && <p role="status">{message}</p>}
-      {error && !confirm && <p role="alert">{error}</p>}
+      <AppMessageFeedback success={message} error={!confirm ? error : ''} />
       {confirm && (
         <ConfirmDialog
           open

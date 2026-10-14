@@ -14,7 +14,11 @@ import { createConfigurationStore } from '../src/server/configuration.js';
 import { loadConfig } from '../src/server/config.js';
 import { initializeDatabase } from '../src/server/db/migrate.js';
 import type { BrowserMcpAdapter } from '../src/server/browser/playwright-mcp.js';
-import { createRunOrchestrator, type RunOrchestrator } from '../src/server/runs/orchestrator.js';
+import {
+  createRunOrchestrator,
+  type RunOrchestrator,
+  type RunOrchestratorOptions,
+} from '../src/server/runs/orchestrator.js';
 import { createTestDataManager } from '../src/server/runs/test-data.js';
 import type { ProviderAdapter } from '../src/server/runs/provider.js';
 import type { AgentSessionFactory, AgentSessionInput } from '../src/server/runs/types.js';
@@ -31,6 +35,23 @@ afterEach(async () => {
 });
 
 describe('Phase 4 Run blocking boundaries', () => {
+  it('records a configuration update recommendation through the existing Main session', async () => {
+    const fixture = await createGitFixture();
+    const recorded: Array<{ runId: string; targetCommit: string; reason: string }> = [];
+    const context = await createRunContext(fixture, 'vision-reviewer', undefined, {
+      sourceCommit: 'a'.repeat(40),
+      summary: 'saved application definition',
+      record: (value) => recorded.push(value),
+    });
+    const result = await context.orchestrator.run({
+      request: 'normal analysis with configuration recommendation',
+      trigger: 'manual',
+    });
+    assert.equal(result.result, 'passed');
+    assert.deepEqual(recorded, [
+      { runId: result.runId, targetCommit: result.targetCommit, reason: '启动脚本增加数据库迁移' },
+    ]);
+  });
   it.each(['fetch', 'UNTRUSTED_SECRET_COMMAND'])(
     'keeps a safe preparation diagnostic for Git %s failures',
     async (operation) => {
@@ -217,6 +238,10 @@ class FailureBoundarySessionFactory implements AgentSessionFactory {
     return {
       prompt: async () => {
         if (input.role === 'main-a') {
+          if (input.customTools.some((tool) => tool.name === 'recommend_environment_update'))
+            await invokeTool(input, 'recommend_environment_update', {
+              reason: '启动脚本增加数据库迁移',
+            });
           await invokeTool(input, 'get_run_context', {});
           await invokeTool(input, 'write_plan', {
             requiresBrowser: this.mode !== 'cleanup-failure' && this.mode !== 'cleanup-review',
@@ -243,7 +268,7 @@ class FailureBoundarySessionFactory implements AgentSessionFactory {
           }
           const context = parsePromptContext(input.userMessage);
           if (this.mode === 'cleanup-failure' || this.mode === 'cleanup-review') {
-            this.cleanupDataId = `luowang-${context.runId}-test-user-1`;
+            this.cleanupDataId = `catchnet-${context.runId}-test-user-1`;
             await invokeTool(input, 'register_test_data', {
               id: this.cleanupDataId,
               description: 'fixture user',
@@ -354,17 +379,18 @@ async function createRunContext(
   fixture: Fixture,
   mode: FailureMode,
   preparationError?: GitCommandError,
+  environmentRecommendation?: RunOrchestratorOptions['environmentRecommendation'],
 ): Promise<RunContextFixture> {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase4-orchestrator-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-orchestrator-'));
   const reportDir = join(dataDirectory, 'report');
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDirectory,
-    LUOWANG_REPO_DIR: join(dataDirectory, 'target'),
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_ADMIN_PASSWORD: 'phase4-orchestrator-password!',
-    LUOWANG_MASTER_KEY: 'phase4-orchestrator-master-key',
+    CATCHNET_DATA_DIR: dataDirectory,
+    CATCHNET_REPO_DIR: join(dataDirectory, 'target'),
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_ADMIN_PASSWORD: 'phase4-orchestrator-password!',
+    CATCHNET_MASTER_KEY: 'phase4-orchestrator-master-key',
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
@@ -396,6 +422,7 @@ async function createRunContext(
     repository.getRepository = async () => git;
   }
   const orchestrator = createRunOrchestrator({
+    environmentRecommendation,
     configuration,
     repository,
     reportDir,
@@ -528,15 +555,15 @@ function fakeOss(mode: FailureMode): OssAdapter {
 }
 
 async function createGitFixture(): Promise<Fixture> {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-phase4-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-phase4-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Phase 4 Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang-phase4@example.test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Phase 4 Test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-phase4@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'fixture product\n');
   await mkdir(join(sourceDir, 'docs/scenario-testing/scenarios'), { recursive: true });
   await writeFile(

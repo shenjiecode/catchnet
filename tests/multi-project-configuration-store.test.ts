@@ -42,8 +42,9 @@ describe('project configuration store', () => {
       config.update(b.projectId, {
         baseUrl: 'https://b.example',
         language: 'en-US',
-        executionDockerfile: 'test/Dockerfile.luowang',
+        executionDockerfile: 'test/Dockerfile.catchnet',
         testDataCleanupUrl: 'https://b.example/cleanup',
+        browserAllowedOrigins: ['https://cdn.example', 'https://login.example/'],
         triggerOnCommit: true,
         pollIntervalSeconds: 10,
       });
@@ -51,8 +52,12 @@ describe('project configuration store', () => {
       assert.equal(config.get(b.projectId).baseUrl, 'https://b.example');
       assert.equal(config.get(b.projectId).pollIntervalSeconds, 300);
       assert.equal(config.get(b.projectId).language, 'en-US');
-      assert.equal(config.get(b.projectId).executionDockerfile, 'test/Dockerfile.luowang');
+      assert.equal(config.get(b.projectId).executionDockerfile, 'test/Dockerfile.catchnet');
       assert.equal(config.get(b.projectId).testDataCleanupUrl, 'https://b.example/cleanup');
+      assert.deepEqual(config.get(b.projectId).browserAllowedOrigins, [
+        'https://cdn.example',
+        'https://login.example',
+      ]);
       assert.equal(projects.get(b.projectId)?.configRevision, 2);
       assert.equal(projects.get(a.projectId)?.configRevision, 1);
       const stored = database
@@ -76,7 +81,16 @@ describe('project configuration store', () => {
           /清理地址无效/,
         );
       }
-      assert.equal(config.get(b.projectId).executionDockerfile, 'test/Dockerfile.luowang');
+      for (const origins of [
+        ['file:///tmp/asset'],
+        ['https://user:pass@cdn.example'],
+        ['https://cdn.example/path'],
+      ])
+        assert.throws(
+          () => config.update(b.projectId, { browserAllowedOrigins: origins }),
+          /额外来源/,
+        );
+      assert.equal(config.get(b.projectId).executionDockerfile, 'test/Dockerfile.catchnet');
       assert.throws(() => config.get('missing'), /项目不存在/);
       assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {

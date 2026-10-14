@@ -40,14 +40,45 @@ describe('versioned YAML configuration transfer', () => {
     }
   });
 
+  it('round-trips named model sources and rejects credential fields inside them', () => {
+    const input = fixtureConfiguration();
+    const named = {
+      ...input,
+      harness: {
+        ...input.harness,
+        modelProviders: [
+          {
+            id: 'secondary',
+            name: '测试来源',
+            provider: 'deepseek',
+            baseUrl: '',
+            verifiedAt: null,
+            models: [],
+          },
+        ],
+        agents: Object.fromEntries(
+          Object.entries(input.harness.agents).map(([role, agent]) => [
+            role,
+            { ...agent, providerSourceId: 'secondary' },
+          ]),
+        ),
+      },
+    };
+    const yaml = stringify({ version: 1, ...named });
+    assert.deepEqual(parseConfigurationYaml(yaml), named);
+    const unsafe = structuredClone(named);
+    Object.assign(unsafe.harness.modelProviders[0], { apiKey: 'must-not-import' });
+    assert.throws(() => parseConfigurationYaml(stringify({ version: 1, ...unsafe })), /未知字段/);
+  });
+
   it('exports through authenticated API and imports atomically without changing Secret Store', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-config-transfer-'));
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-config-transfer-'));
     cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
     const config = loadConfig({
       NODE_ENV: 'test',
-      LUOWANG_DATA_DIR: dataDir,
-      LUOWANG_ADMIN_PASSWORD: 'configuration-transfer-password!',
-      LUOWANG_MASTER_KEY: 'configuration-transfer-master-key',
+      CATCHNET_DATA_DIR: dataDir,
+      CATCHNET_ADMIN_PASSWORD: 'configuration-transfer-password!',
+      CATCHNET_MASTER_KEY: 'configuration-transfer-master-key',
     });
     const database = initializeDatabase(config);
     const configuration = createConfigurationStore(database.sqlite, {
@@ -138,7 +169,7 @@ function fixtureConfiguration() {
         bucket: 'evidence',
         publicBaseUrl: '',
         accessMode: 'private' as const,
-        objectPrefix: 'luowang',
+        objectPrefix: 'catchnet',
       },
     },
     repository: {

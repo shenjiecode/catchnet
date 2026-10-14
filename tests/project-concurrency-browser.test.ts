@@ -10,7 +10,7 @@ import { createPlaywrightMcpAdapter } from '../src/server/browser/playwright-mcp
 import type { ConfigurationStore } from '../src/server/configuration.js';
 
 it('isolates two live MCP browsers and same-name screenshots; closing A leaves B usable', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-parallel-browser-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-parallel-browser-'));
   const server = createServer((request, response) => {
     const marker = request.url?.includes('project-a') ? 'project-a' : 'project-b';
     response.writeHead(200, {

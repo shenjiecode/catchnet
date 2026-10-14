@@ -127,8 +127,8 @@ describe('Phase 2 repository control', () => {
     const competingDir = join(fixture.rootDir, 'competing');
     await git(['clone', fixture.remoteDir, competingDir], fixture.rootDir);
     await git(['checkout', 'scenario-testing'], competingDir);
-    await git(['config', 'user.name', 'LuoWang Test'], competingDir);
-    await git(['config', 'user.email', 'luowang@example.test'], competingDir);
+    await git(['config', 'user.name', 'Catchnet Test'], competingDir);
+    await git(['config', 'user.email', 'catchnet@example.test'], competingDir);
     await writeFile(join(competingDir, 'README.md'), 'scenario side\n');
     await git(['add', 'README.md'], competingDir);
     await git(['commit', '-m', 'scenario side'], competingDir);
@@ -285,7 +285,7 @@ describe('Phase 2 repository control', () => {
 });
 
 async function createGitFixture() {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-phase2-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-phase2-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
@@ -293,8 +293,8 @@ async function createGitFixture() {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang@example.test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'initial product\n');
   await git(['add', 'README.md'], sourceDir);
   await git(['commit', '-m', 'initial product'], sourceDir);
@@ -307,15 +307,15 @@ async function createRepositoryContext(
   fixture: Awaited<ReturnType<typeof createGitFixture>>,
   withApp = false,
 ) {
-  const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase2-data-'));
+  const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase2-data-'));
   cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPO_DIR: join(dataDir, 'repo'),
-    LUOWANG_REPORT_DIR: join(dataDir, 'report'),
-    LUOWANG_ADMIN_PASSWORD: withApp ? 'phase2-api-password!' : undefined,
-    LUOWANG_MASTER_KEY: 'phase2-master-key-material',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPO_DIR: join(dataDir, 'repo'),
+    CATCHNET_REPORT_DIR: join(dataDir, 'report'),
+    CATCHNET_ADMIN_PASSWORD: withApp ? 'phase2-api-password!' : undefined,
+    CATCHNET_MASTER_KEY: 'phase2-master-key-material',
   });
   const database = initializeDatabase(config);
   const configuration = createConfigurationStore(database.sqlite, {

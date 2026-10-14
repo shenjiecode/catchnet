@@ -24,8 +24,8 @@ function environment(): NodeJS.ProcessEnv {
   }
   return {
     ...env,
-    LUOWANG_LIVE_PROJECT_ID: projectId,
-    LUOWANG_LIVE_REPOSITORY: 'https://github.com/example/fixture',
+    CATCHNET_LIVE_PROJECT_ID: projectId,
+    CATCHNET_LIVE_REPOSITORY: 'https://github.com/example/fixture',
   };
 }
 
@@ -73,7 +73,7 @@ describe('v0.7.1 acceptance preparation and API contracts', () => {
     const mock = server();
     const report = await runPreflight(environment(), mock.request);
     assert.equal(report.status, 'passed');
-    assert.equal(report.schema, 'luowang.acceptance-preflight.v1');
+    assert.equal(report.schema, 'catchnet.acceptance-preflight.v1');
     assert.equal(report.readinessCheckedAt, '2026-09-29T00:00:00.000Z');
     assert.equal('live' in report || 'release' in report || 'acEvidence' in report, false);
     assert.deepEqual(mock.calls, [
@@ -91,11 +91,11 @@ describe('v0.7.1 acceptance preparation and API contracts', () => {
   it('blocks missing inputs before authentication and lists only names', async () => {
     const mock = server();
     const report = await runPreflight(
-      { LUOWANG_ADMIN_PASSWORD: 'canary-private-value' },
+      { CATCHNET_ADMIN_PASSWORD: 'canary-private-value' },
       mock.request,
     );
     assert.equal(report.status, 'blocked');
-    assert.ok(report.missing.includes('LUOWANG_LIVE_PROJECT_ID'));
+    assert.ok(report.missing.includes('CATCHNET_LIVE_PROJECT_ID'));
     assert.equal(mock.calls.length, 0);
     assert.doesNotMatch(JSON.stringify(report), /canary-private-value/);
   });
@@ -129,7 +129,7 @@ describe('v0.7.1 acceptance preparation and API contracts', () => {
   it('rejects malformed JSON and invalid project IDs without exposing values', async () => {
     const mock = server();
     const invalid = await runPreflight(
-      { ...environment(), LUOWANG_LIVE_PROJECT_ID: '../foreign' },
+      { ...environment(), CATCHNET_LIVE_PROJECT_ID: '../foreign' },
       mock.request,
     );
     assert.equal(invalid.status, 'failed');
@@ -152,7 +152,7 @@ describe('v0.7.1 acceptance preparation and API contracts', () => {
         promisify(execFile)(
           process.execPath,
           ['node_modules/tsx/dist/cli.mjs', 'tests/acceptance/closure.ts', 'preflight'],
-          { env: { PATH: process.env.PATH, LUOWANG_ACCEPTANCE_ARTIFACT_DIR: directory } },
+          { env: { PATH: process.env.PATH, CATCHNET_ACCEPTANCE_ARTIFACT_DIR: directory } },
         );
       await assert.rejects(invoke, (error: Error & { code?: number }) => error.code === 1);
       const original = await readFile(join(directory, 'report.json'), 'utf8');
@@ -168,7 +168,7 @@ describe('v0.7.1 acceptance preparation and API contracts', () => {
   });
 
   it('does not expose arbitrary upstream error credential values', async () => {
-    const env = { ...environment(), LUOWANG_ADMIN_PASSWORD: 'opaque-canary-value' };
+    const env = { ...environment(), CATCHNET_ADMIN_PASSWORD: 'opaque-canary-value' };
     const report = await runPreflight(env, async () => {
       throw new Error('failed opaque-canary-value');
     });

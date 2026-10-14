@@ -31,7 +31,15 @@ const server = createServer(async (request, response) => {
   const bytes = await readFile(path);
   const extension = extname(path);
   const contentType =
-    extension === '.js' ? 'text/javascript' : extension === '.css' ? 'text/css' : 'text/html';
+    extension === '.js'
+      ? 'text/javascript'
+      : extension === '.css'
+        ? 'text/css'
+        : extension === '.png'
+          ? 'image/png'
+          : extension === '.ico'
+            ? 'image/x-icon'
+            : 'text/html';
   response.writeHead(200, { 'content-type': contentType }).end(bytes);
 });
 await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
@@ -41,7 +49,10 @@ const origin = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 768, height: 900 } });
+  const menuDownloads: string[] = [];
+  page.on('download', (download) => menuDownloads.push(download.suggestedFilename()));
   let authenticated = true;
+  let expireNextProjectDetail = false;
   await page.route('**/api/**', (route) => {
     const pathname = new URL(route.request().url()).pathname;
     if (pathname === '/api/mode') return route.fulfill({ json: { mode: 'multi-project' } });
@@ -49,7 +60,21 @@ try {
       return route.fulfill({ json: { configured: true, authenticated } });
     }
     if (pathname === '/api/projects') return route.fulfill({ json: { projects: [project] } });
+    if (pathname === `/api/projects/${project.projectId}` && expireNextProjectDetail) {
+      expireNextProjectDetail = false;
+      authenticated = false;
+      return route.fulfill({
+        status: 401,
+        json: { error: { code: 'UNAUTHORIZED', message: '需要管理员认证' } },
+      });
+    }
     if (pathname === '/api/auth/login') {
+      if (route.request().postDataJSON().password !== 'synthetic-password') {
+        return route.fulfill({
+          status: 401,
+          json: { error: { code: 'INVALID_CREDENTIALS', message: '管理员密码不正确' } },
+        });
+      }
       authenticated = true;
       return route.fulfill({ json: { authenticated: true } });
     }
@@ -65,12 +90,41 @@ try {
   assert.equal(new URL(page.url()).pathname, `/projects/${project.projectId}/overview`);
   assert.equal(new URL(page.url()).hash, '');
   await page.getByRole('region', { name: '当前项目' }).getByText(project.displayName).waitFor();
+  const brandLink = page.getByRole('link', { name: '罗网工作台', exact: true });
+  assert.equal(await brandLink.getAttribute('href'), '/workspace');
+  await brandLink.locator('img').evaluate((image: HTMLImageElement) => image.decode());
+  const userMenu = page.locator('.operator-menu');
+  assert.equal(await userMenu.locator('.operator-avatar').textContent(), '管');
+  await userMenu.locator('summary').click();
+  assert.notEqual(await userMenu.getAttribute('open'), null);
+  await page.keyboard.press('Escape');
+  assert.equal(await userMenu.getAttribute('open'), null);
+  await userMenu.locator('summary').click();
+  await page.locator('.lw-header').click({ position: { x: 5, y: 5 } });
+  assert.equal(await userMenu.getAttribute('open'), null);
 
   await page.getByRole('link', { name: '项目', exact: true }).click();
   await page.getByRole('heading', { name: '项目', exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, '/projects');
   await page.goBack();
   await page.getByRole('heading', { name: '项目概览' }).waitFor();
+
+  await page.getByRole('link', { name: '项目设置', exact: true }).click({ modifiers: ['Alt'] });
+  try {
+    await page.waitForURL(`${origin}/projects/${project.projectId}/settings/general`, {
+      timeout: 5000,
+    });
+  } catch (error) {
+    assert.deepEqual(menuDownloads, [], 'Project menus must not download HTML');
+    throw error;
+  }
+  await page.getByRole('heading', { level: 1, name: '项目设置', exact: true }).waitFor();
+  await page.getByRole('link', { name: '配置文件', exact: true }).click({ modifiers: ['Alt'] });
+  await page.waitForURL(`${origin}/projects/${project.projectId}/settings/files`);
+  await page.getByRole('link', { name: '总览', exact: true }).click({ modifiers: ['Alt'] });
+  await page.waitForURL(`${origin}/workspace`);
+  await page.getByRole('heading', { level: 1, name: '总览', exact: true }).waitFor();
+  assert.deepEqual(menuDownloads, [], 'Menus must navigate instead of downloading HTML');
 
   await page.goto(`${origin}/system`);
   await page.getByRole('heading', { name: '系统状态' }).waitFor();
@@ -83,7 +137,7 @@ try {
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
-  assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), '工作台');
+  assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), '总览');
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), '项目');
   await page.keyboard.press('Enter');
@@ -91,9 +145,8 @@ try {
 
   const projectRoot = `/projects/${project.projectId}`;
   const stableRoutes: Array<[string, string]> = [
-    ['/workspace', '工作台'],
+    ['/workspace', '总览'],
     ['/projects', '项目'],
-    ['/projects/new', '接入项目'],
     ['/system', '系统状态'],
     ['/settings/models', '全局设置'],
     ['/settings/browser', '全局设置'],
@@ -122,6 +175,35 @@ try {
     assert.equal(await page.locator('h1').count(), 1);
   }
 
+  for (const width of [768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 1244 });
+    await page.goto(`${origin}${projectRoot}/settings/general`);
+    await page.getByRole('heading', { level: 1, name: '项目设置', exact: true }).waitFor();
+    await page.getByRole('link', { name: '测试规则', exact: true }).click();
+    await page.waitForURL(`${origin}${projectRoot}/settings/testing`);
+    await page.getByRole('link', { name: '基本资料', exact: true }).click();
+    await page.waitForURL(`${origin}${projectRoot}/settings/general`);
+    const layout = await page.evaluate(() => ({
+      height: document.documentElement.clientHeight,
+      scrollHeight: document.documentElement.scrollHeight,
+      scrollY: window.scrollY,
+    }));
+    assert.equal(layout.scrollY, 0, `Menu navigation must stay at the top at ${width}px`);
+    assert.ok(
+      layout.scrollHeight <= layout.height + 1,
+      `Short pages must not have empty vertical overflow at ${width}px: ${JSON.stringify(layout)}`,
+    );
+  }
+  await page.setViewportSize({ width: 768, height: 900 });
+
+  await page.goto(`${origin}/projects/new`);
+  await page.getByRole('heading', { level: 1, name: '项目', exact: true }).waitFor();
+  const onboardingDialog = page.getByRole('dialog');
+  await onboardingDialog.getByRole('heading', { name: '连接仓库', exact: true }).waitFor();
+  assert.equal(await page.locator('h1').count(), 1);
+  await onboardingDialog.getByRole('button', { name: '关闭', exact: true }).click();
+  await page.waitForURL(`${origin}/projects`);
+
   await page.goto(`${origin}/settings/credentials`);
   await page.getByRole('heading', { level: 1, name: '全局设置', exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, '/settings/models');
@@ -141,6 +223,37 @@ try {
   assert.equal(new URL(page.url()).pathname, '/login');
   await page.getByLabel('管理员密码').fill('synthetic-password');
   await page.getByRole('button', { name: '登录' }).click();
+  await page.getByRole('heading', { level: 1, name: '项目概览' }).waitFor();
+  assert.equal(new URL(page.url()).pathname, `${projectRoot}/overview`);
+
+  expireNextProjectDetail = true;
+  await page.goto(`${origin}${projectRoot}/overview`);
+  await page.getByRole('heading', { level: 1, name: '管理员登录' }).waitFor();
+  const expiredMessage = page.locator('.app-message').filter({ hasText: '登录已过期，请重新登录' });
+  await expiredMessage.waitFor();
+  assert.equal(await expiredMessage.count(), 1);
+  assert.equal(await page.locator('.login-panel .notice-error').count(), 0);
+  assert.equal(await page.locator('.app-banner').count(), 0);
+  const logoAlignment = await page.locator('.login-panel-brand').evaluate((element) => {
+    const logo = element.getBoundingClientRect();
+    const panel = element.closest('.login-panel')!.getBoundingClientRect();
+    return Math.abs(logo.x + logo.width / 2 - (panel.x + panel.width / 2));
+  });
+  assert.ok(logoAlignment <= 1, 'Login logo must be centered within the panel');
+  await expiredMessage.waitFor({ state: 'hidden', timeout: 6500 });
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await page.getByLabel('管理员密码').fill('incorrect-synthetic-password');
+    await page.getByRole('button', { name: '登录', exact: true }).click();
+    const invalidPassword = page.locator('.app-message').filter({ hasText: '管理员密码不正确' });
+    await invalidPassword.waitFor();
+    assert.equal(await expiredMessage.count(), 0);
+    assert.equal(await page.locator('.login-panel .notice-error').count(), 0);
+    assert.equal(await page.getByLabel('管理员密码').inputValue(), 'incorrect-synthetic-password');
+    await invalidPassword.getByRole('button', { name: '关闭提示', exact: true }).click();
+  }
+  await page.getByLabel('管理员密码').fill('synthetic-password');
+  await page.getByRole('button', { name: '登录', exact: true }).click();
   await page.getByRole('heading', { level: 1, name: '项目概览' }).waitFor();
   assert.equal(new URL(page.url()).pathname, `${projectRoot}/overview`);
 } finally {

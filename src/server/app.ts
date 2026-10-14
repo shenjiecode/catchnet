@@ -229,6 +229,9 @@ export async function createApp(options: AppOptions) {
       root: staticRoot,
       prefix: '/',
       index: 'index.html',
+      setHeaders(reply, path) {
+        if (path.endsWith('index.html')) reply.header('cache-control', 'no-store');
+      },
     });
   }
 
@@ -316,7 +319,7 @@ export async function createApp(options: AppOptions) {
   app.get('/api/config/export', async (request, reply) => {
     requireAuth(request, auth);
     return reply.send({
-      fileName: 'luowang-config.yml',
+      fileName: 'catchnet-config.yml',
       yaml: exportConfigurationYaml({
         harness: configuration.getHarness(),
         repository: configuration.getRepository(),
@@ -900,7 +903,7 @@ function makeHealth(config: AppConfig, database: DatabaseContext): HealthRespons
   const databaseIsHealthy = database.isHealthy();
   return {
     status: databaseIsHealthy ? 'ok' : 'degraded',
-    service: 'luowang',
+    service: 'catchnet',
     version: config.version,
     database: databaseIsHealthy ? 'ok' : 'error',
     timestamp: new Date().toISOString(),

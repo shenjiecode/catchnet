@@ -5,11 +5,11 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const repositoryUrl = process.env.LUOWANG_SMOKE_REPOSITORY;
-const token = process.env.LUOWANG_SMOKE_GITHUB_TOKEN;
+const repositoryUrl = process.env.CATCHNET_SMOKE_REPOSITORY;
+const token = process.env.CATCHNET_SMOKE_GITHUB_TOKEN;
 if (!repositoryUrl || !token) {
   throw new Error(
-    '设置 LUOWANG_SMOKE_REPOSITORY 和 LUOWANG_SMOKE_GITHUB_TOKEN 后才能运行真实 GitHub smoke',
+    '设置 CATCHNET_SMOKE_REPOSITORY 和 CATCHNET_SMOKE_GITHUB_TOKEN 后才能运行真实 GitHub smoke',
   );
 }
 
@@ -33,7 +33,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
   let lastError = 'unknown error';
   while (Date.now() < deadline) {
     if (child.exitCode !== null)
-      throw new Error(`LuoWang server exited with code ${child.exitCode}: ${lastError}`);
+      throw new Error(`Catchnet server exited with code ${child.exitCode}: ${lastError}`);
     try {
       const response = await fetch(`http://127.0.0.1:${port}/health`);
       if (response.ok) return;
@@ -43,7 +43,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error(`LuoWang server did not become healthy: ${lastError}`);
+  throw new Error(`Catchnet server did not become healthy: ${lastError}`);
 }
 
 async function request<T>(
@@ -62,23 +62,23 @@ async function request<T>(
   return body;
 }
 
-const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase2-github-'));
+const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase2-github-'));
 const port = await availablePort();
 const adminPassword = 'phase2-real-smoke-admin-password!';
 const masterKey = 'phase2-real-smoke-master-key-material';
 const childEnvironment = { ...process.env };
-delete childEnvironment.LUOWANG_SMOKE_GITHUB_TOKEN;
+delete childEnvironment.CATCHNET_SMOKE_GITHUB_TOKEN;
 const child = spawn(process.execPath, ['dist/server/main.js'], {
   cwd: process.cwd(),
   env: {
     ...childEnvironment,
     NODE_ENV: 'production',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_HOST: '127.0.0.1',
-    LUOWANG_PORT: String(port),
-    LUOWANG_LOG_LEVEL: 'silent',
-    LUOWANG_ADMIN_PASSWORD: adminPassword,
-    LUOWANG_MASTER_KEY: masterKey,
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_HOST: '127.0.0.1',
+    CATCHNET_PORT: String(port),
+    CATCHNET_LOG_LEVEL: 'silent',
+    CATCHNET_ADMIN_PASSWORD: adminPassword,
+    CATCHNET_MASTER_KEY: masterKey,
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });

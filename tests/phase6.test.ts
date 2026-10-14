@@ -633,15 +633,15 @@ describe('Phase 6 persistent automation', () => {
 });
 
 async function createDatabaseContext() {
-  const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase6-'));
+  const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase6-'));
   cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPO_DIR: join(dataDir, 'repo'),
-    LUOWANG_REPORT_DIR: join(dataDir, 'report'),
-    LUOWANG_ADMIN_PASSWORD: 'phase6-password!',
-    LUOWANG_MASTER_KEY: 'phase6-master-key',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPO_DIR: join(dataDir, 'repo'),
+    CATCHNET_REPORT_DIR: join(dataDir, 'report'),
+    CATCHNET_ADMIN_PASSWORD: 'phase6-password!',
+    CATCHNET_MASTER_KEY: 'phase6-master-key',
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());

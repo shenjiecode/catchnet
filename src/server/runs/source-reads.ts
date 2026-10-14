@@ -133,13 +133,13 @@ export class SourceReadStore {
       // this call's independently validated structured references are authoritative.
       if (typeof content === 'string')
         content = content.replace(
-          /^<!-- luowang-source-references-v1\r?\n[^\r\n]*\r?\n-->\r?\n\r?\n/,
+          /^<!-- catchnet-source-references-v1\r?\n[^\r\n]*\r?\n-->\r?\n\r?\n/,
           '',
         );
       if (
         typeof content !== 'string' ||
         !content.trim() ||
-        /<!--\s*luowang-source-references/i.test(content)
+        /<!--\s*catchnet-source-references/i.test(content)
       )
         throw new SourceReferenceError();
       const selected = references.map((reference) => {
@@ -174,7 +174,7 @@ export class SourceReadStore {
         requiresBrowser,
         sourceReferences: references,
       });
-      await write(`<!-- luowang-source-references-v1\n${metadata}\n-->\n\n${content}`);
+      await write(`<!-- catchnet-source-references-v1\n${metadata}\n-->\n\n${content}`);
       this.plan = { hash, references: structuredClone(references) };
     });
     this.pending = operation.catch(() => undefined);

@@ -20,16 +20,16 @@ afterEach(async () => {
 
 describe('Fastify application', () => {
   it('serves health, status, and the console shell', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-app-'));
-    const webRoot = await mkdtemp(join(tmpdir(), 'luowang-web-'));
-    await writeFile(join(webRoot, 'index.html'), '<!doctype html><html>LuoWang shell</html>');
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-app-'));
+    const webRoot = await mkdtemp(join(tmpdir(), 'catchnet-web-'));
+    await writeFile(join(webRoot, 'index.html'), '<!doctype html><html>Catchnet shell</html>');
     cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
     cleanup.push(async () => rm(webRoot, { recursive: true, force: true }));
 
     const config = loadConfig({
       NODE_ENV: 'test',
-      LUOWANG_DATA_DIR: dataDir,
-      LUOWANG_WEB_ROOT: webRoot,
+      CATCHNET_DATA_DIR: dataDir,
+      CATCHNET_WEB_ROOT: webRoot,
     });
     const database = initializeDatabase(config);
     const app = await createApp({ config, database, logger: pino({ level: 'silent' }) });
@@ -43,17 +43,23 @@ describe('Fastify application', () => {
 
     const statusResponse = await app.inject({ method: 'GET', url: '/api/status' });
     assert.equal(statusResponse.statusCode, 200);
-    assert.equal(statusResponse.json().service, 'luowang');
+    assert.equal(statusResponse.json().service, 'catchnet');
 
     const shellResponse = await app.inject({ method: 'GET', url: '/' });
     assert.equal(shellResponse.statusCode, 200);
-    assert.match(shellResponse.body, /LuoWang shell/);
+    assert.match(shellResponse.body, /Catchnet shell/);
+    assert.equal(shellResponse.headers['cache-control'], 'no-store');
+
+    const spaResponse = await app.inject({ method: 'GET', url: '/settings/models' });
+    assert.equal(spaResponse.statusCode, 200);
+    assert.match(spaResponse.body, /Catchnet shell/);
+    assert.equal(spaResponse.headers['cache-control'], 'no-store');
   });
 
   it('returns a stable error envelope for missing API resources', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-error-'));
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-error-'));
     cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
-    const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDir });
+    const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDir });
     const database = initializeDatabase(config);
     const app = await createApp({ config, database, logger: pino({ level: 'silent' }) });
     cleanup.push(async () => app.close());

@@ -30,7 +30,9 @@ export async function recoverProjectDockerResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
+    '--filter',
+    'name=catchnet-run-',
   ]);
   let removedContainers = 0;
   for (const containerId of new Set(containers.trim().split(/\s+/).filter(Boolean))) {
@@ -42,13 +44,13 @@ export async function recoverProjectDockerResources(
       Config?: { Labels?: Record<string, string> };
     };
     const labels = details.Config?.Labels;
-    const runId = labels?.['luowang.run-id'];
+    const runId = labels?.['catchnet.run-id'];
     if (
-      labels?.['luowang.instance-id'] !== instanceId ||
-      !projects.has(labels?.['luowang.project-id'] ?? '') ||
+      labels?.['catchnet.instance-id'] !== instanceId ||
+      !projects.has(labels?.['catchnet.project-id'] ?? '') ||
       !runId ||
       !RUN_ID.test(runId) ||
-      details.Name !== `/luowang-run-${runId.toLowerCase()}`
+      details.Name !== `/catchnet-run-${runId.toLowerCase()}`
     ) {
       throw new Error('Docker 容器归属核验失败，停止恢复以避免误删');
     }
@@ -58,15 +60,7 @@ export async function recoverProjectDockerResources(
 
   // The state table and every pinned Run record are conservative references. Docker itself
   // refuses removal of an image still used by any container or another tag (no --force).
-  const referenced = new Set(
-    (
-      database
-        .prepare(
-          'SELECT image_id FROM project_execution_images WHERE image_id IS NOT NULL UNION SELECT image_id FROM project_run_images',
-        )
-        .all() as { image_id: string }[]
-    ).map((row) => row.image_id),
-  );
+  const referenced = referencedImageIds(database, instanceId);
   const images = await command(docker, [
     'image',
     'ls',
@@ -74,7 +68,7 @@ export async function recoverProjectDockerResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
   ]);
   let removedImages = 0;
   let retainedImages = 0;
@@ -85,8 +79,8 @@ export async function recoverProjectDockerResources(
     ) as { Config?: { Labels?: Record<string, string> }; RepoTags?: string[] };
     const labels = details.Config?.Labels;
     if (
-      labels?.['luowang.instance-id'] !== instanceId ||
-      !projects.has(labels?.['luowang.project-id'] ?? '')
+      labels?.['catchnet.instance-id'] !== instanceId ||
+      !projects.has(labels?.['catchnet.project-id'] ?? '')
     ) {
       throw new Error('Docker 镜像归属核验失败，停止清理以避免误删');
     }
@@ -94,10 +88,14 @@ export async function recoverProjectDockerResources(
       retainedImages += 1;
       continue;
     }
-    // Inherited Docker labels are not proof that a derived image belongs to LuoWang.
+    // Inherited Docker labels are not proof that a derived image belongs to Catchnet.
     // Only an exact tag created by our builder is eligible; dangling images stay untouched.
-    const tag = `luowang-project-${labels['luowang.project-id']}:${labels['luowang.target-commit']}`;
-    if (!details.RepoTags?.includes(tag)) {
+    const legacyTag = `catchnet-project-${labels['catchnet.project-id']}:${labels['catchnet.target-commit']}`;
+    const composePrefix = `catchnet-compose-${labels['catchnet.project-id'].slice(0, 8)}:`;
+    if (
+      !details.RepoTags?.includes(legacyTag) &&
+      !details.RepoTags?.some((tag) => tag.startsWith(composePrefix))
+    ) {
       retainedImages += 1;
       continue;
     }
@@ -106,6 +104,28 @@ export async function recoverProjectDockerResources(
     else retainedImages += 1;
   }
   return { removedContainers, removedImages, retainedImages };
+}
+
+function referencedImageIds(database: Database.Database, instanceId: string): Set<string> {
+  const runtimeCache = database
+    .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_image_cache'")
+    .get();
+  const rows = runtimeCache
+    ? (database
+        .prepare(
+          `SELECT image_id FROM project_execution_images WHERE image_id IS NOT NULL
+           UNION SELECT image_id FROM project_run_images
+           UNION SELECT image_id FROM execution_image_cache
+             WHERE image_id IS NOT NULL AND execution_location_id = ?`,
+        )
+        .all(`local:${instanceId}`) as { image_id: string }[])
+    : (database
+        .prepare(
+          `SELECT image_id FROM project_execution_images WHERE image_id IS NOT NULL
+           UNION SELECT image_id FROM project_run_images`,
+        )
+        .all() as { image_id: string }[]);
+  return new Set(rows.map((row) => row.image_id));
 }
 
 async function command(docker: DockerRuntime, args: string[]): Promise<string> {

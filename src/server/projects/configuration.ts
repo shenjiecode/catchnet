@@ -1,4 +1,8 @@
 import type Database from 'better-sqlite3';
+import { normalizeGeneratedDefinition, type GeneratedDefinition } from './generated-definition.js';
+import { assertDeclaredApplicationPort } from './compose-contract.js';
+import { assertEnvironmentIdle } from './environment-state.js';
+import type { PreparationCheck } from '../../shared/project-preparation.js';
 
 import type { RepositoryConfig } from '../../shared/types.js';
 import {
@@ -9,13 +13,35 @@ import {
 
 export type ProjectConfiguration = Omit<RepositoryConfig, 'repository'> & {
   language: string;
+  browserAllowedOrigins: string[];
   testDataCleanupUrl: string;
-  /** Empty uses LuoWang's built-in executor image. */
+  /** Empty uses Catchnet's built-in executor image. */
   executionDockerfile: string;
+  runtimeMode: 'managed' | 'external' | 'repository-only';
+  startType: 'single-container' | 'compose';
+  runtime: ProjectRuntimeDefinition;
+  generatedDefinition?: GeneratedDefinition | null;
+  scheduleIntervalSeconds?: number;
+};
+
+export type ProjectRuntimeDefinition = {
+  workingDirectory: string;
+  prepareCommand: string[];
+  startCommand: string[];
+  servicePort: number | null;
+  healthPath: string;
+  healthTimeoutSeconds: number;
+  composeFile: string;
+  composeServices: string[];
+  applicationService: string;
+  commandService: string;
+  initializationSteps?: Array<{ service: string; command: string; timeoutSeconds: number }>;
+  preparationChecks?: PreparationCheck[];
 };
 
 const ALLOWED_FIELDS = new Set([
   'language',
+  'browserAllowedOrigins',
   'scenarioBranch',
   'scenarioMode',
   'scenarioLabels',
@@ -27,9 +53,15 @@ const ALLOWED_FIELDS = new Set([
   'externalDatabase',
   'testDataCleanupUrl',
   'executionDockerfile',
+  'runtimeMode',
+  'startType',
+  'runtime',
+  'generatedDefinition',
+  'scheduleIntervalSeconds',
 ]);
 const TASK_SEMANTIC_FIELDS = [
   'language',
+  'browserAllowedOrigins',
   'scenarioBranch',
   'scenarioMode',
   'scenarioLabels',
@@ -38,6 +70,10 @@ const TASK_SEMANTIC_FIELDS = [
   'externalDatabase',
   'testDataCleanupUrl',
   'executionDockerfile',
+  'runtimeMode',
+  'startType',
+  'runtime',
+  'generatedDefinition',
 ] as const;
 
 export interface ProjectConfigurationStore {
@@ -77,9 +113,27 @@ export function createProjectConfigurationStore(
       typeof source.language === 'string' && source.language.length <= 4096
         ? source.language
         : 'zh-CN';
+    const browserAllowedOrigins = normalizeBrowserAllowedOrigins(source.browserAllowedOrigins);
     const executionDockerfile = normalizeExecutionDockerfile(source.executionDockerfile);
     const testDataCleanupUrl = normalizeTestDataCleanupUrl(source.testDataCleanupUrl);
-    return { repository, config: { ...rest, language, executionDockerfile, testDataCleanupUrl } };
+    const runtimeMode = normalizeRuntimeMode(source.runtimeMode, row ? 'external' : 'managed');
+    const startType = normalizeStartType(source.startType);
+    const runtime = normalizeRuntimeDefinition(source.runtime);
+    return {
+      repository,
+      config: {
+        ...rest,
+        language,
+        browserAllowedOrigins,
+        executionDockerfile,
+        testDataCleanupUrl,
+        runtimeMode,
+        startType,
+        runtime,
+        generatedDefinition: normalizeGeneratedDefinition(source.generatedDefinition),
+        scheduleIntervalSeconds: normalizeScheduleInterval(source.scheduleIntervalSeconds),
+      },
+    };
   }
 
   return {
@@ -102,8 +156,14 @@ export function createProjectConfigurationStore(
         const current = read(projectId);
         const {
           language: languagePatch,
+          browserAllowedOrigins: browserAllowedOriginsPatch,
           executionDockerfile: executionDockerfilePatch,
           testDataCleanupUrl: cleanupUrlPatch,
+          runtimeMode: runtimeModePatch,
+          startType: startTypePatch,
+          runtime: runtimePatch,
+          generatedDefinition: generatedPatch,
+          scheduleIntervalSeconds: schedulePatch,
           ...repositoryPatch
         } = patch;
         const merged = mergeRepositoryConfiguration(
@@ -114,6 +174,11 @@ export function createProjectConfigurationStore(
         if (typeof language !== 'string' || language.length > 4096) {
           throw new ConfigurationError('language must be a string');
         }
+        const browserAllowedOrigins = normalizeBrowserAllowedOrigins(
+          browserAllowedOriginsPatch === undefined
+            ? current.config.browserAllowedOrigins
+            : browserAllowedOriginsPatch,
+        );
         const { repository: ignored, ...rest } = merged;
         void ignored;
         const executionDockerfile = normalizeExecutionDockerfile(
@@ -124,7 +189,49 @@ export function createProjectConfigurationStore(
         const testDataCleanupUrl = normalizeTestDataCleanupUrl(
           cleanupUrlPatch === undefined ? current.config.testDataCleanupUrl : cleanupUrlPatch,
         );
-        const config = { ...rest, language, executionDockerfile, testDataCleanupUrl };
+        const runtimeMode = normalizeRuntimeMode(
+          runtimeModePatch === undefined ? current.config.runtimeMode : runtimeModePatch,
+          current.config.runtimeMode,
+        );
+        const startType = normalizeStartType(
+          startTypePatch === undefined ? current.config.startType : startTypePatch,
+        );
+        const runtime = normalizeRuntimeDefinition(
+          runtimePatch === undefined ? current.config.runtime : runtimePatch,
+        );
+        const config = {
+          ...rest,
+          language,
+          browserAllowedOrigins,
+          executionDockerfile,
+          testDataCleanupUrl,
+          runtimeMode,
+          startType,
+          runtime,
+          generatedDefinition: normalizeGeneratedDefinition(
+            generatedPatch === undefined ? current.config.generatedDefinition : generatedPatch,
+          ),
+          scheduleIntervalSeconds: normalizeScheduleInterval(
+            schedulePatch === undefined ? current.config.scheduleIntervalSeconds : schedulePatch,
+          ),
+        };
+        if (
+          config.generatedDefinition &&
+          config.startType === 'compose' &&
+          config.runtime.servicePort
+        ) {
+          const compose = config.generatedDefinition.files.find(
+            (file) => file.path === config.runtime.composeFile,
+          );
+          if (compose)
+            assertDeclaredApplicationPort(
+              compose.content,
+              config.runtime.applicationService,
+              config.runtime.servicePort,
+            );
+        }
+        if (config.cron.trim() && config.scheduleIntervalSeconds > 0)
+          throw new ConfigurationError('定时间隔与 Cron 只能启用一种');
         const semanticChange = TASK_SEMANTIC_FIELDS.some(
           (key) => JSON.stringify(config[key]) !== JSON.stringify(current.config[key]),
         );
@@ -140,6 +247,7 @@ export function createProjectConfigurationStore(
               `项目仍有 ${pending.count} 个待处理请求，不能修改测试语义配置`,
             );
           }
+          assertEnvironmentIdle(database, projectId);
         }
         const now = new Date().toISOString();
         database
@@ -157,6 +265,219 @@ export function createProjectConfigurationStore(
       })();
     },
   };
+}
+
+export function normalizeScheduleInterval(value: unknown): number {
+  if (value === undefined) return 0;
+  if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 7 * 86400)
+    throw new ConfigurationError('定时间隔须为 0–604800 秒');
+  return value as number;
+}
+
+export function normalizeBrowserAllowedOrigins(value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 16)
+    throw new ConfigurationError('浏览器额外来源无效');
+  const origins = value.map((item) => {
+    if (typeof item !== 'string' || item.length > 2048)
+      throw new ConfigurationError('浏览器额外来源无效');
+    let parsed: URL;
+    try {
+      parsed = new URL(item);
+    } catch {
+      throw new ConfigurationError('浏览器额外来源无效');
+    }
+    if (
+      !['http:', 'https:'].includes(parsed.protocol) ||
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== '/' ||
+      parsed.search ||
+      parsed.hash ||
+      (item !== parsed.origin && item !== `${parsed.origin}/`)
+    )
+      throw new ConfigurationError('浏览器额外来源必须是完整的 HTTP(S) origin');
+    return parsed.origin;
+  });
+  return [...new Set(origins)];
+}
+
+export function normalizeRuntimeMode(
+  value: unknown,
+  fallback: ProjectConfiguration['runtimeMode'] = 'managed',
+): ProjectConfiguration['runtimeMode'] {
+  if (value === undefined) return fallback;
+  if (value !== 'managed' && value !== 'external' && value !== 'repository-only')
+    throw new ConfigurationError('项目运行模式无效');
+  return value;
+}
+
+export function normalizeStartType(value: unknown): ProjectConfiguration['startType'] {
+  if (value === undefined) return 'single-container';
+  if (value !== 'single-container' && value !== 'compose')
+    throw new ConfigurationError('项目启动方式无效');
+  return value;
+}
+
+export function normalizeRuntimeDefinition(value: unknown): ProjectRuntimeDefinition {
+  const source =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+  const path = (input: unknown, fallback: string) => {
+    const result = input === undefined ? fallback : input;
+    if (
+      typeof result !== 'string' ||
+      result.length > 255 ||
+      result.includes('\\') ||
+      result.startsWith('/') ||
+      result.split('/').some((part) => part === '..')
+    )
+      throw new ConfigurationError('运行路径无效');
+    return result;
+  };
+  const command = (input: unknown) => {
+    if (input === undefined) return [];
+    if (
+      !Array.isArray(input) ||
+      input.length > 64 ||
+      input.some(
+        (item) =>
+          typeof item !== 'string' ||
+          item.length === 0 ||
+          item.length > 4096 ||
+          item.includes('\0'),
+      )
+    )
+      throw new ConfigurationError('运行命令必须是参数数组');
+    return input as string[];
+  };
+  const services = source.composeServices === undefined ? [] : source.composeServices;
+  if (
+    !Array.isArray(services) ||
+    services.length > 32 ||
+    services.some(
+      (item) => typeof item !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,62}$/.test(item),
+    )
+  )
+    throw new ConfigurationError('Compose 服务列表无效');
+  if (new Set(services).size !== services.length)
+    throw new ConfigurationError('Compose 服务列表不能重复');
+  const servicePort =
+    source.servicePort === undefined || source.servicePort === null ? null : source.servicePort;
+  if (
+    servicePort !== null &&
+    (!Number.isInteger(servicePort) ||
+      (servicePort as number) < 1 ||
+      (servicePort as number) > 65535)
+  )
+    throw new ConfigurationError('服务端口无效');
+  const timeout = source.healthTimeoutSeconds ?? 60;
+  if (!Number.isInteger(timeout) || (timeout as number) < 5 || (timeout as number) > 600)
+    throw new ConfigurationError('健康检查超时无效');
+  const applicationService = serviceName(source.applicationService);
+  const commandService = serviceName(source.commandService);
+  if (
+    (applicationService && !services.includes(applicationService)) ||
+    (commandService && !services.includes(commandService))
+  ) {
+    throw new ConfigurationError('应用和测试服务必须包含在 Compose 服务列表中');
+  }
+  return {
+    workingDirectory: path(source.workingDirectory, '.'),
+    prepareCommand: command(source.prepareCommand),
+    startCommand: command(source.startCommand),
+    servicePort: servicePort as number | null,
+    healthPath: httpPath(source.healthPath),
+    healthTimeoutSeconds: timeout as number,
+    composeFile: path(source.composeFile, 'compose.yml'),
+    composeServices: services as string[],
+    applicationService,
+    commandService,
+    ...(source.preparationChecks === undefined
+      ? {}
+      : {
+          preparationChecks: normalizePreparationChecks(
+            source.preparationChecks,
+            services as string[],
+            applicationService,
+          ),
+        }),
+    initializationSteps: normalizeInitializationSteps(
+      source.initializationSteps,
+      services as string[],
+      applicationService,
+    ),
+  };
+}
+
+function normalizeInitializationSteps(
+  value: unknown,
+  services: string[],
+  applicationService: string,
+): ProjectRuntimeDefinition['initializationSteps'] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 16) throw new ConfigurationError('初始化步骤无效');
+  return value.map((entry: unknown) => {
+    const step = entry as Record<string, unknown> | null;
+    if (
+      !step ||
+      typeof step.service !== 'string' ||
+      !services.includes(step.service) ||
+      step.service === applicationService ||
+      typeof step.command !== 'string' ||
+      !step.command.trim() ||
+      step.command.length > 16_384 ||
+      step.command.includes('\0') ||
+      !Number.isInteger(step.timeoutSeconds) ||
+      (step.timeoutSeconds as number) < 1 ||
+      (step.timeoutSeconds as number) > 900
+    )
+      throw new ConfigurationError('初始化步骤须指定非应用服务、命令和 1–900 秒超时');
+    return {
+      service: step.service,
+      command: step.command,
+      timeoutSeconds: step.timeoutSeconds as number,
+    };
+  });
+}
+
+function normalizePreparationChecks(
+  value: unknown,
+  services: string[],
+  applicationService: string,
+): PreparationCheck[] {
+  const steps = normalizeInitializationSteps(value, services, applicationService)!;
+  return steps.map((step, index) => {
+    const source = (value as Record<string, unknown>[])[index];
+    if (
+      !['data', 'account'].includes(String(source.kind)) ||
+      typeof source.label !== 'string' ||
+      !source.label.trim() ||
+      source.label.length > 200
+    )
+      throw new ConfigurationError('准备核验须指定数据/账号类型和名称');
+    return { ...step, kind: source.kind as PreparationCheck['kind'], label: source.label.trim() };
+  });
+}
+
+function httpPath(value: unknown): string {
+  const path = value ?? '/';
+  if (
+    typeof path !== 'string' ||
+    !path.startsWith('/') ||
+    path.startsWith('//') ||
+    path.length > 512 ||
+    /[?#\\\s]/.test(path)
+  )
+    throw new ConfigurationError('健康检查路径无效');
+  return path;
+}
+function serviceName(value: unknown): string {
+  if (value === undefined || value === '') return '';
+  if (typeof value !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,62}$/.test(value))
+    throw new ConfigurationError('Compose 服务名无效');
+  return value;
 }
 
 export function normalizeExecutionDockerfile(value: unknown): string {

@@ -218,7 +218,7 @@ describe('controlled non-production HTTP tools', () => {
     });
     const tools = createControlledHttpTools({
       baseUrl: 'http://app.test:3100',
-      cleanupUrl: 'http://cleanup.test:3100/api/luowang/test-data',
+      cleanupUrl: 'http://cleanup.test:3100/api/catchnet/test-data',
       runId: RUN_ID,
       getTestPassword: () => undefined,
       getCleanupToken: () => 'secret-cleanup-token-long-enough-123456',
@@ -239,7 +239,7 @@ describe('controlled non-production HTTP tools', () => {
       }),
     );
     expect(storage).toMatchObject({ status: 200, resource: 'storage', cacheControl: 'no-store' });
-    expect(calls[0]!.url).toBe(`http://cleanup.test:3100/api/luowang/test-data/${RUN_ID}/storage`);
+    expect(calls[0]!.url).toBe(`http://cleanup.test:3100/api/catchnet/test-data/${RUN_ID}/storage`);
     expect((calls[0]!.init.headers as Record<string, string>).authorization).toContain(
       'secret-cleanup-token',
     );
@@ -252,7 +252,7 @@ describe('controlled non-production HTTP tools', () => {
         authorization: 'configured',
       }),
     );
-    expect(calls[1]!.url).toBe(`http://cleanup.test:3100/api/luowang/test-data/${RUN_ID}`);
+    expect(calls[1]!.url).toBe(`http://cleanup.test:3100/api/catchnet/test-data/${RUN_ID}`);
     toolResult(
       await probe.execute('3', {
         method: 'GET',
@@ -261,7 +261,7 @@ describe('controlled non-production HTTP tools', () => {
         invalidRunId: true,
       }),
     );
-    expect(calls[2]!.url).toBe('http://cleanup.test:3100/api/luowang/test-data/INVALID');
+    expect(calls[2]!.url).toBe('http://cleanup.test:3100/api/catchnet/test-data/INVALID');
     expect((calls[2]!.init.headers as Record<string, string>).authorization).toBeUndefined();
     expect(
       (
@@ -314,7 +314,9 @@ describe('controlled non-production HTTP tools', () => {
       calls.push({ url, method });
       if (url.endsWith('/api/auth/register')) {
         const body = JSON.parse(String(init!.body)) as { email: string; password: string };
-        const controlRunId = body.email.match(/^luowang-([0-9a-z]{26})-scope@/)?.[1]?.toUpperCase();
+        const controlRunId = body.email
+          .match(/^catchnet-([0-9a-z]{26})-scope@/)?.[1]
+          ?.toUpperCase();
         expect(controlRunId).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
         expect(body.password).toHaveLength(58);
         counts.set(controlRunId!, 1);
@@ -338,7 +340,7 @@ describe('controlled non-production HTTP tools', () => {
     });
     const tool = createControlledHttpTools({
       baseUrl: 'http://app.test:3100',
-      cleanupUrl: 'http://app.test:3100/api/luowang/test-data',
+      cleanupUrl: 'http://app.test:3100/api/catchnet/test-data',
       runId: RUN_ID,
       getTestPassword: () => undefined,
       getCleanupToken: () => 'secret-cleanup-token-long-enough-123456',
@@ -364,9 +366,9 @@ describe('controlled non-production HTTP tools', () => {
     expect(result.controlRunId).not.toBe(RUN_ID);
     expect(counts.get(result.controlRunId)).toBe(0);
     expect(calls.filter((call) => call.method === 'DELETE')).toEqual([
-      { url: `http://app.test:3100/api/luowang/test-data/${RUN_ID}`, method: 'DELETE' },
+      { url: `http://app.test:3100/api/catchnet/test-data/${RUN_ID}`, method: 'DELETE' },
       {
-        url: `http://app.test:3100/api/luowang/test-data/${result.controlRunId}`,
+        url: `http://app.test:3100/api/catchnet/test-data/${result.controlRunId}`,
         method: 'DELETE',
       },
     ]);
@@ -391,7 +393,7 @@ describe('controlled non-production HTTP tools', () => {
     });
     const tool = createControlledHttpTools({
       baseUrl: 'http://app.test:3100',
-      cleanupUrl: 'http://app.test:3100/api/luowang/test-data',
+      cleanupUrl: 'http://app.test:3100/api/catchnet/test-data',
       runId: RUN_ID,
       getTestPassword: () => undefined,
       getCleanupToken: () => 'secret-cleanup-token-long-enough-123456',

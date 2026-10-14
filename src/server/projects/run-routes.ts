@@ -2,6 +2,7 @@ import type Database from 'better-sqlite3';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Logger } from 'pino';
 import type { OssObject } from '../storage/oss.js';
+import type { GitPollResult } from '../automation/poller.js';
 
 import type { ProjectAutomationDispatcher } from '../automation/project-dispatcher.js';
 import { createProjectTestRequestQueue } from '../automation/queue.js';
@@ -13,7 +14,12 @@ import { createProjectRunWorkspaceStore } from '../runs/workspace.js';
 import { SESSION_COOKIE_NAME, type AuthService } from '../security/auth.js';
 import { encodeStableEvidenceId } from '../storage/oss.js';
 import type { ProjectStore } from './store.js';
-import type { OperationsRunDetail, RunDetail, RunSummary } from '../../shared/types.js';
+import type {
+  OperationsRunDetail,
+  RunDetail,
+  RunExecutionView,
+  RunSummary,
+} from '../../shared/types.js';
 
 function failedQueueRun(item: TestRequestRecord | undefined): RunDetail | null {
   if (!item || !['failed', 'interrupted'].includes(item.status) || !item.runId) return null;
@@ -49,6 +55,7 @@ export async function registerProjectRunRoutes(
     logger?: Logger;
     reportRoot?: string;
     readEvidence: (projectId: string, key: string) => Promise<OssObject>;
+    checkForTest?: (projectId: string) => Promise<GitPollResult>;
   },
 ): Promise<void> {
   await app.register(async (routes) => {
@@ -62,6 +69,16 @@ export async function registerProjectRunRoutes(
       if (!project) throw new AppError('PROJECT_NOT_FOUND', '项目不存在', 404);
       return project;
     };
+    if (options.checkForTest)
+      routes.post<{ Params: { projectId: string } }>(
+        '/api/projects/:projectId/check-for-test',
+        async (request) => {
+          requireProject(request.params.projectId);
+          const result = await options.checkForTest!(request.params.projectId);
+          if (result.status === 'queued') void options.dispatcher.drain().catch(() => undefined);
+          return result;
+        },
+      );
     const queueFor = (projectId: string) =>
       createProjectTestRequestQueue(options.database, requireProject(projectId).projectId);
     const runStoreFor = (projectId: string) =>
@@ -78,7 +95,8 @@ export async function registerProjectRunRoutes(
         options.dispatcher.getActiveRun(projectId, runId),
         Promise.resolve(store.get(runId)),
       ]);
-      if (runtime || stored) return presentRun(runtime, stored);
+      if (runtime || stored)
+        return presentRun(runtime, stored, readExecutionContext(options.database, runId));
       const recovered = recoveryFor(projectId).get(runId);
       if (recovered) {
         let artifacts: Record<string, string> = {};
@@ -95,14 +113,20 @@ export async function registerProjectRunRoutes(
             /* Keep the recorded interruption if local artifacts are unavailable. */
           }
         }
-        return presentRun({ ...recovered, artifacts }, null);
+        return presentRun(
+          { ...recovered, artifacts },
+          null,
+          readExecutionContext(options.database, runId),
+        );
       }
       const failed = failedQueueRun(
         queueFor(projectId)
           .list()
           .find((item) => item.runId === runId),
       );
-      return failed ? presentRun(failed, null) : null;
+      return failed
+        ? presentRun(failed, null, readExecutionContext(options.database, runId))
+        : null;
     };
     const startDrain = () => {
       void options.dispatcher.drain().catch((error: unknown) => {
@@ -335,6 +359,7 @@ export async function registerProjectRunRoutes(
 function presentRun(
   runtime: RunDetail | RunSummary | null,
   stored: StoredRun | null,
+  execution: RunExecutionView | null = null,
 ): OperationsRunDetail {
   const base: RunSummary = runtime ?? {
     runId: stored!.runId,
@@ -356,6 +381,7 @@ function presentRun(
     runtime && 'artifacts' in runtime ? runtime.artifacts : (stored?.artifacts ?? {});
   return {
     ...base,
+    execution,
     request: base.request || stored?.request || '',
     baseCommit: base.baseCommit ?? stored?.baseCommit ?? null,
     targetCommit: base.targetCommit ?? stored?.targetCommit ?? null,
@@ -404,6 +430,63 @@ function presentRun(
         attempts: issue.attempts,
       })) ?? [],
     artifacts,
+  };
+}
+
+function readExecutionContext(database: Database.Database, runId: string): RunExecutionView | null {
+  if (
+    !database
+      .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='run_execution_context'")
+      .get()
+  ) {
+    return null;
+  }
+  const row = database
+    .prepare(
+      `SELECT c.*, s.name AS server_name
+      FROM run_execution_context c
+      LEFT JOIN execution_servers s
+        ON c.execution_location_id = 'server:' || s.server_id
+      WHERE c.run_id = ?`,
+    )
+    .get(runId) as
+    | {
+        execution_location_id: string;
+        execution_location_revision: number;
+        config_revision: number;
+        start_type: 'single-container' | 'compose';
+        image_id: string | null;
+        scenario_patch_sha256: string | null;
+        runtime_environment_json: string | null;
+        cleanup_state: RunExecutionView['cleanupState'];
+        server_name: string | null;
+      }
+    | undefined;
+  if (!row) return null;
+  let environment: {
+    baseUrl?: unknown;
+    applicationService?: unknown;
+    commandService?: unknown;
+  } = {};
+  try {
+    environment = JSON.parse(row.runtime_environment_json ?? '{}') as typeof environment;
+  } catch {
+    /* A corrupt optional presentation snapshot must not hide the immutable run facts. */
+  }
+  return {
+    locationId: row.execution_location_id,
+    locationRevision: row.execution_location_revision,
+    serverName: row.server_name ?? '本机',
+    configRevision: row.config_revision,
+    startType: row.start_type,
+    imageId: row.image_id,
+    scenarioPatchSha256: row.scenario_patch_sha256,
+    baseUrl: typeof environment.baseUrl === 'string' ? environment.baseUrl : null,
+    applicationService:
+      typeof environment.applicationService === 'string' ? environment.applicationService : null,
+    commandService:
+      typeof environment.commandService === 'string' ? environment.commandService : null,
+    cleanupState: row.cleanup_state,
   };
 }
 

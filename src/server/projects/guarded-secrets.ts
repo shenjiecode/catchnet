@@ -1,9 +1,12 @@
 import type Database from 'better-sqlite3';
+import { assertEnvironmentIdle } from './environment-state.js';
 
 import {
   type BoundSecretStore,
   type DeploymentSecretKey,
   type ProjectSecretKey,
+  type ResourceSecretKey,
+  type ResourceSecretScope,
   type ScopedSecretStore,
 } from '../security/scoped-secret-store.js';
 
@@ -50,10 +53,13 @@ export function createGuardedScopedSecretStore(
         },
       };
     },
+    resource(scope: ResourceSecretScope, resourceId: string): BoundSecretStore<ResourceSecretKey> {
+      return scoped.resource(scope, resourceId);
+    },
   };
 }
 
-function readMethods<K extends DeploymentSecretKey | ProjectSecretKey>(store: BoundSecretStore<K>) {
+function readMethods<K extends string>(store: BoundSecretStore<K>) {
   return {
     isAvailable: () => store.isAvailable(),
     get: (key: K) => store.get(key),
@@ -80,4 +86,5 @@ function guardProject(database: Database.Database, projectId: string, key: Proje
   if (pending.count > 0) {
     throw new Error(`项目仍有 ${pending.count} 个待处理请求，不能替换测试或清理凭据`);
   }
+  assertEnvironmentIdle(database, projectId);
 }

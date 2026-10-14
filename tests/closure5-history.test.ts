@@ -222,13 +222,13 @@ async function historyFixture(): Promise<{
   runStore: RunStore;
   recoveryStore: ReturnType<typeof createRunRecoveryStore>;
 }> {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-closure5-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-closure5-'));
   cleanup.push(async () => rm(directory, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: directory,
-    LUOWANG_ADMIN_PASSWORD: 'closure5-fixture-password!',
-    LUOWANG_MASTER_KEY: 'closure5-fixture-master-key',
+    CATCHNET_DATA_DIR: directory,
+    CATCHNET_ADMIN_PASSWORD: 'closure5-fixture-password!',
+    CATCHNET_MASTER_KEY: 'closure5-fixture-master-key',
   });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());

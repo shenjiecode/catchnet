@@ -41,7 +41,10 @@ export interface RunInput {
 }
 
 export interface RunContext {
+  testPreparation?: import('../../shared/project-preparation.js').RunTestPreparation;
+  preparationResults?: Array<{ kind: 'data' | 'account'; label: string; exitCode: number | null }>;
   capabilities?: RunCapabilities;
+  runtimeBaseUrl: string | null;
   runId: string;
   request: string;
   trigger: RunTrigger;
@@ -65,6 +68,8 @@ export interface RunContext {
 
 export interface AgentSessionInput {
   signal?: AbortSignal;
+  thinkingPolicy?: 'highest';
+  onThinkingResolved?: (level: import('../../shared/types.js').ThinkingLevel) => void;
   role: AgentRole;
   sessionKind: AgentSessionKind;
   config: AgentConfig;

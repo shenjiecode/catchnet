@@ -33,7 +33,7 @@ describe('project-bound repository service', () => {
       const secrets = createScopedSecretStore(database, 'synthetic-master');
       secrets.project(a.projectId).set('gitToken', 'token-a');
       secrets.project(b.projectId).set('gitToken', 'token-b');
-      const root = resolve('/tmp/luowang-repositories');
+      const root = resolve('/tmp/catchnet-repositories');
       const serviceA = createProjectRepositoryService(
         database,
         a.projectId,

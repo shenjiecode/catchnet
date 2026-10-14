@@ -57,7 +57,7 @@ import {
   createRunnerEvidenceTools,
   type RunEvidenceStore,
 } from './evidence.js';
-import { createProviderAdapter, type ProviderAdapter } from './provider.js';
+import { createProviderAdapter, ProviderError, type ProviderAdapter } from './provider.js';
 import { createIssueCandidateController, createRunHistoryTool } from './run-history.js';
 import { createScenarioProgressController, type ProgressScenario } from './scenario-progress.js';
 import { scenarioReviewSummary } from './scenario-review-summary.js';
@@ -115,8 +115,14 @@ const SENSITIVE_PATH =
   /(^|\/)(?:\.env(?:\.|$)|.*(?:secret|credential|password|token|private[-_]?key|key\.txt).*)/i;
 
 export interface RunOrchestratorOptions {
+  environmentRecommendation?: {
+    sourceCommit: string;
+    summary: string;
+    record: (value: { runId: string; targetCommit: string; reason: string }) => void;
+  };
+  browserAllowedOrigins?: readonly string[];
   capabilityConfiguration?: RunCapabilities['configuration'];
-  checkEnvironment?: (signal?: AbortSignal) => Promise<EnvironmentObservation>;
+  checkEnvironment?: (baseUrl: string, signal?: AbortSignal) => Promise<EnvironmentObservation>;
   configuration: ConfigurationStore;
   repository: RepositoryService;
   indexer?: RepositoryIndexer;
@@ -126,6 +132,8 @@ export interface RunOrchestratorOptions {
   sessions?: AgentSessionFactory;
   commandRunner?: ControlledCommandRunner;
   commandSessionFactory?: RunCommandSessionFactory;
+  runtimeEnvironmentFactory?: RunRuntimeEnvironmentFactory;
+  testPreparation?: RunContext['testPreparation'];
   browser?: BrowserMcpAdapter;
   oss?: OssAdapter;
   testData?: TestDataManager;
@@ -137,6 +145,22 @@ export interface RunOrchestratorOptions {
   logger?: Logger;
   roleInstructions?: RoleInstructionLoader;
 }
+
+export type RunRuntimeEnvironmentOwner = {
+  baseUrl: string | null;
+  browserAvailable: boolean;
+  sensitiveValues?: readonly string[];
+  preparationResults?: RunContext['preparationResults'];
+  close(): Promise<void>;
+};
+export type RunRuntimeEnvironmentFactory = (input: {
+  repository: GitRepository;
+  runId: string;
+  targetCommit: string;
+  scenarioPatch?: string;
+  signal?: AbortSignal;
+  onExitUnconfirmed?: () => void;
+}) => Promise<RunRuntimeEnvironmentOwner>;
 
 export type RunCommandSessionFactory = (input: {
   signal?: AbortSignal;
@@ -426,6 +450,7 @@ class DefaultRunOrchestrator implements RunOrchestrator {
 
   private async execute(state: RunState, workspace: RunWorkspace, input: RunInput): Promise<void> {
     let cleanupDone = false;
+    let runtimeOwner: RunRuntimeEnvironmentOwner | undefined;
     const finishCleanup = async () => {
       if (cleanupDone) return;
       cleanupDone = true;
@@ -452,6 +477,10 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         historyIssuesAvailable: history.available,
         evidence: [],
         blockingReasons: [],
+        runtimeBaseUrl: null,
+        testPreparation: this.options.testPreparation
+          ? structuredClone(this.options.testPreparation)
+          : undefined,
         browserRequired: false,
         scenarioMode: this.options.configuration.getRepository().scenarioMode,
         initialization: input.initialization === true,
@@ -463,10 +492,39 @@ class DefaultRunOrchestrator implements RunOrchestrator {
           ),
       });
 
+      const registerRuntimeSecrets = (owner: RunRuntimeEnvironmentOwner | undefined) => {
+        context.preparationResults = structuredClone(owner?.preparationResults ?? []);
+        for (const value of owner?.sensitiveValues ?? []) {
+          evidenceStore.registerSensitiveValue?.(value);
+        }
+      };
+
+      runtimeOwner = this.options.runtimeEnvironmentFactory
+        ? await this.options.runtimeEnvironmentFactory({
+            repository: prepared.repository,
+            runId: context.runId,
+            targetCommit: context.targetCommit,
+            signal: state.stopController?.signal,
+            onExitUnconfirmed: () =>
+              this.setPhase(
+                state,
+                state.phase,
+                '应用运行资源尚未确认退出；继续保留名额并核对',
+                'warning',
+              ),
+          })
+        : undefined;
+      registerRuntimeSecrets(runtimeOwner);
+
+      context.runtimeBaseUrl =
+        runtimeOwner?.baseUrl ??
+        (this.options.configuration.getRepository().baseUrl.trim() || null);
+
       context.capabilities = await collectRunCapabilities({
         runId: context.runId,
-        baseUrl: this.options.configuration.getRepository().baseUrl,
-        browserConfigured: this.options.browser?.isEnabled() ?? false,
+        baseUrl: runtimeOwner?.baseUrl ?? this.options.configuration.getRepository().baseUrl,
+        browserConfigured:
+          (runtimeOwner?.browserAvailable ?? true) && (this.options.browser?.isEnabled() ?? false),
         testData: this.options.testData ?? createTestDataManager(),
         configuration: this.options.capabilityConfiguration,
         checkEnvironment: this.options.checkEnvironment,
@@ -504,10 +562,45 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         await this.finishScenarioReviewRun(state, workspace, context, closure);
         return;
       }
-      let runnerCleanup: { uploaded: boolean; uploadFailed: boolean } = {
-        uploaded: false,
-        uploadFailed: false,
-      };
+      const scenarioPatch = await readOptionalScenarioPatch(workspace);
+      if (scenarioPatch !== undefined && this.options.runtimeEnvironmentFactory) {
+        // The planning environment uses only the immutable target. Recreate it from
+        // the validated Run source before execution so the scenario patch never
+        // enters the reusable image while the tested application and command
+        // session observe the same source tree.
+        if (runtimeOwner) await runtimeOwner.close();
+        runtimeOwner = undefined;
+        runtimeOwner = await this.options.runtimeEnvironmentFactory({
+          repository: prepared.repository,
+          runId: context.runId,
+          targetCommit: context.targetCommit,
+          scenarioPatch,
+          signal: state.stopController?.signal,
+          onExitUnconfirmed: () =>
+            this.setPhase(
+              state,
+              state.phase,
+              '应用运行资源尚未确认退出；继续保留名额并核对',
+              'warning',
+            ),
+        });
+        registerRuntimeSecrets(runtimeOwner);
+        context.runtimeBaseUrl =
+          runtimeOwner.baseUrl ??
+          (this.options.configuration.getRepository().baseUrl.trim() || null);
+        context.capabilities = await collectRunCapabilities({
+          runId: context.runId,
+          baseUrl: runtimeOwner.baseUrl ?? this.options.configuration.getRepository().baseUrl,
+          browserConfigured:
+            runtimeOwner.browserAvailable && (this.options.browser?.isEnabled() ?? false),
+          testData: this.options.testData ?? createTestDataManager(),
+          configuration: this.options.capabilityConfiguration,
+          checkEnvironment: this.options.checkEnvironment,
+          signal: state.stopController?.signal,
+          now: this.now,
+        });
+        this.assertNotStopped();
+      }
       try {
         if (context.initialization) {
           await this.runRunner(
@@ -530,7 +623,7 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         }
       } finally {
         try {
-          runnerCleanup = await this.finishRunner(state, workspace, context, evidenceStore);
+          await this.finishRunner(state, workspace, context, evidenceStore);
         } catch (error) {
           this.addBlockingReason(context, `Runner 收尾失败：${safeMessage(error)}`);
           await this.appendExecutionNotes(workspace, [
@@ -554,9 +647,6 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         await this.appendExecutionNotes(workspace, [
           'Reviewer 未读取截图 evidence，无法完成独立视觉审核。',
         ]);
-      }
-      if (runnerCleanup.uploaded && !runnerCleanup.uploadFailed) {
-        await this.cleanupRetainedEvidence(workspace, context, evidenceStore);
       }
       const patchBeforeFinalMain = await readOptionalScenarioPatch(workspace);
       await this.runMainB(state, workspace, context);
@@ -601,6 +691,15 @@ class DefaultRunOrchestrator implements RunOrchestrator {
       this.markExecutionFailure(state, error);
     } finally {
       await finishCleanup();
+      if (runtimeOwner) {
+        try {
+          await runtimeOwner.close();
+        } catch {
+          state.errorMessage = [state.errorMessage, '应用运行资源清理失败或状态未知']
+            .filter(Boolean)
+            .join('；');
+        }
+      }
       await this.options.repository.cleanWorkspace().catch(() => undefined);
       if (state.stopRequestedAt && !state.completionCommitted) {
         state.status = 'interrupted';
@@ -682,6 +781,7 @@ class DefaultRunOrchestrator implements RunOrchestrator {
   ): Promise<void> {
     this.setPhase(state, 'main-a', 'Main · 规划正在分析变更并选择场景');
     const tools = [
+      ...this.environmentRecommendationTools(context),
       ...createTargetContextTools(
         this.targetToolOptions(
           repository,
@@ -747,8 +847,7 @@ class DefaultRunOrchestrator implements RunOrchestrator {
     context: RunContext,
     repository: GitRepository,
   ): Promise<void> {
-    const config = this.options.configuration.getRepository();
-    if (!isValidTestEnvironmentUrl(config.baseUrl.trim())) {
+    if (!context.runtimeBaseUrl || !isValidTestEnvironmentUrl(context.runtimeBaseUrl)) {
       this.addBlockingReason(context, '初始化所需的非生产测试环境基础 URL 未配置或无效');
     }
     try {
@@ -779,6 +878,7 @@ class DefaultRunOrchestrator implements RunOrchestrator {
     let patchWriteAttempted = false;
     let patchWriteSucceeded = false;
     const tools = [
+      ...this.environmentRecommendationTools(context),
       ...createTargetContextTools(
         this.targetToolOptions(
           repository,
@@ -1176,7 +1276,10 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         return { ...result, evidenceId };
       }),
       createRunnerEnvironmentTool(
-        this.options.configuration.getRepository(),
+        {
+          ...this.options.configuration.getRepository(),
+          baseUrl: context.runtimeBaseUrl ?? '',
+        },
         this.options.secretStore,
       ),
       ...createTestDataTools(
@@ -1192,10 +1295,10 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         },
         context.capabilities?.accountStorage,
       ),
-      ...(evidenceStore && this.options.configuration.getRepository().baseUrl
+      ...(evidenceStore && context.runtimeBaseUrl
         ? createControlledHttpTools({
             signal: state.stopController?.signal,
-            baseUrl: this.options.configuration.getRepository().baseUrl,
+            baseUrl: context.runtimeBaseUrl,
             cleanupUrl: this.options.testDataCleanupUrl,
             runId: context.runId,
             getTestPassword: () => this.options.secretStore?.get('testPassword'),
@@ -1245,7 +1348,11 @@ class DefaultRunOrchestrator implements RunOrchestrator {
     ];
     const browserExtension =
       context.browserRequired && this.options.browser?.isEnabled()
-        ? this.options.browser.extension(workspace.evidenceDirectory)
+        ? this.options.browser.extension(
+            workspace.evidenceDirectory,
+            context.runtimeBaseUrl,
+            this.options.browserAllowedOrigins,
+          )
         : undefined;
     if (browserExtension) evidenceStore?.allowBrowserRecords?.();
     const commandSession = this.options.commandSessionFactory
@@ -1415,7 +1522,7 @@ class DefaultRunOrchestrator implements RunOrchestrator {
     if (!browser?.isEnabled()) {
       this.addBlockingReason(context, '计划包含 UI 场景，但 Playwright MCP 未启用');
     }
-    const baseUrl = this.options.configuration.getRepository().baseUrl.trim();
+    const baseUrl = context.runtimeBaseUrl?.trim() ?? '';
     if (baseUrl === '') {
       this.addBlockingReason(context, '计划包含 UI 场景，但测试环境基础 URL 未配置');
     } else if (!isValidTestEnvironmentUrl(baseUrl)) {
@@ -1584,25 +1691,6 @@ class DefaultRunOrchestrator implements RunOrchestrator {
       );
     }
     return `${message}\n\n${detail}`;
-  }
-
-  private async cleanupRetainedEvidence(
-    workspace: RunWorkspace,
-    context: RunContext,
-    evidenceStore: RunEvidenceStore | undefined,
-  ): Promise<void> {
-    if (!evidenceStore || this.options.configuration.getHarness().local.retentionDays !== 0) {
-      return;
-    }
-    try {
-      await evidenceStore.cleanupLocal();
-      await this.appendExecutionNotes(workspace, ['已按 retentionDays=0 清理本地 evidence。']);
-    } catch (error) {
-      this.addBlockingReason(context, `本地 evidence 清理失败：${safeMessage(error)}`);
-      await this.appendExecutionNotes(workspace, [
-        `本地 evidence 清理失败，保留本地文件：${safeMessage(error)}`,
-      ]);
-    }
   }
 
   private async appendExecutionNotes(
@@ -1855,6 +1943,12 @@ class DefaultRunOrchestrator implements RunOrchestrator {
         extensionFactories,
       );
       input.signal = this.activeRun?.stopController?.signal;
+      // The argument controls role-resource loading (Runner/Reviewer pass false),
+      // while the Run flag governs the thinking policy for every initialization role.
+      if (this.activeRun?.initialization || initialization) input.thinkingPolicy = 'highest';
+      input.onThinkingResolved = (thinking) => {
+        sessionRecord.thinking = thinking;
+      };
       stage = 'session-create';
       session = await this.sessions.create(input);
       if (this.activeRun?.telemetry) {
@@ -1963,6 +2057,25 @@ class DefaultRunOrchestrator implements RunOrchestrator {
       this.sourceReadStores.set(context, store);
     }
     return store;
+  }
+
+  private environmentRecommendationTools(context: RunContext): ToolDefinition[] {
+    const config = this.options.environmentRecommendation;
+    if (!config) return [];
+    return [
+      {
+        name: 'recommend_environment_update',
+        label: '建议更新启动配置',
+        description: `正常分析发现启动脚本、依赖或服务结构变化时，记录具体原因，供用户在配置页决定是否更新。只提醒，不修改配置或调用生成模型。当前配置来源：${config.sourceCommit}；摘要：${config.summary}`,
+        parameters: Type.Object({ reason: Type.String({ minLength: 1, maxLength: 1000 }) }),
+        execute: async (_id, params) => {
+          const reason = this.sanitizeSource((params as { reason: string }).reason.trim());
+          if (!reason) throw new Error('需要具体的配置更新原因');
+          config.record({ runId: context.runId, targetCommit: context.targetCommit, reason });
+          return createTextResult('已记录提醒，启动配置保持不变，等待用户点击更新。');
+        },
+      },
+    ];
   }
 
   private sanitizeSource(text: string): string {
@@ -2737,6 +2850,8 @@ function normalizeFinalReportFrontmatter(content: string): string {
 }
 
 function safeMessage(error: unknown): string {
+  if (error instanceof ProviderError && error.code === 'THINKING_UNSUPPORTED')
+    return '当前角色模型不支持所需思考等级；初始化要求最高可用思考等级，请检查 Main/Runner/Reviewer 模型能力后重试';
   if (error instanceof AgentSessionTerminationError) {
     return new AgentSessionTerminationError(error.reason).message;
   }
@@ -2769,10 +2884,10 @@ function safeMessage(error: unknown): string {
 }
 
 const SESSION_IDENTITIES: Record<AgentSessionKind, string> = {
-  'main-planning': '你是 LuoWang 的 Main · 规划。你负责理解变化、维护或选择长期场景并形成计划。',
-  'runner-execution': '你是 LuoWang 的 Runner。你负责在固定 target 上执行计划并收集证据。',
-  'reviewer-audit': '你是 LuoWang 的 Reviewer。你负责在独立上下文中审核本次执行和证据。',
-  'main-finalization': '你是 LuoWang 的 Main · 最终汇总。你负责根据落盘工件和审核形成最终报告。',
+  'main-planning': '你是 Catchnet 的 Main · 规划。你负责理解变化、维护或选择长期场景并形成计划。',
+  'runner-execution': '你是 Catchnet 的 Runner。你负责在固定 target 上执行计划并收集证据。',
+  'reviewer-audit': '你是 Catchnet 的 Reviewer。你负责在独立上下文中审核本次执行和证据。',
+  'main-finalization': '你是 Catchnet 的 Main · 最终汇总。你负责根据落盘工件和审核形成最终报告。',
 };
 
 function buildSystemPrompt(
@@ -2866,6 +2981,7 @@ function reviewerOutputContract(): string {
 
 function finalizationPromptContext(context: RunContext): Record<string, unknown> {
   return {
+    ...preparationContext(context),
     runId: context.runId,
     request: context.request,
     trigger: context.trigger,
@@ -2907,8 +3023,16 @@ scenario_results 必须是 YAML 数组，每项只能有 id 和 result。confirm
 证据只写在正文并引用稳定 URL。不得复述任何测试账号字段、Secret、隐藏推理、短期签名 URL 或绝对路径。结束前通过 write_report 写完整 report.md。`;
 }
 
+function preparationContext(context: RunContext) {
+  return {
+    testPreparation: context.testPreparation ?? null,
+    preparationResults: context.preparationResults ?? [],
+  };
+}
+
 function mainPlanningContext(context: RunContext) {
   return {
+    ...preparationContext(context),
     capabilities: context.capabilities ?? null,
     runId: context.runId,
     request: context.request,
@@ -2927,6 +3051,7 @@ function mainPlanningContext(context: RunContext) {
 
 function runnerContext(context: RunContext) {
   return {
+    ...preparationContext(context),
     capabilities: context.capabilities ?? null,
     runId: context.runId,
     request: context.request,
@@ -2944,6 +3069,7 @@ function runnerContext(context: RunContext) {
 
 function reviewerContext(context: RunContext) {
   return {
+    ...preparationContext(context),
     capabilities: context.capabilities ?? null,
     runId: context.runId,
     trigger: context.trigger,

@@ -22,7 +22,7 @@ let sourceRoot: string;
 let sourceDirectory: string;
 
 beforeAll(async () => {
-  sourceRoot = await mkdtemp(join(tmpdir(), 'luowang-command-source-'));
+  sourceRoot = await mkdtemp(join(tmpdir(), 'catchnet-command-source-'));
   sourceDirectory = join(sourceRoot, 'projects', PROJECT, 'run-sources', 'source-test', 'context');
   await mkdir(sourceDirectory, { recursive: true });
 });
@@ -38,10 +38,10 @@ describe('project command container', () => {
       const abort = new AbortController();
       const calls: string[][] = [];
       const labels = {
-        'luowang.project-id': PROJECT,
-        'luowang.instance-id': INSTANCE,
-        'luowang.run-id': RUN,
-        'luowang.target-commit': COMMIT,
+        'catchnet.project-id': PROJECT,
+        'catchnet.instance-id': INSTANCE,
+        'catchnet.run-id': RUN,
+        'catchnet.target-commit': COMMIT,
       };
       const docker: DockerRuntime = {
         async run(args) {
@@ -75,7 +75,7 @@ describe('project command container', () => {
     },
   );
 
-  it('checks image ownership, shares the command allowlist, and binds every command to one Run', async () => {
+  it('checks image ownership, permits project shell commands, and binds every command to one Run', async () => {
     const calls: string[][] = [];
     const docker: DockerRuntime = {
       async run(args): Promise<DockerRuntimeResult> {
@@ -84,8 +84,8 @@ describe('project command container', () => {
           case 'image':
             return ok(
               JSON.stringify({
-                'luowang.project-id': PROJECT,
-                'luowang.target-commit': COMMIT,
+                'catchnet.project-id': PROJECT,
+                'catchnet.target-commit': COMMIT,
               }),
             );
           case 'create':
@@ -105,33 +105,30 @@ describe('project command container', () => {
     assert.equal(session.containerId, CONTAINER);
     const create = calls.find((args) => args[0] === 'create')!;
     assert.equal(create.includes('--mount'), false);
-    assert.ok(create.includes(`luowang.instance-id=${INSTANCE}`));
+    assert.ok(create.includes(`catchnet.instance-id=${INSTANCE}`));
     assert.deepEqual(
       create.slice(
-        create.indexOf(`luowang.instance-id=${INSTANCE}`) - 1,
-        create.indexOf(`luowang.instance-id=${INSTANCE}`) + 1,
+        create.indexOf(`catchnet.instance-id=${INSTANCE}`) - 1,
+        create.indexOf(`catchnet.instance-id=${INSTANCE}`) + 1,
       ),
-      ['--label', `luowang.instance-id=${INSTANCE}`],
+      ['--label', `catchnet.instance-id=${INSTANCE}`],
     );
     const copy = calls.find((args) => args[0] === 'cp')!;
-    assert.deepEqual(copy, ['cp', `${sourceDirectory}/.`, `${CONTAINER}:/luowang-source`]);
+    assert.deepEqual(copy, ['cp', `${sourceDirectory}/.`, `${CONTAINER}:/catchnet-source`]);
     const result = await session.run('node --version', commandOptions());
     assert.equal(result.stdout, 'v24.0.0\n');
-    assert.deepEqual(result.environmentKeys, ['LUOWANG_RUN_ID', 'LUOWANG_TARGET_COMMIT']);
+    assert.deepEqual(result.environmentKeys, ['CATCHNET_RUN_ID', 'CATCHNET_TARGET_COMMIT']);
     const exec = calls.find((args) => args[0] === 'exec')!;
-    assert.deepEqual(exec.slice(-2), ['node', '--version']);
-    assert.ok(exec.includes('/luowang-source'));
-    assert.ok(exec.includes(`LUOWANG_RUN_ID=${RUN}`));
-    assert.ok(exec.includes(`LUOWANG_TARGET_COMMIT=${COMMIT}`));
-    await assert.rejects(
-      () => session.run('node -e "process.exit(0)"', commandOptions()),
-      /内联代码/,
-    );
+    assert.deepEqual(exec.slice(-3), ['/bin/sh', '-lc', 'node --version']);
+    assert.ok(exec.includes('/catchnet-source'));
+    assert.ok(exec.includes(`CATCHNET_RUN_ID=${RUN}`));
+    assert.ok(exec.includes(`CATCHNET_TARGET_COMMIT=${COMMIT}`));
+    await session.run('node -e "process.exit(0)" && echo complete', commandOptions());
     await assert.rejects(
       () => session.run('node --version', { ...commandOptions(), runId: 'other' }),
       /上下文不符/,
     );
-    assert.equal(calls.filter((args) => args[0] === 'exec').length, 1);
+    assert.equal(calls.filter((args) => args[0] === 'exec').length, 2);
     await session.close();
     await session.close();
     assert.equal(calls.filter((args) => args[0] === 'rm').length, 1);
@@ -144,7 +141,7 @@ describe('project command container', () => {
       async run(args) {
         wrongCalls.push(args);
         return ok(
-          JSON.stringify({ 'luowang.project-id': 'other', 'luowang.target-commit': COMMIT }),
+          JSON.stringify({ 'catchnet.project-id': 'other', 'catchnet.target-commit': COMMIT }),
         );
       },
     };
@@ -173,7 +170,7 @@ describe('project command container', () => {
         failedCalls.push(args);
         if (args[0] === 'image') {
           return ok(
-            JSON.stringify({ 'luowang.project-id': PROJECT, 'luowang.target-commit': COMMIT }),
+            JSON.stringify({ 'catchnet.project-id': PROJECT, 'catchnet.target-commit': COMMIT }),
           );
         }
         if (args[0] === 'create') return ok(CONTAINER);
@@ -198,7 +195,10 @@ describe('project command container', () => {
             copyCalls.push(args[0]);
             if (args[0] === 'image')
               return ok(
-                JSON.stringify({ 'luowang.project-id': PROJECT, 'luowang.target-commit': COMMIT }),
+                JSON.stringify({
+                  'catchnet.project-id': PROJECT,
+                  'catchnet.target-commit': COMMIT,
+                }),
               );
             if (args[0] === 'create') return ok(CONTAINER);
             if (args[0] === 'cp') return { stdout: '', stderr: 'copy failed', exitCode: 1 };

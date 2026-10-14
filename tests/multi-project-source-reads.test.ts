@@ -29,7 +29,7 @@ async function invoke(tool: ToolDefinition, params: object) {
 }
 
 it('keeps v0.6.0 deep-read receipts and plans inside their owning project Run', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-project-source-reads-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-project-source-reads-'));
   const database = new Database(':memory:');
   try {
     runMigrations(database);

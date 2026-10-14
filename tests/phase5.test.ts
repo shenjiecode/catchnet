@@ -79,8 +79,8 @@ describe('Phase 5 archive and progress', () => {
     );
     assert.equal(context.store.getLastCompletedTarget(), 'a'.repeat(40));
     for (const created of context.repository.createdIssues) {
-      assert.match(created.body, new RegExp(`luowang-run:${runId}`));
-      assert.match(created.body, /luowang-bug:BUG-/);
+      assert.match(created.body, new RegExp(`catchnet-run:${runId}`));
+      assert.match(created.body, /catchnet-bug:BUG-/);
     }
   });
 
@@ -353,7 +353,7 @@ describe('Phase 5 Git report publisher', () => {
             html_url: 'https://github.com/cynos-ai/cynos-website/issues/7',
             created_at: '2026-08-30T00:00:00Z',
             updated_at: '2026-08-30T00:00:00Z',
-            body: 'luowang-run:RUN-1 luowang-bug:BUG-1',
+            body: 'catchnet-run:RUN-1 catchnet-bug:BUG-1',
           },
           {
             number: 6,
@@ -361,7 +361,7 @@ describe('Phase 5 Git report publisher', () => {
             state: 'open',
             html_url: 'https://github.com/cynos-ai/cynos-website/pull/6',
             pull_request: { url: 'https://api.github.com/pulls/6' },
-            body: 'luowang-run:RUN-1 luowang-bug:BUG-1',
+            body: 'catchnet-run:RUN-1 catchnet-bug:BUG-1',
           },
         ]),
         { status: 200, headers: { 'content-type': 'application/json' } },
@@ -373,12 +373,15 @@ describe('Phase 5 Git report publisher', () => {
         apiBaseUrl: 'https://github.test',
         tokenProvider: () => 'token-not-recorded',
       });
-      const matches = await client.findIssuesByMarkers(['luowang-run:RUN-1', 'luowang-bug:BUG-1']);
+      const matches = await client.findIssuesByMarkers([
+        'catchnet-run:RUN-1',
+        'catchnet-bug:BUG-1',
+      ]);
       assert.deepEqual(
         matches.map((issue) => issue.number),
         [7],
       );
-      const created = await client.createIssue('新问题', 'luowang-run:RUN-2\nluowang-bug:BUG-2');
+      const created = await client.createIssue('新问题', 'catchnet-run:RUN-2\ncatchnet-bug:BUG-2');
       assert.equal(created.number, 8);
       const linked = await client.getIssueByUrl(
         'https://github.com/cynos-ai/cynos-website/issues/42',
@@ -390,7 +393,7 @@ describe('Phase 5 Git report publisher', () => {
       );
       assert.equal(
         requests.filter((request) => request.method === 'POST')[0]?.body,
-        JSON.stringify({ title: '新问题', body: 'luowang-run:RUN-2\nluowang-bug:BUG-2' }),
+        JSON.stringify({ title: '新问题', body: 'catchnet-run:RUN-2\ncatchnet-bug:BUG-2' }),
       );
     } finally {
       globalThis.fetch = originalFetch;
@@ -445,7 +448,7 @@ class ArchiveRepository {
   }
 
   async createIssue(title: string, body: string): Promise<RepositoryIssue> {
-    const key = body.match(/luowang-bug:([^\r\n]+)/)?.[1] ?? '';
+    const key = body.match(/catchnet-bug:([^\r\n]+)/)?.[1] ?? '';
     if (this.failKeys.has(key)) throw new Error('fixture Issue failure');
     const issue: RepositoryIssue & { body: string } = {
       number: this.createdIssues.length + 1,
@@ -474,13 +477,13 @@ class ArchiveRepository {
 }
 
 async function createArchiveContext(): Promise<ArchiveContext> {
-  const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase5-data-'));
+  const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase5-data-'));
   const reportDir = join(dataDir, 'report');
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_REPORT_DIR: reportDir,
-    LUOWANG_REPO_DIR: join(dataDir, 'repo'),
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_REPORT_DIR: reportDir,
+    CATCHNET_REPO_DIR: join(dataDir, 'repo'),
   });
   const database = initializeDatabase(config);
   const store = createRunStore(database.sqlite, { now: () => '2026-08-30T00:10:00Z' });
@@ -564,7 +567,7 @@ function runIdAt(index: number): string {
 }
 
 async function createGitFixture() {
-  const rootDir = await mkdtemp(join(tmpdir(), 'luowang-phase5-git-'));
+  const rootDir = await mkdtemp(join(tmpdir(), 'catchnet-phase5-git-'));
   cleanup.push(async () => rm(rootDir, { recursive: true, force: true }));
   const remoteDir = join(rootDir, 'remote.git');
   const sourceDir = join(rootDir, 'source');
@@ -572,8 +575,8 @@ async function createGitFixture() {
   await mkdir(sourceDir, { recursive: true });
   await git(['init', '--bare', remoteDir], rootDir);
   await git(['init', '--initial-branch=main'], sourceDir);
-  await git(['config', 'user.name', 'LuoWang Phase 5 Test'], sourceDir);
-  await git(['config', 'user.email', 'luowang-phase5@example.test'], sourceDir);
+  await git(['config', 'user.name', 'Catchnet Phase 5 Test'], sourceDir);
+  await git(['config', 'user.email', 'catchnet-phase5@example.test'], sourceDir);
   await writeFile(join(sourceDir, 'README.md'), 'fixture product\n');
   await git(['add', 'README.md'], sourceDir);
   await git(['commit', '-m', 'initial product'], sourceDir);

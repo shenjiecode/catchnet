@@ -9,8 +9,8 @@ import { ensureSystemMetadata, initializeDatabase } from '../src/server/db/migra
 
 describe('SQLite foundation', () => {
   it('runs versioned migrations and preserves system metadata across restarts', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-db-'));
-    const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDir });
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-db-'));
+    const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDir });
 
     const first = initializeDatabase(config);
     const firstInstance = first.sqlite
@@ -48,8 +48,8 @@ describe('SQLite foundation', () => {
   });
 
   it('does not overwrite a persisted instance id when metadata is refreshed', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-meta-'));
-    const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDir });
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-meta-'));
+    const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDir });
     const database = initializeDatabase(config);
 
     ensureSystemMetadata(database.sqlite, {

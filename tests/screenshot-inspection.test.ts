@@ -19,7 +19,7 @@ import { localEvidenceTransport, TEST_PNG } from './acceptance/local-evidence.js
 it.each(['detected', 'not_detected', 'unknown'] as const)(
   'binds %s labels to image bytes, readers and report without changing upload',
   async (status) => {
-    const directory = await mkdtemp(join(tmpdir(), 'luowang-capture-label-'));
+    const directory = await mkdtemp(join(tmpdir(), 'catchnet-capture-label-'));
     try {
       const workspace = new RunWorkspace('01K00000000000000000000000', directory);
       await workspace.create();
@@ -28,7 +28,7 @@ it.each(['detected', 'not_detected', 'unknown'] as const)(
       const sha256 = createHash('sha256').update(TEST_PNG).digest('hex');
       await writeFile(join(workspace.evidenceDirectory, 'image.png'), TEST_PNG);
       const receipt = readScreenshotReceipt(
-        'LUOWANG_SCREENSHOT_CAPTURE ' +
+        'CATCHNET_SCREENSHOT_CAPTURE ' +
           JSON.stringify({ filename: './image.png', status, scope: 'page', sha256 }),
       );
       await store.captureScreenshot!(receipt.filename, receipt.inspection);
@@ -63,8 +63,8 @@ it.each(['detected', 'not_detected', 'unknown'] as const)(
 
 it('rejects missing/forged receipts and changed images before upload', async () => {
   assert.throws(() => readScreenshotReceipt('old screenshot result'));
-  assert.throws(() => readScreenshotReceipt('LUOWANG_SCREENSHOT_CAPTURE {"status":"safe"}'));
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-capture-tamper-'));
+  assert.throws(() => readScreenshotReceipt('CATCHNET_SCREENSHOT_CAPTURE {"status":"safe"}'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-capture-tamper-'));
   try {
     const workspace = new RunWorkspace('01K00000000000000000000000', directory);
     await workspace.create();

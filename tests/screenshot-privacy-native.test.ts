@@ -12,7 +12,7 @@ import { createPlaywrightMcpAdapter } from '../src/server/browser/playwright-mcp
 import type { ConfigurationStore } from '../src/server/configuration.js';
 
 it('native MCP captures populated forms without changing state and labels detection outcomes', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-screenshot-guard-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-screenshot-guard-'));
   const sentinel = 'synthetic-field-value';
   const pages: Record<string, string> = {
     '/unknown':
@@ -108,7 +108,7 @@ it('native MCP captures populated forms without changing state and labels detect
       arguments: { fullPage: true, target: 'missing-ref' },
     });
     assert.equal(invalid.isError, true);
-    assert.doesNotMatch(JSON.stringify(invalid), /LUOWANG_SCREENSHOT_CAPTURE/);
+    assert.doesNotMatch(JSON.stringify(invalid), /CATCHNET_SCREENSHOT_CAPTURE/);
   } finally {
     await client.close();
     await transport.close();

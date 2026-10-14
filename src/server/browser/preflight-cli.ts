@@ -8,9 +8,9 @@ import { initializeDatabase } from '../db/migrate.js';
 import { createPlaywrightMcpAdapter } from './playwright-mcp.js';
 import { runBrowserPreflight } from './preflight.js';
 
-const root = await mkdtemp(join(tmpdir(), 'luowang-readiness-'));
+const root = await mkdtemp(join(tmpdir(), 'catchnet-readiness-'));
 try {
-  const config = loadConfig({ LUOWANG_DATA_DIR: root });
+  const config = loadConfig({ CATCHNET_DATA_DIR: root });
   const database = initializeDatabase(config);
   try {
     const configuration = createConfigurationStore(database.sqlite, config);

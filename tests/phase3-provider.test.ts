@@ -129,7 +129,7 @@ describe('Phase 3 Provider connectivity', () => {
     assert.equal(result.code, 'AUTH_NOT_CONFIGURED');
   });
 
-  it('selects stage thinking from each model supported levels rather than stored preferences', async () => {
+  it('accepts configured thinking while resolving each role model', async () => {
     const adapter = await makeAdapter({
       provider: 'openai',
       model: 'gpt-4',
@@ -171,7 +171,7 @@ describe('Phase 3 Provider connectivity', () => {
     assert.deepEqual(supportedThinkingLevels({ reasoning: false } as unknown as PiModel), ['off']);
   });
 
-  it('maps low-intent stages to the second supported level and off-intent stages to the first', () => {
+  it('keeps supported choices and falls back to each role default', () => {
     const glm53 = {
       reasoning: true,
       thinkingLevelMap: {
@@ -186,9 +186,11 @@ describe('Phase 3 Provider connectivity', () => {
     } as unknown as PiModel;
     assert.deepEqual(supportedThinkingLevels(glm53), ['low', 'high', 'max']);
     assert.equal(selectStageThinking(glm53, 'runner'), 'low');
-    assert.equal(selectStageThinking(glm53, 'main-b'), 'low');
+    assert.equal(selectStageThinking(glm53, 'main-b'), 'high');
     assert.equal(selectStageThinking(glm53, 'main-a'), 'high');
     assert.equal(selectStageThinking(glm53, 'reviewer'), 'high');
+    assert.equal(selectStageThinking(glm53, 'main-a', 'max'), 'max');
+    assert.equal(selectStageThinking(glm53, 'runner', 'off'), 'low');
 
     const nonReasoning = { reasoning: false } as unknown as PiModel;
     assert.equal(selectStageThinking(nonReasoning, 'runner'), 'off');
@@ -204,9 +206,9 @@ async function makeAdapter(options: {
   baseUrl?: string;
   thinking?: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 }) {
-  const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase3-provider-'));
+  const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase3-provider-'));
   cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
-  const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDirectory });
+  const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDirectory });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
   const configuration = createConfigurationStore(database.sqlite, {

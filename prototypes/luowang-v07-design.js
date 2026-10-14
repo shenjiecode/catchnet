@@ -14,7 +14,7 @@ function pageFromHash() {
   return pageRenderers[page] ? page : '';
 }
 
-let currentPage = pageFromHash() || localStorage.getItem('luowang-v07-design-page') || defaultPage;
+let currentPage = pageFromHash() || localStorage.getItem('catchnet-v07-design-page') || defaultPage;
 if (!pageRenderers[currentPage]) currentPage = defaultPage;
 
 function render() {
@@ -27,7 +27,7 @@ function render() {
 function switchPage(page, options = {}) {
   if (!pageRenderers[page]) return;
   currentPage = page;
-  localStorage.setItem('luowang-v07-design-page', page);
+  localStorage.setItem('catchnet-v07-design-page', page);
   if (!options.fromHash) window.history.pushState(null, '', `#/${page}`);
   render();
 }

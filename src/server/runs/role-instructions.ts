@@ -92,7 +92,7 @@ async function loadResource(
     }
     const content = await readFile(path, 'utf8');
     if (content.trim() === '') throw new Error('empty resource');
-    const expectedMarker = `luowang-role-id: ${id}; format-version: ${FORMAT_VERSION}`;
+    const expectedMarker = `catchnet-role-id: ${id}; format-version: ${FORMAT_VERSION}`;
     if (!content.includes(expectedMarker)) throw new Error('invalid marker');
     return {
       id,
@@ -116,6 +116,6 @@ function defaultResourceDirectory(): string {
 }
 
 function normalizedApplicationVersion(value: string | undefined): string {
-  const version = value ?? process.env.LUOWANG_VERSION ?? DEFAULT_VERSION;
+  const version = value ?? process.env.CATCHNET_VERSION ?? DEFAULT_VERSION;
   return version.trim() === '' ? DEFAULT_VERSION : version.trim();
 }

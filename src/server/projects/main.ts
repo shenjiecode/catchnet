@@ -13,7 +13,7 @@ import { assertProjectSchema } from './schema-mode.js';
 export async function startProjectServer(environment: NodeJS.ProcessEnv = process.env) {
   const config = loadConfig({
     ...environment,
-    LUOWANG_WEB_ROOT: environment.LUOWANG_WEB_ROOT ?? defaultWebRoot(),
+    CATCHNET_WEB_ROOT: environment.CATCHNET_WEB_ROOT ?? defaultWebRoot(),
   });
   const logger = createLogger(config);
   if (config.databasePath === ':memory:' || !existsSync(config.databasePath)) {

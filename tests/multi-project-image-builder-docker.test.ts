@@ -20,12 +20,12 @@ import { prepareProjectRunSource } from '../src/server/projects/run-source.js';
 import { GitRepository } from '../src/server/repository/git-repository.js';
 
 const execFileAsync = promisify(execFile);
-const dockerIt = process.env.LUOWANG_DOCKER_SMOKE === '1' ? it : it.skip;
+const dockerIt = process.env.CATCHNET_DOCKER_SMOKE === '1' ? it : it.skip;
 
 dockerIt(
   'runs a real fixed-commit image against its validated Run scenario patch',
   async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-project-run-docker-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-project-run-docker-'));
     const repo = join(root, 'repo');
     const projectId = randomUUID();
     const runId = '01K00000000000000000000002';
@@ -33,15 +33,15 @@ dockerIt(
     let imageId: string | undefined;
     let builtInImageId: string | undefined;
     let containerId: string | undefined;
-    const originalMasterKey = process.env.LUOWANG_MASTER_KEY;
-    process.env.LUOWANG_MASTER_KEY = 'synthetic-docker-smoke-master';
+    const originalMasterKey = process.env.CATCHNET_MASTER_KEY;
+    process.env.CATCHNET_MASTER_KEY = 'synthetic-docker-smoke-master';
     try {
       await execFileAsync('git', ['init', '-b', 'main', repo], { cwd: root });
-      await execFileAsync('git', ['config', 'user.name', 'LuoWang Test'], { cwd: repo });
-      await execFileAsync('git', ['config', 'user.email', 'luowang@example.test'], { cwd: repo });
+      await execFileAsync('git', ['config', 'user.name', 'Catchnet Test'], { cwd: repo });
+      await execFileAsync('git', ['config', 'user.email', 'catchnet@example.test'], { cwd: repo });
       await mkdir(join(repo, 'docs/scenario-testing/scenarios'), { recursive: true });
       await writeFile(
-        join(repo, 'Dockerfile.luowang'),
+        join(repo, 'Dockerfile.catchnet'),
         'FROM docker.m.daocloud.io/library/node:24.14.1-bookworm-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c\nWORKDIR /workspace\n',
       );
       await writeFile(
@@ -62,7 +62,7 @@ dockerIt(
         repository,
         projectId,
         targetCommit,
-        dockerfilePath: 'Dockerfile.luowang',
+        dockerfilePath: 'Dockerfile.catchnet',
         storageRoot: root,
       });
       const runSource = await prepareProjectRunSource({
@@ -131,7 +131,7 @@ dockerIt(
         assert.ok(
           inspected.Config.Env.every(
             (entry) =>
-              !/^(?:DOCKER_HOST|LUOWANG_MASTER_KEY|LUOWANG_ADMIN_PASSWORD|LUOWANG_TEST_PASSWORD)=/.test(
+              !/^(?:DOCKER_HOST|CATCHNET_MASTER_KEY|CATCHNET_ADMIN_PASSWORD|CATCHNET_TEST_PASSWORD)=/.test(
                 entry,
               ),
           ),
@@ -143,7 +143,7 @@ dockerIt(
               containerId,
               'sh',
               '-c',
-              'test ! -e /var/run/docker.sock && test ! -e /data/luowang.db',
+              'test ! -e /var/run/docker.sock && test ! -e /data/catchnet.db',
             ])
           ).stdout,
           '',
@@ -158,7 +158,7 @@ dockerIt(
         await session.close();
         containerId = undefined;
         const originalDockerHost = process.env.DOCKER_HOST;
-        process.env.DOCKER_HOST = 'unix:///luowang-smoke-missing-docker.sock';
+        process.env.DOCKER_HOST = 'unix:///catchnet-smoke-missing-docker.sock';
         try {
           await assert.rejects(
             startProjectCommandSession({
@@ -184,7 +184,7 @@ dockerIt(
               '--all',
               '--quiet',
               '--filter',
-              `label=luowang.run-id=${runId}`,
+              `label=catchnet.run-id=${runId}`,
             ])
           ).stdout.trim(),
           '',
@@ -194,8 +194,8 @@ dockerIt(
         await runSource.cleanup();
       }
     } finally {
-      if (originalMasterKey === undefined) delete process.env.LUOWANG_MASTER_KEY;
-      else process.env.LUOWANG_MASTER_KEY = originalMasterKey;
+      if (originalMasterKey === undefined) delete process.env.CATCHNET_MASTER_KEY;
+      else process.env.CATCHNET_MASTER_KEY = originalMasterKey;
       if (containerId) await execFileAsync('docker', ['rm', '--force', containerId]);
       if (builtInImageId) await execFileAsync('docker', ['image', 'rm', '--force', builtInImageId]);
       if (imageId) await execFileAsync('docker', ['image', 'rm', '--force', imageId]);
@@ -212,7 +212,7 @@ function scenario(description: string): string {
 dockerIt(
   'builds one real reusable project image and resolves its immutable ID',
   async () => {
-    const root = await mkdtemp(join(tmpdir(), 'luowang-project-image-docker-'));
+    const root = await mkdtemp(join(tmpdir(), 'catchnet-project-image-docker-'));
     const projectId = randomUUID();
     const context = join(root, 'projects', projectId, 'run-sources', 'source-smoke', 'context');
     const targetCommit = randomBytes(20).toString('hex');
@@ -221,7 +221,7 @@ dockerIt(
     try {
       await mkdir(context, { recursive: true });
       await writeFile(
-        join(context, 'Dockerfile.luowang'),
+        join(context, 'Dockerfile.catchnet'),
         'FROM docker.m.daocloud.io/library/node:24.14.1-bookworm-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c\nWORKDIR /workspace\nCOPY marker.txt /workspace/marker.txt\n',
       );
       await writeFile(join(context, 'marker.txt'), targetCommit);
@@ -234,7 +234,7 @@ dockerIt(
         instanceId: projectId,
         source: {
           directory: context,
-          dockerfilePath: 'Dockerfile.luowang',
+          dockerfilePath: 'Dockerfile.catchnet',
           targetCommit,
           cleanup: async () => {},
         },

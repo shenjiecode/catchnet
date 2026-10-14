@@ -66,7 +66,7 @@ export function createV07ConsoleFixture(
       'Closure 7 Fixture',
       '1002',
       'cynos-ai',
-      'luowang-closure7-fixture',
+      'catchnet-closure7-fixture',
       'paused',
       now,
     ),
@@ -405,7 +405,7 @@ function fixtureReport(now: string): IndexedReport {
 function fixtureSystemStatus(now: string): SystemStatusResponse {
   return {
     fetchedAt: now,
-    service: { name: 'luowang', version: '0.7.0-test', build: 'synthetic' },
+    service: { name: 'catchnet', version: '0.7.0-test', build: 'synthetic' },
     database: 'ok',
     secretStore: 'available',
     executionCapacity: { occupied: 1, limit: 2 },

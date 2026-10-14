@@ -36,7 +36,7 @@ interface BackupTreeDigest {
   sha256: string;
 }
 
-/** Caller must stop the LuoWang service before backing up mutable work directories. */
+/** Caller must stop the Catchnet service before backing up mutable work directories. */
 export async function createLegacyBackup(input: LegacyBackupInput): Promise<LegacyBackupManifest> {
   const databasePath = resolve(input.databasePath);
   const repoDir = resolve(input.repoDir);
@@ -67,7 +67,7 @@ export async function createLegacyBackup(input: LegacyBackupInput): Promise<Lega
   await mkdir(backupDir);
   await writeFile(join(backupDir, 'INCOMPLETE'), '备份尚未完成，请勿用于恢复\n', { flag: 'wx' });
 
-  const databaseCopy = join(backupDir, 'luowang.db');
+  const databaseCopy = join(backupDir, 'catchnet.db');
   await input.database.backup(databaseCopy);
   const snapshot = new Database(databaseCopy, { readonly: true, fileMustExist: true });
   try {
@@ -109,7 +109,7 @@ export async function verifyLegacyBackup(backupDir: string): Promise<LegacyBacku
 }
 
 async function verifyContents(root: string, manifest: LegacyBackupManifest): Promise<void> {
-  const databaseCopy = join(root, 'luowang.db');
+  const databaseCopy = join(root, 'catchnet.db');
   if ((await fileHash(databaseCopy)) !== manifest.databaseSha256) {
     throw new Error('SQLite 备份摘要不匹配');
   }

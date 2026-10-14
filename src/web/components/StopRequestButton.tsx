@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { requestJson, toUserMessage } from '../api';
 import { ConfirmDialog } from './ConfirmDialog';
+import { AppMessageFeedback } from './AppMessageProvider';
 
 export function StopRequestButton({
   projectId,
@@ -51,11 +52,7 @@ export function StopRequestButton({
       });
       if (current.current !== submitted) return;
       setConfirm(false);
-      setMessage(
-        result.queue.stopRequestedAt
-          ? '停止请求已记录；实际退出与清理状态会继续更新。'
-          : '本次测试已结束执行，保留原结果并继续归档。',
-      );
+      setMessage(result.queue.stopRequestedAt ? '停止请求已记录' : '本次测试已结束');
       onChanged();
     } catch (cause) {
       if (current.current === submitted) setError(toUserMessage(cause, '停止请求失败'));
@@ -76,8 +73,7 @@ export function StopRequestButton({
       >
         {requested ? '正在停止与收尾' : queued ? '取消排队' : '停止本次测试'}
       </button>
-      {message && <p role="status">{message}</p>}
-      {error && !confirm && <p role="alert">{error}</p>}
+      <AppMessageFeedback success={message} error={!confirm ? error : ''} />
       {confirm && (
         <ConfirmDialog
           open

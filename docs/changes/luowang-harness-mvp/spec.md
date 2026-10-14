@@ -1,4 +1,4 @@
-# 罗网（LuoWang）场景测试 Harness MVP 规格
+# 罗网（Catchnet）场景测试 Harness MVP 规格
 
 - 工件类型：Spec
 - 关联 Intent：[intent.md](./intent.md)
@@ -6,10 +6,10 @@
 - 状态：MVP Implementation Baseline v0.7
 - 日期：2026-08-29
 - 中文名：罗网
-- 英文名：LuoWang
-- GitHub 目标：公开仓库 `cynos-ai/luowang`
+- 英文名：Catchnet
+- GitHub 目标：公开仓库 `shenjiecode/catchnet`
 - 许可证：GNU Affero General Public License v3.0（`AGPL-3.0`，允许商业使用的强 copyleft）
-- 本地目录：`/home/sj/Codes/cynos/luowang`
+- 本地目录：`/home/sj/Codes/cynos/catchnet`
 - 项目定位：AI Scenario Testing Harness
 - MVP 部署范围：单租户、单目标仓库、每个部署一个测试环境
 
@@ -572,7 +572,7 @@ Archiver 对 Git 的写入边界固定为：发布 Main 已生成且通过验证
 MVP 使用 SQLite 保存配置。敏感值使用由容器外部主密钥派生的密钥加密。
 
 ```text
-LUOWANG_MASTER_KEY
+CATCHNET_MASTER_KEY
 ```
 
 所有敏感信息通过一个统一的 Secret Store 出入口管理：
@@ -966,11 +966,11 @@ MVP 不做用户系统，只配置一个管理员密码。
 
 管理员密码只按以下方式首次初始化：
 
-1. SQLite 中尚无管理员密码哈希时，服务端只从 `LUOWANG_ADMIN_PASSWORD` 环境变量读取初始密码；
+1. SQLite 中尚无管理员密码哈希时，服务端只从 `CATCHNET_ADMIN_PASSWORD` 环境变量读取初始密码；
 2. 环境变量缺失时拒绝完成管理员初始化，网站可以显示“尚未配置管理员初始密码”，但登录之外不开放任何匿名管理接口；
 3. 不提供“第一个访问网站的人设置密码”的流程，也不生成或写死默认密码；
 4. 服务端立即生成 Argon2id 哈希并只把哈希写入 SQLite，原始值用后即丢弃；
-5. SQLite 已有密码哈希后忽略 `LUOWANG_ADMIN_PASSWORD`，进程重启不能用环境变量覆盖现有密码；
+5. SQLite 已有密码哈希后忽略 `CATCHNET_ADMIN_PASSWORD`，进程重启不能用环境变量覆盖现有密码；
 6. 后续修改密码必须先通过当前管理员认证，成功后撤销全部既有登录 Token。
 
 登录流程：
@@ -1136,7 +1136,7 @@ Cron 到点后检查场景测试分支：
 MVP 可以使用单应用容器：
 
 ```text
-luowang
+catchnet
 ├── Gateway/API
 ├── Web 静态资源
 ├── Cron/Git Poller
@@ -1154,7 +1154,7 @@ luowang
 持久化数据卷：
 
 ```text
-/data/luowang.db
+/data/catchnet.db
 /data/repo
 /data/report
 ```
@@ -1162,8 +1162,8 @@ luowang
 外部 Secret：
 
 ```text
-LUOWANG_ADMIN_PASSWORD
-LUOWANG_MASTER_KEY
+CATCHNET_ADMIN_PASSWORD
+CATCHNET_MASTER_KEY
 ```
 
 模型 Provider、Git、测试环境和 OSS 凭据均在登录网站后配置，进入 SQLite Secret Store，不要求作为容器环境变量提供。
@@ -1281,7 +1281,7 @@ MVP 只实现 GitHub，不抽象 GitLab、Gitea 或通用 Git Provider。
 - 只修改 `docs/scenario-testing/scenarios/**` 或 `docs/scenario-testing/reports/**` 的 commit 不自动触发测试，也不进入 `included_commits`，无论来自罗网、人工还是场景 PR；
 - 场景 PR 合并后需要立即验证时，由用户人工重测当前版本；否则最新场景在下一次产品/需求变化触发的 Run 中生效；
 - 最终报告可以列出多个 `confirmed_bugs`；每个 Bug 由 Agent 判断创建新 Issue 或关联明显相同的现有 Issue；
-- 新建 Issue body 带 `luowang-run:<run-id>` 和 `luowang-bug:<bug-key>` 标记，归档重试时先查找，避免同一 Bug 重复创建；
+- 新建 Issue body 带 `catchnet-run:<run-id>` 和 `catchnet-bug:<bug-key>` 标记，归档重试时先查找，避免同一 Bug 重复创建；
 - blocked Run 中已经确认的 Bug 同样创建或关联 Issues，但 blocked 永不推进。
 
 只产生待审核场景变更而没有执行测试的 Run 以 blocked 结束；其 `report.md` 和 `scenario_pr_url` 归档到 SQLite，但不写入 Git 正式报告目录，也不推进。Git 中每个正式测试报告始终包含 `draft-report.md`、`review.md` 和 `report.md`。
@@ -1374,7 +1374,7 @@ MVP 实现 S3-compatible OSS Adapter，不绑定单一厂商。
 - Runner 获得目标仓库读取、受控命令、Playwright MCP、OSS 上传和当前测试环境 Secret 请求能力；
 - Reviewer 只读取本次工件和证据，不获得 Git 写入、测试密码或任意命令执行能力；
 - Main B 通常只读取本次工件并写最终报告；初始化 Run 中只能通过同一个受限 patch 工具修订本次尚未发布的场景 patch；
-- 启动测试命令时使用显式环境 allowlist，不继承 Git Token、模型 API Key、OSS Secret、管理员密码或 `LUOWANG_MASTER_KEY`；
+- 启动测试命令时使用显式环境 allowlist，不继承 Git Token、模型 API Key、OSS Secret、管理员密码或 `CATCHNET_MASTER_KEY`；
 - Docker 容器使用非 root 用户，不挂载 Docker socket，不挂载无关宿主目录；
 - MVP 的单容器不是针对恶意仓库的安全沙箱，只允许连接操作者信任的仓库和测试环境；不执行 fork/PR 中尚未合并的代码；
 - 以后如需运行不可信仓库，必须把 Runner 移入独立临时容器，不能只依赖提示词或路径检查。
@@ -1387,11 +1387,11 @@ SQLite 表、API 路径、React 组件划分、CSS、日志库、迁移文件组
 
 ### 22.9 项目发布、分支与许可证
 
-本节规定 `cynos-ai/luowang` 如何开发和发布，不改变罗网对外部目标项目 `scenario-testing` 分支的管理规则。
+本节规定 `shenjiecode/catchnet` 如何开发和发布，不改变罗网对外部目标项目 `scenario-testing` 分支的管理规则。
 
 #### 公开方式和许可证
 
-- 正式仓库为 GitHub `cynos-ai/luowang`，可见性为 Public；
+- 正式仓库为 GitHub `shenjiecode/catchnet`，可见性为 Public；
 - 根目录保存完整的 GNU Affero General Public License v3.0 官方文本，GitHub 识别为 `AGPL-3.0`，`package.json` 使用精确 SPDX 标识 `AGPL-3.0-only`；
 - 允许个人和商业使用、修改、分发和收费，但许可证与版权声明必须保留；
 - 分发基于本项目的作品时，完整对应源码必须按 AGPL-3.0 提供；修改版通过网络与用户交互时，同样必须向这些用户提供完整对应源码；
@@ -1416,13 +1416,13 @@ SQLite 表、API 路径、React 组件划分、CSS、日志库、迁移文件组
 3. PR 必须通过格式检查、lint、typecheck、测试和生产构建；单人维护阶段不强制另一位人工批准，避免自己阻塞自己，有第二位维护者后再启用至少一人审核；
 4. 正常发布直接使用 `develop → main` PR，不创建 `release/*`；
 5. 正式版本紧急修复使用 `fix/*` 从 `main` 创建，合入 `main` 并打补丁版本 tag 后，必须把同一修复同步到 `develop`；不再额外建立 `hotfix/*` 命名；
-6. `scenario-testing` 只存在于配置的外部目标仓库中，不是 `cynos-ai/luowang` 的开发集成或发布分支；MVP 发布验收使用独立样例仓库和独立本地或非生产样例应用，不增加自动发布 gate。
+6. `scenario-testing` 只存在于配置的外部目标仓库中，不是 `shenjiecode/catchnet` 的开发集成或发布分支；MVP 发布验收使用独立样例仓库和独立本地或非生产样例应用，不增加自动发布 gate。
 
 ## 23. MVP 验收标准
 
 另一位实现 Agent 交付 MVP 前至少证明：
 
-1. **AC-DEPLOY-01**：单个 Docker 部署可以启动、登录并持久化 SQLite；空数据库只使用 `LUOWANG_ADMIN_PASSWORD` 初始化管理员哈希，缺失时拒绝初始化，已有哈希不被环境变量覆盖；
+1. **AC-DEPLOY-01**：单个 Docker 部署可以启动、登录并持久化 SQLite；空数据库只使用 `CATCHNET_ADMIN_PASSWORD` 初始化管理员哈希，缺失时拒绝初始化，已有哈希不被环境变量覆盖；
 2. **AC-CONFIG-01**：网站可以查看并配置唯一目标仓库、唯一场景测试分支、测试环境、Provider、三个 Agent、MCP、OSS、Cron 和 commit 触发，Secret 只能覆盖不能取回；
 3. **AC-CONNECT-01**：GitHub、场景测试分支、测试环境、模型、MCP 和 OSS 配置都可以独立执行连通性检查；
 4. **AC-GIT-01**：场景测试分支不存在时，可以从用户指定 commit 创建；

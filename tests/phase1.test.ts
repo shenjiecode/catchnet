@@ -51,7 +51,7 @@ describe('Phase 1 secure console', () => {
     assert.equal(login.statusCode, 200);
     const cookie = readSessionCookie(login.headers['set-cookie']);
     assert.ok(cookie);
-    assert.match(cookie, /^luowang_session=/);
+    assert.match(cookie, /^catchnet_session=/);
     assert.match(login.headers['set-cookie'] ?? '', /HttpOnly/);
     assert.match(login.headers['set-cookie'] ?? '', /SameSite=Strict/);
     assert.equal(login.body.includes(password), false);
@@ -263,15 +263,15 @@ describe('Phase 1 secure console', () => {
   });
 
   it('does not let a changed bootstrap environment password replace the stored password', async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), 'luowang-password-'));
+    const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-password-'));
     cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
     const oldPassword = 'phase1-old-password!';
     const newPassword = 'phase1-env-password!';
     const firstConfig = loadConfig({
       NODE_ENV: 'test',
-      LUOWANG_DATA_DIR: dataDir,
-      LUOWANG_ADMIN_PASSWORD: oldPassword,
-      LUOWANG_MASTER_KEY: 'phase1-master-key-material',
+      CATCHNET_DATA_DIR: dataDir,
+      CATCHNET_ADMIN_PASSWORD: oldPassword,
+      CATCHNET_MASTER_KEY: 'phase1-master-key-material',
     });
     const firstDatabase = initializeDatabase(firstConfig);
     const firstApp = await createApp({
@@ -284,9 +284,9 @@ describe('Phase 1 secure console', () => {
 
     const secondConfig = loadConfig({
       NODE_ENV: 'test',
-      LUOWANG_DATA_DIR: dataDir,
-      LUOWANG_ADMIN_PASSWORD: newPassword,
-      LUOWANG_MASTER_KEY: 'phase1-master-key-material',
+      CATCHNET_DATA_DIR: dataDir,
+      CATCHNET_ADMIN_PASSWORD: newPassword,
+      CATCHNET_MASTER_KEY: 'phase1-master-key-material',
     });
     const secondDatabase = initializeDatabase(secondConfig);
     const secondApp = await createApp({
@@ -395,13 +395,13 @@ describe('Phase 1 secure console', () => {
 });
 
 async function makeApp(options: { password?: string; masterKey?: string } = {}) {
-  const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase1-'));
+  const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase1-'));
   cleanup.push(async () => rm(dataDir, { recursive: true, force: true }));
   const config = loadConfig({
     NODE_ENV: 'test',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_ADMIN_PASSWORD: options.password,
-    LUOWANG_MASTER_KEY: options.masterKey,
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_ADMIN_PASSWORD: options.password,
+    CATCHNET_MASTER_KEY: options.masterKey,
   });
   const database = initializeDatabase(config);
   const app = await createApp({ config, database, logger: pino({ level: 'silent' }) });

@@ -12,6 +12,7 @@ import { requestJson, toUserMessage } from '../../api';
 import { AppLink } from '../../app/navigation';
 import { useResource } from '../../app/resource';
 import { AsyncRegion } from '../../components/AsyncRegion';
+import { AppMessageFeedback } from '../../components/AppMessageProvider';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Field } from '../../components/FormControls';
 import { PageHeading } from '../../components/PageHeading';
@@ -22,7 +23,7 @@ import type { ProjectDetailResponse } from '../../project-types';
 
 type TestPageData = {
   detail: ProjectDetailResponse;
-  readiness: ConsoleReadinessSnapshot;
+  readiness: ConsoleReadinessSnapshot | null;
   current: RunSummary | null;
   queue: OperationsQueueItem[];
   runs: RunSummary[];
@@ -45,7 +46,7 @@ export function ProjectTestPage({ projectId }: { projectId: string }) {
     async (signal: AbortSignal): Promise<TestPageData> => {
       const [detail, readiness, current, queue, runs, workspace] = await Promise.all([
         requestJson<ProjectDetailResponse>(`/api/projects/${projectId}`, { signal }),
-        requestJson<{ readiness: ConsoleReadinessSnapshot }>(
+        requestJson<{ readiness: ConsoleReadinessSnapshot | null }>(
           `/api/projects/${projectId}/readiness/status`,
           { signal },
         ),
@@ -137,12 +138,29 @@ export function ProjectTestPage({ projectId }: { projectId: string }) {
     <section className="page-content project-test-page">
       <PageHeading title="测试" scope="当前项目" />
       <div className="page-body test-page-layout">
-        {message && <p className="notice notice-success">{message}</p>}
-        {actionError && (
-          <p className="notice notice-error" role="alert">
-            {actionError}
-          </p>
-        )}
+        <button
+          className="button button-secondary"
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            setActionError('');
+            void requestJson<{ status: string; message: string }>(
+              `/api/projects/${projectId}/check-for-test`,
+              { method: 'POST', body: '{}' },
+            )
+              .then((result) => {
+                if (result.status === 'failed') setActionError(result.message);
+                else setMessage(result.message);
+                resource.reload();
+              })
+              .catch((cause) => setActionError(toUserMessage(cause, '检查待测提交失败')))
+              .finally(() => setBusy(false));
+          }}
+        >
+          检查待测提交
+        </button>
+        <AppMessageFeedback success={message} error={actionError} />
         {data && resource.error && (
           <p className="stale-notice" role="status">
             自动刷新失败，继续显示最后可信状态：{resource.error}
@@ -304,7 +322,6 @@ function IdleState({
           <span>空闲</span>
           <div>
             <h2 id="test-request-title">发起测试</h2>
-            <p>同一项目顺序执行，不同项目可在名额允许时同时测试。</p>
           </div>
         </div>
         <div className="request-mode" role="group" aria-label="测试请求类型">
@@ -358,6 +375,11 @@ function IdleState({
             />
             首次初始化测试
           </label>
+          <p>
+            首次初始化使用各角色模型支持的最高思考等级：深读项目与业务流程 → 侦察实际环境 →
+            建立整体场景基线 → 按审批策略验证并审核归档。准备方案中的
+            Mock、身份与外联限制会传递到测试；设计、可执行和已通过分别记录。日常测试不重复初始化。
+          </p>
           <button
             className="button"
             type="submit"
@@ -529,7 +551,7 @@ function TestContext({ data, blockers }: { data: TestPageData; blockers: string[
         <Fact label="项目" value={data.detail.project.displayName} />
         <Fact label="环境" value={data.detail.configuration.baseUrl || '未配置'} />
         <Fact label="场景分支" value={data.detail.configuration.scenarioBranch} mono />
-        <Fact label="运行准备" value={readinessLabel(data.readiness.status)} />
+        <Fact label="运行准备" value={readinessLabel(data.readiness?.status ?? 'not_checked')} />
       </dl>
       {blockers.length > 0 && (
         <div className="readiness-blockers">
@@ -610,11 +632,13 @@ function cleanupCompleted(activities: RunActivity[] | undefined): boolean {
 function readinessBlockers(data: TestPageData): string[] {
   const blockers: string[] = [];
   if (data.detail.project.status === 'paused') blockers.push('项目已暂停');
-  if (data.readiness.status !== 'ready') {
-    const failed = data.readiness.checks
+  if (data.readiness?.status !== 'ready') {
+    const failed = (data.readiness?.checks ?? [])
       .filter((check) => check.status !== 'ok')
       .map((check) => `${check.label}：${check.message}`);
-    blockers.push(...(failed.length ? failed : [readinessLabel(data.readiness.status)]));
+    blockers.push(
+      ...(failed.length ? failed : [readinessLabel(data.readiness?.status ?? 'not_checked')]),
+    );
   }
   return blockers;
 }

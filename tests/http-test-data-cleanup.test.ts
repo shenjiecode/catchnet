@@ -19,8 +19,8 @@ import { localEvidenceTransport } from './acceptance/local-evidence.js';
 const RUN = '01K00000000000000000000000';
 const TOKEN = 'synthetic-cleanup-token-12345678901234567890';
 const secrets = { get: () => TOKEN };
-const entry = { id: `luowang-${RUN}-account`, cleanupScope: 'website-accounts' as const };
-const endpoint = 'http://website:3100/api/luowang/test-data';
+const entry = { id: `catchnet-${RUN}-account`, cleanupScope: 'website-accounts' as const };
+const endpoint = 'http://website:3100/api/catchnet/test-data';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -126,9 +126,9 @@ describe('Run-scoped HTTP cleanup adapter', () => {
       const directory = await mkdtemp(join(tmpdir(), 'cleanup-app-'));
       const config = loadConfig({
         NODE_ENV: 'test',
-        LUOWANG_DATA_DIR: directory,
-        LUOWANG_MASTER_KEY: 'synthetic-app-cleanup-master',
-        ...(enabled ? { LUOWANG_TEST_DATA_CLEANUP_URL: endpoint } : {}),
+        CATCHNET_DATA_DIR: directory,
+        CATCHNET_MASTER_KEY: 'synthetic-app-cleanup-master',
+        ...(enabled ? { CATCHNET_TEST_DATA_CLEANUP_URL: endpoint } : {}),
       });
       const database = initializeDatabase(config);
       const secretStore = createSecretStore(database.sqlite, config.masterKey);

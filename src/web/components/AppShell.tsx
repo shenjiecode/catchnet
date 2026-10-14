@@ -1,8 +1,29 @@
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 
 import type { AppRoute } from '../app/route';
+import { useResource } from '../app/resource';
+import { requestJson, toUserMessage } from '../api';
 import { AppLink } from '../app/navigation';
 import type { ProjectReference } from '../project-types';
+import { BrandLogo } from './ui';
+
+function useOperatorName(): string {
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      requestJson<{ profile: { displayName: string } | null }>('/api/account', { signal }),
+    [],
+  );
+  const profile = useResource('operator-profile', load, (cause) =>
+    toUserMessage(cause, '管理员资料读取失败'),
+  );
+  const reload = profile.reload;
+  useEffect(() => {
+    const onProfileChanged = () => reload();
+    window.addEventListener('catchnet:profile-changed', onProfileChanged);
+    return () => window.removeEventListener('catchnet:profile-changed', onProfileChanged);
+  }, [reload]);
+  return profile.value?.profile?.displayName?.trim() || '管理员';
+}
 
 export function AppShell({
   route,
@@ -16,6 +37,24 @@ export function AppShell({
   children: ReactNode;
 }) {
   const projectId = projectIdFromRoute(route);
+  const operatorMenu = useRef<HTMLDetailsElement>(null);
+  const operatorName = useOperatorName();
+  const operatorInitial = [...operatorName][0] ?? '管';
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (!operatorMenu.current?.contains(event.target as Node))
+        operatorMenu.current?.removeAttribute('open');
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') operatorMenu.current?.removeAttribute('open');
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
   return (
     <div className="lw-shell">
       <a className="skip-link" href="#main-content">
@@ -23,11 +62,9 @@ export function AppShell({
       </a>
       <header className="lw-header">
         <AppLink className="wordmark" to={{ name: 'workspace' }} aria-label="罗网工作台">
-          <span className="wordmark-cn">
-            <span>罗</span>
-            <span className="wordmark-cn-second">网</span>
+          <span className="wordmark-paper">
+            <BrandLogo tone="color" decorative />
           </span>
-          <span className="wordmark-en">LUOWANG</span>
         </AppLink>
         <nav className="global-nav" aria-label="全局导航">
           <AppLink
@@ -35,7 +72,7 @@ export function AppShell({
             to={{ name: 'workspace' }}
             current={route.name === 'workspace'}
           >
-            工作台
+            总览
           </AppLink>
           <AppLink className="nav-link" to={{ name: 'projects' }} current={isProjectRoute(route)}>
             项目
@@ -48,13 +85,18 @@ export function AppShell({
             to={{ name: 'global-settings', section: 'models' }}
             current={route.name === 'global-settings'}
           >
-            设置
+            全局设置
           </AppLink>
         </nav>
-        <details className="operator-menu" key={route.name}>
-          <summary aria-label="打开用户菜单">管理员</summary>
+        <details className="operator-menu" key={route.name} ref={operatorMenu}>
+          <summary aria-label={`管理员 ${operatorName}`} title={operatorName}>
+            <span className="operator-avatar" aria-hidden="true">
+              {operatorInitial}
+            </span>
+            <span className="operator-presence" aria-hidden="true" />
+          </summary>
           <div className="operator-menu-popover">
-            <AppLink to={{ name: 'account' }}>账号设置</AppLink>
+            <AppLink to={{ name: 'global-settings', section: 'system' }}>系统设置</AppLink>
             <button type="button" onClick={onLogout}>
               退出登录
             </button>
@@ -82,7 +124,7 @@ function ProjectContext({
     projectId,
     displayName: '项目读取中',
     repositoryOwner: '—',
-    repositoryName: projectId,
+    repositoryName: '加载中',
   };
   return (
     <section className="project-context" aria-label="当前项目">
@@ -90,7 +132,7 @@ function ProjectContext({
         <span className="scope-label">当前项目</span>
         <h2>{reference.displayName}</h2>
         <p>
-          {reference.repositoryOwner}/{reference.repositoryName} · {projectId}
+          {reference.repositoryOwner}/{reference.repositoryName}
         </p>
       </div>
       <nav className="project-nav" aria-label="项目导航">
@@ -109,7 +151,7 @@ function ProjectContext({
           to={{ name: 'project-settings', projectId, section: 'general' }}
           current={route.name === 'project-settings'}
         >
-          设置
+          项目设置
         </AppLink>
       </nav>
     </section>

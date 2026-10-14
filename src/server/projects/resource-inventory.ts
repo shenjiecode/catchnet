@@ -38,15 +38,25 @@ export async function inspectProjectResources(
     }>
   ).map((row) => row.project_id);
   const owned = new Set(projects);
-  const referenced = new Set(
-    (
-      database
+  const runtimeCache = database
+    .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_image_cache'")
+    .get();
+  const referencedRows = runtimeCache
+    ? (database
         .prepare(
-          'SELECT image_id FROM project_execution_images WHERE image_id IS NOT NULL UNION SELECT image_id FROM project_run_images',
+          `SELECT image_id FROM project_execution_images WHERE image_id IS NOT NULL
+           UNION SELECT image_id FROM project_run_images
+           UNION SELECT image_id FROM execution_image_cache
+             WHERE image_id IS NOT NULL AND execution_location_id = ?`,
         )
-        .all() as Array<{ image_id: string }>
-    ).map((row) => row.image_id),
-  );
+        .all(`local:${instanceId}`) as Array<{ image_id: string }>)
+    : (database
+        .prepare(
+          `SELECT image_id FROM project_execution_images WHERE image_id IS NOT NULL
+           UNION SELECT image_id FROM project_run_images`,
+        )
+        .all() as Array<{ image_id: string }>);
+  const referenced = new Set(referencedRows.map((row) => row.image_id));
   const containers: ProjectResourceInventory['containers'] = [];
   const containerIds = await command(docker, [
     'ps',
@@ -54,7 +64,7 @@ export async function inspectProjectResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
   ]);
   for (const containerId of ids(containerIds)) {
     if (!CONTAINER_ID.test(containerId)) throw new Error('Docker 返回无效容器 ID');
@@ -62,13 +72,26 @@ export async function inspectProjectResources(
       await command(docker, ['inspect', '--format', '{{json .}}', containerId]),
     ) as { Name?: string; Config?: { Labels?: Record<string, string> } };
     const labels = details.Config?.Labels;
-    const projectId = labels?.['luowang.project-id'] ?? '';
-    const runId = labels?.['luowang.run-id'] ?? '';
+    const projectId = labels?.['catchnet.project-id'] ?? '';
+    const legacyRunId = labels?.['catchnet.run-id'] ?? '';
+    const runId = legacyRunId || labels?.['catchnet.attempt-id'] || '';
+    const runtimeOwned =
+      !legacyRunId &&
+      Boolean(runtimeCache) &&
+      Boolean(
+        database
+          .prepare(
+            `SELECT 1 FROM execution_resource_ledger
+             WHERE project_id = ? AND attempt_id = ?
+               AND execution_location_id = ? AND state <> 'released'`,
+          )
+          .get(projectId, runId, `local:${instanceId}`),
+      );
     if (
-      labels?.['luowang.instance-id'] !== instanceId ||
+      labels?.['catchnet.instance-id'] !== instanceId ||
       !owned.has(projectId) ||
       !RUN_ID.test(runId) ||
-      details.Name !== `/luowang-run-${runId.toLowerCase()}`
+      (legacyRunId ? details.Name !== `/catchnet-run-${runId.toLowerCase()}` : !runtimeOwned)
     ) {
       throw new Error('Docker 容器归属核验失败，不能生成清理预览');
     }
@@ -82,7 +105,7 @@ export async function inspectProjectResources(
     '--no-trunc',
     '--quiet',
     '--filter',
-    `label=luowang.instance-id=${instanceId}`,
+    `label=catchnet.instance-id=${instanceId}`,
   ]);
   for (const imageId of ids(imageIds)) {
     if (!IMAGE_ID.test(imageId)) throw new Error('Docker 返回无效镜像 ID');
@@ -94,14 +117,16 @@ export async function inspectProjectResources(
       Size?: number;
     };
     const labels = details.Config?.Labels;
-    const projectId = labels?.['luowang.project-id'] ?? '';
-    if (labels?.['luowang.instance-id'] !== instanceId || !owned.has(projectId)) {
+    const projectId = labels?.['catchnet.project-id'] ?? '';
+    if (labels?.['catchnet.instance-id'] !== instanceId || !owned.has(projectId)) {
       throw new Error('Docker 镜像归属核验失败，不能生成清理预览');
     }
-    const tag = `luowang-project-${projectId}:${labels['luowang.target-commit']}`;
+    const tag = `catchnet-project-${projectId}:${labels['catchnet.target-commit']}`;
+    const composePrefix = `catchnet-compose-${projectId.slice(0, 8)}:`;
     const disposition = referenced.has(imageId)
       ? 'referenced'
-      : details.RepoTags?.includes(tag)
+      : details.RepoTags?.includes(tag) ||
+          details.RepoTags?.some((candidate) => candidate.startsWith(composePrefix))
         ? 'restart-candidate'
         : 'manual-review';
     images.push({

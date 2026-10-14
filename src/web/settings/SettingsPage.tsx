@@ -12,11 +12,13 @@ import type {
   ThinkingLevel,
 } from '../../shared/types';
 import { requestJson, toUserMessage } from '../api';
+import { useAppDialog } from '../components/AppDialogProvider';
 import {
   checkStatusLabel,
   ConnectivityResult,
   Field,
   ModelCapabilities,
+  NumberInput,
   SecretField,
   SectionCard,
 } from '../components/FormControls';
@@ -67,6 +69,7 @@ export function SettingsPage({
   onError,
   onSessionEnded,
 }: SettingsPageProps) {
+  const dialogs = useAppDialog();
   const [harness, setHarness] = useState(config.harness);
   const [repository, setRepository] = useState(config.repository);
   const [secretDraft, setSecretDraft] = useState(emptySecretDraft);
@@ -240,7 +243,15 @@ export function SettingsPage({
 
   const deleteSecret = async (secretKey: SecretKey) => {
     const field = SECRET_FIELDS[secretKey];
-    if (!window.confirm(`确定删除“${field.label}”吗？`)) return;
+    if (
+      !(await dialogs.confirm({
+        title: `删除${field.label}？`,
+        message: '原值无法恢复，依赖该凭据的连接检查和运行可能失败。',
+        confirmLabel: '确认删除',
+        danger: true,
+      }))
+    )
+      return;
     await execute(`delete-${secretKey}`, async () => {
       const next = await requestJson<ConfigResponse>(
         `/api/secrets/${encodeURIComponent(secretKey)}`,
@@ -261,7 +272,7 @@ export function SettingsPage({
     <div className="settings-page">
       {!config.secretStore.available && (
         <p className="notice notice-warning">
-          Secret Store 尚未配置主密钥。普通配置可保存，但保存 Secret 前请设置 LUOWANG_MASTER_KEY
+          Secret Store 尚未配置主密钥。普通配置可保存，但保存 Secret 前请设置 CATCHNET_MASTER_KEY
           并重启服务。
         </p>
       )}
@@ -278,14 +289,15 @@ export function SettingsPage({
           })
         }
         onImport={(file) => {
-          if (
-            !window.confirm(
-              '导入会替换当前普通配置并清除旧连接结果，但不会覆盖或删除任何 Secret。是否继续？',
-            )
-          ) {
-            return;
-          }
           void execute('config-import', async () => {
+            if (
+              !(await dialogs.confirm({
+                title: '导入普通配置？',
+                message: '导入会替换当前普通配置并清除旧连接结果，但不会覆盖或删除任何 Secret。',
+                confirmLabel: '确认导入',
+              }))
+            )
+              return;
             const yaml = await file.text();
             const next = await requestJson<ConfigResponse>('/api/config/import', {
               method: 'POST',
@@ -520,7 +532,6 @@ function ProviderSection({
       id="provider-title"
       eyebrow="MODEL SERVICE"
       title="模型服务"
-      description="Provider、地址与凭据在这里统一配置。测试连接会真实调用当前 Main 模型。"
       actions={
         <>
           <button className="button button-secondary" disabled={busy !== null} onClick={onSave}>
@@ -599,7 +610,6 @@ function AgentModelsSection({
       id="agents-title"
       eyebrow="AGENT MODELS"
       title="Agent 模型"
-      description="模型候选只来自上方选中的 Provider。Reviewer 负责读取截图证据，视觉场景必须使用支持图像输入的模型。"
       actions={
         <button className="button" disabled={busy !== null} onClick={onSaveAndCheck}>
           {busy === 'agents-check' ? '验证中…' : '保存并验证三个角色'}
@@ -743,7 +753,6 @@ function BrowserSection({
       id="browser-title"
       eyebrow="BROWSER"
       title="浏览器自动化"
-      description="配置 Playwright MCP，并启动一次真实 MCP 握手检查。"
       actions={
         <button className="button" disabled={busy !== null} onClick={onSaveAndCheck}>
           {busy === 'browser-check' ? '测试中…' : '保存并测试'}
@@ -792,15 +801,16 @@ function BrowserSection({
           </select>
         </Field>
         <Field label="MCP 超时（毫秒）">
-          <input
-            type="number"
-            min="100"
-            max="300000"
+          <NumberInput
+            ariaLabel="MCP 超时（毫秒）"
+            min={100}
+            max={300000}
+            step={100}
             value={harness.mcp.timeoutMs}
-            onChange={(event) =>
+            onChange={(timeoutMs) =>
               onChange({
                 ...harness,
-                mcp: { ...harness.mcp, timeoutMs: Number(event.target.value) },
+                mcp: { ...harness.mcp, timeoutMs },
               })
             }
           />
@@ -827,7 +837,6 @@ function LocalSection({
       id="local-title"
       eyebrow="LOCAL RUNTIME"
       title="本地运行与保留"
-      description="容器内工作目录与临时报告保留策略。"
       actions={
         <button className="button button-secondary" disabled={busy !== null} onClick={onSave}>
           {busy === 'local-save' ? '保存中…' : '保存'}
@@ -864,15 +873,16 @@ function LocalSection({
           />
         </Field>
         <Field label="保留天数">
-          <input
-            type="number"
-            min="0"
-            max="36500"
+          <NumberInput
+            ariaLabel="保留天数"
+            min={1}
+            max={36500}
+            step={1}
             value={harness.local.retentionDays}
-            onChange={(event) =>
+            onChange={(retentionDays) =>
               onChange({
                 ...harness,
-                local: { ...harness.local, retentionDays: Number(event.target.value) },
+                local: { ...harness.local, retentionDays },
               })
             }
           />
@@ -908,7 +918,7 @@ function OssSection({
       id="oss-title"
       eyebrow="EVIDENCE STORAGE"
       title="Evidence 存储"
-      description="配置 S3-compatible 私有或公开对象存储；测试会写入、读取并删除一个临时对象。"
+      description="连接测试会创建并删除一个临时对象。"
       actions={
         <button className="button" disabled={busy !== null} onClick={onSaveAndCheck}>
           {busy === 'oss-check' ? '测试中…' : '保存并测试'}
@@ -1034,7 +1044,6 @@ function RepositorySection({
       id="repository-title"
       eyebrow="GITHUB PROJECT"
       title="GitHub 仓库"
-      description="一个罗网实例只连接一个可信目标仓库。一次执行四项无副作用检查，不制造测试 PR、Issue 或远端分支。"
       actions={
         <>
           <button className="button button-secondary" disabled={busy !== null} onClick={onSave}>
@@ -1139,7 +1148,7 @@ function EnvironmentSection({
       id="environment-title"
       eyebrow="TEST ENVIRONMENT"
       title="非生产测试环境"
-      description="只连接可清理的非生产环境；连接检查不会提交测试数据。"
+      description="仅限非生产环境"
       actions={
         <button className="button" disabled={busy !== null} onClick={onSaveAndCheck}>
           {busy === 'environment-check' ? '测试中…' : '保存并测试'}
@@ -1214,7 +1223,6 @@ function AutomationSection({
       id="automation-title"
       eyebrow="AUTOMATION"
       title="自动触发"
-      description="自动测试默认关闭。新提交检查只负责发现变化后创建 Run，不会按间隔无条件重复测试。"
       actions={
         <button className="button button-secondary" disabled={busy !== null} onClick={onSave}>
           {busy === 'automation-save' ? '保存中…' : '保存'}
@@ -1238,24 +1246,23 @@ function AutomationSection({
         />
         <span>
           <strong>新 commit 自动测试</strong>
-          <small>启用后按下方间隔检查场景测试分支，有可测试提交时才进入顺序队列。</small>
         </span>
       </label>
       <Field
         label="新提交检查间隔（分钟）"
         hint={repository.triggerOnCommit ? '最短 5 分钟' : '启用“新 commit 自动测试”后可编辑'}
       >
-        <input
-          type="number"
-          min="5"
-          max="525600"
-          step="1"
+        <NumberInput
+          ariaLabel="新提交检查间隔（分钟）"
+          min={5}
+          max={525600}
+          step={1}
           disabled={!repository.triggerOnCommit}
           value={secondsToMinutes(repository.pollIntervalSeconds)}
-          onChange={(event) =>
+          onChange={(minutes) =>
             onChange({
               ...repository,
-              pollIntervalSeconds: minutesToSeconds(Number(event.target.value)),
+              pollIntervalSeconds: minutesToSeconds(minutes),
             })
           }
         />
@@ -1329,7 +1336,7 @@ function ConnectivityOverview({
       id="checks-title"
       eyebrow="CONNECTIVITY OVERVIEW"
       title="配置检查总览"
-      description={`最近结果：${passed}/${checks.length} 项通过。点击一次测试所有已保存配置，下面逐项显示问题原因。`}
+      description={`最近结果：${passed}/${checks.length} 项通过`}
       actions={
         <button className="button" type="button" disabled={busy !== null} onClick={onRunAll}>
           {busy === 'checks-all' ? '正在测试全部…' : '测试全部'}
@@ -1363,7 +1370,7 @@ function PasswordSection({
       id="password-title"
       eyebrow="ADMINISTRATOR"
       title="修改管理员密码"
-      description="修改成功后所有管理会话立即失效，需要重新登录。"
+      description="修改后需重新登录"
     >
       <form
         className="password-form"
@@ -1380,11 +1387,11 @@ function PasswordSection({
             onChange={(event) => setCurrentPassword(event.target.value)}
           />
         </Field>
-        <Field label="新密码（至少 12 个字符）">
+        <Field label="新密码（至少 6 个字符）">
           <input
             type="password"
             autoComplete="new-password"
-            minLength={12}
+            minLength={6}
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
           />

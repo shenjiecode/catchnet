@@ -474,9 +474,9 @@ function scenarioPullRequestBody(runId: string, details: ScenarioPublicationDeta
   const reason = safeDetailsText(details.reason ?? '本次 Run 发现需要维护长期场景资产。');
   const gaps = details.blockingReasons?.map(safeDetailsText).filter(Boolean) ?? [];
   return [
-    '由 LuoWang 生成的场景测试资产变更。',
+    '由 Catchnet 生成的场景测试资产变更。',
     '',
-    `- luowang-run:${runId}`,
+    `- catchnet-run:${runId}`,
     `- target_commit: ${safeDetailsText(details.targetCommit) || 'unknown'}`,
     `- 变更理由：${reason}`,
     `- 覆盖缺口：${gaps.length > 0 ? gaps.join('；') : '无'}`,

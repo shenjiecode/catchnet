@@ -10,7 +10,7 @@
 - [x] 核对 #100–102、检查器、项目 Run HTTP 路由与现有测试。
 - [x] 确认 v0.7.0 GitHub Release 已发布；不继续沿用 README 的旧候选说法。
 - [x] 创建本目录 intent/spec/plan。
-- [x] 延后复杂工作：[#103](https://github.com/cynos-ai/luowang/issues/103)、[#104](https://github.com/cynos-ai/luowang/issues/104)，复用已有 [#94](https://github.com/cynos-ai/luowang/issues/94)。
+- [x] 延后复杂工作：[#103](https://github.com/shenjiecode/catchnet/issues/103)、[#104](https://github.com/shenjiecode/catchnet/issues/104)，复用已有 [#94](https://github.com/shenjiecode/catchnet/issues/94)。
 
 ## 阶段 2：检查器小修复
 
@@ -35,10 +35,10 @@
 - [x] 定向测试（检查器、生产项目 HTTP 路由、预检）：3 文件、27 测试通过。
 - [x] 已有固定 quality 容器内 format:check、lint、typecheck、npm test、build、test:acceptance:local；输入和限制见执行记录。
 - [x] 同一 quality 容器内浏览器 E2E。
-- [x] [PR #105 最终 CI](https://github.com/cynos-ai/luowang/actions/runs/36536695285) 在 0.7.1 版本号更新后通过 quality/runtime 镜像构建、local 工程矩阵及零模型浏览器预检；早先本地失败/未运行记录保留于下方。
+- [x] [PR #105 最终 CI](https://github.com/shenjiecode/catchnet/actions/runs/36536695285) 在 0.7.1 版本号更新后通过 quality/runtime 镜像构建、local 工程矩阵及零模型浏览器预检；早先本地失败/未运行记录保留于下方。
 - [x] `git diff --check`、新增行高置信凭据模式扫描和 Markdown 本地链接检查通过。
 - [x] 更新本 Plan 为实际检查结果；未执行、失败、受阻单独记录。
-- [x] [PR #105](https://github.com/cynos-ai/luowang/pull/105) 通过后合入 develop（merge commit `17224c8`）；实现提交 `962f4c1`、版本准备提交 `8856ae7`。未直接提交 develop/main；本条仅记录修复 PR 阶段，发布操作另见本 Plan 收尾记录。
+- [x] [PR #105](https://github.com/shenjiecode/catchnet/pull/105) 通过后合入 develop（merge commit `17224c8`）；实现提交 `962f4c1`、版本准备提交 `8856ae7`。未直接提交 develop/main；本条仅记录修复 PR 阶段，发布操作另见本 Plan 收尾记录。
 
 证明：AC-V071-06。测试使用本地合成数据，不在罗网自身创建 scenario-testing 或测试资产。
 
@@ -60,7 +60,7 @@
 ### 失败、受阻与未运行
 
 - 新 `docker build --target quality --tag luowang:v071-quality .` 首次失败：`better-sqlite3` 回退 node-gyp 时，Node 24.14.1 headers 下载连接中断（`Error: aborted`）。一次重试仍停留于 npm 安装阶段，超过 6 分钟后本次执行主动终止，没有进一步重试或修改 Dockerfile 绕过；首次失败与重试日志分别保存为同目录 `build-quality-failed.log`、`build-quality-retry-stopped.log`。
-- 上述本地构建失败后，PR #105 首轮 CI（提交 `8e254e9`）成功构建新 quality 和 production image，并通过 local 质量矩阵及生产浏览器零模型预检。包版本更新后最终 CI（提交 `8856ae7`）同样通过，[工作流证据](https://github.com/cynos-ai/luowang/actions/runs/36536695285)。CI 未运行 live，不用它替代真实资源检查。
+- 上述本地构建失败后，PR #105 首轮 CI（提交 `8e254e9`）成功构建新 quality 和 production image，并通过 local 质量矩阵及生产浏览器零模型预检。包版本更新后最终 CI（提交 `8856ae7`）同样通过，[工作流证据](https://github.com/shenjiecode/catchnet/actions/runs/36536695285)。CI 未运行 live，不用它替代真实资源检查。
 - 受控本机 `.env.closure7` 的必需变量均已声明（不记录值）。`preflight` 在 `.cynos/acceptance/v071-preflight-resource-check/attempt-2/report.json` 为 passed，引用已有 readiness 缓存检查时间 `2026-09-29T05:38:11.322Z`；先前经 npm pretest 因宿主机 better-sqlite3 原生依赖加载失败而未生成报告，失败日志另存 `command.log`。预检不证明实时依赖。
 - 同一受控候选实例对已完成事实的首次 live 只读事实复核保存在 `.cynos/acceptance/v071-preflight-resource-check/live-existing-candidate/report.json`，`live=passed`、`release=blocked`（没有 local）。生产路径从 v0.7.0 tag 到修复提交，`src/`、`resources/`、`scripts/`、`Dockerfile`、lockfile 无差异；本版只变验收、测试和文档，不重做旧模型 Run。复核包含新的真实 readiness 探测，不能称为零模型调用。
 - 完整 release 第一轮 `.cynos/acceptance/v071-release-candidate/attempt-1/report.json`：直接执行 tsx 缺 `npm_execpath`，local=failed/live=passed/release=failed；原记录保留，不修改。第二轮使用标准 `npm run test:acceptance:release`，见 `attempt-2/report.json`：local=passed/live=passed/release=passed（命令退出 0），检查器对已完成 Run/归档/GitHub/OSS/清理/Secret 值进行了独立复核。`AC-CLOSURE-RELEASE-01` 仍 blocked，待人类合并 main 和创建 tag 后复核；报告内部分 SDQ 模型效果 AC 为 `not_run`，不得宣称该类评估通过。候选实例仍为 `luowang:0.7.0-candidate`；正式 0.7.1 构建与候选一致性需另行核对，不能仅凭这些结果认定新部署已经 live 通过。
@@ -69,8 +69,8 @@
 
 ### 发布与发布后证明（2026-09-29）
 
-- 负责人明确授权 AI 合并发布 PR、创建 `v0.7.1` tag。授权规则澄清经 [PR #108](https://github.com/cynos-ai/luowang/pull/108) 合入 develop；[PR #107](https://github.com/cynos-ai/luowang/pull/107) 在两个 [quality](https://github.com/cynos-ai/luowang/actions/runs/36543253813) [工作流](https://github.com/cynos-ai/luowang/actions/runs/36543258956)通过后以 merge commit `857697b00c61af6bdab30738581630fb5cc6ab6b` 合入 main。未直接提交或 force-push main。
-- 新增注释 tag `v0.7.1`（tag object `5c41b41780ee6b16fcd418ebf2cae748df1b1275`），peel 到同一 main 发布提交 `857697b00c61af6bdab30738581630fb5cc6ab6b`；[GitHub Release](https://github.com/cynos-ai/luowang/releases/tag/v0.7.1) 已发布。旧 `v0.7.0` tag object 仍为 `28a644c5ba77cc424558de9522bd23b44ecc9be6`，`v0.1.0` 仍为 `388c54741e86e10f252bac4f15b353d4ef2f7037`。
+- 负责人明确授权 AI 合并发布 PR、创建 `v0.7.1` tag。授权规则澄清经 [PR #108](https://github.com/shenjiecode/catchnet/pull/108) 合入 develop；[PR #107](https://github.com/shenjiecode/catchnet/pull/107) 在两个 [quality](https://github.com/shenjiecode/catchnet/actions/runs/36543253813) [工作流](https://github.com/shenjiecode/catchnet/actions/runs/36543258956)通过后以 merge commit `857697b00c61af6bdab30738581630fb5cc6ab6b` 合入 main。未直接提交或 force-push main。
+- 新增注释 tag `v0.7.1`（tag object `5c41b41780ee6b16fcd418ebf2cae748df1b1275`），peel 到同一 main 发布提交 `857697b00c61af6bdab30738581630fb5cc6ab6b`；[GitHub Release](https://github.com/shenjiecode/catchnet/releases/tag/v0.7.1) 已发布。旧 `v0.7.0` tag object 仍为 `28a644c5ba77cc424558de9522bd23b44ecc9be6`，`v0.1.0` 仍为 `388c54741e86e10f252bac4f15b353d4ef2f7037`。
 - 发布后独立 live 报告：`.cynos/acceptance/v071-post-tag/live-1/report.json`，`live=passed`，`AC-CLOSURE-RELEASE-01=passed`；该命令未跑 local，`release=blocked` 是分层正确结果。
 - 发布后标准完整 `npm run test:acceptance:release` 报告：`.cynos/acceptance/v071-post-tag/release-1/report.json`、`report.md`；退出码 0，`local=passed/live=passed/release=passed`，18 个 Closure AC 全部 passed。该次复核重读既有非生产候选与 Run 事实、实时检查外部依赖及 tag/main/旧 tag，不重新执行历史模型 Run、不改写任何原失败。报告中 5 个 SDQ 模型效果 AC 仍 `not_run`，不能写成通过；也不证明新部署的 v0.7.1 实例已单独 live 验收。凭据只在本机忽略文件及受控容器内使用，未进入 Git。
 - 本节是发布后的追加记录，仅通过 `chore/* → develop` PR 提交；正式 `v0.7.1` tag 和 main 发布提交保持不可变。

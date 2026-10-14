@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 
 import type { ConsoleReadinessCheck, ConsoleReadinessSnapshot } from '../../../shared/types';
 import { requestJson, toUserMessage } from '../../api';
 import { AppLink } from '../../app/navigation';
 import { useResource } from '../../app/resource';
 import { AsyncRegion } from '../../components/AsyncRegion';
+import { AppMessageFeedback } from '../../components/AppMessageProvider';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PageHeading } from '../../components/PageHeading';
 import { StatusLabel } from '../../components/StatusLabel';
@@ -27,7 +28,7 @@ export function ProjectReadinessPage({ projectId }: { projectId: string }) {
   );
   const loadReadiness = useCallback(
     (signal: AbortSignal) =>
-      requestJson<{ readiness: ConsoleReadinessSnapshot }>(
+      requestJson<{ readiness: ConsoleReadinessSnapshot | null }>(
         `/api/projects/${projectId}/readiness/status`,
         { signal },
       ).then((response) => response.readiness),
@@ -55,7 +56,7 @@ export function ProjectReadinessPage({ projectId }: { projectId: string }) {
     try {
       await operation();
       reload();
-      setMessage(`${label}完成；请根据需要重新检查。`);
+      setMessage(`${label}完成`);
     } catch (cause) {
       setError(toUserMessage(cause, `${label}失败`));
     } finally {
@@ -70,35 +71,66 @@ export function ProjectReadinessPage({ projectId }: { projectId: string }) {
         title="运行准备"
         scope="当前项目"
         actions={
-          <button
-            className="button"
-            type="button"
-            disabled={Boolean(busy)}
-            onClick={() =>
-              void action(
-                '运行准备检查',
-                () => requestJson(`/api/projects/${projectId}/readiness/check`, { method: 'POST' }),
-                readiness.reload,
-              )
-            }
-          >
-            {busy === '运行准备检查' ? '检查中…' : '重新检查'}
-          </button>
+          <div className="page-actions">
+            <button
+              className="button button-secondary"
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={() =>
+                void action(
+                  '运行准备检查',
+                  () =>
+                    requestJson(`/api/projects/${projectId}/readiness/check`, { method: 'POST' }),
+                  readiness.reload,
+                )
+              }
+            >
+              {busy === '运行准备检查' ? '检查中…' : '重新检查'}
+            </button>
+            {project?.status === 'paused' && (
+              <button
+                className="button"
+                type="button"
+                disabled={Boolean(busy) || readiness.value?.status !== 'ready'}
+                onClick={() =>
+                  void action(
+                    '启用项目',
+                    () => requestJson(`/api/projects/${projectId}/resume`, { method: 'POST' }),
+                    () => {
+                      detail.reload();
+                      readiness.reload();
+                    },
+                  )
+                }
+              >
+                {busy === '启用项目' ? '启用中…' : '启用项目'}
+              </button>
+            )}
+          </div>
         }
       />
       <div className="page-body readiness-layout">
-        {message && <p className="notice notice-success">{message}</p>}
-        {error && (
-          <p className="notice notice-error" role="alert">
-            {error}
-          </p>
-        )}
+        <p>
+          这里检查仓库、执行工具与共享依赖，不等于应用、数据和账号已经实际验证。
+          <AppLink
+            className="text-link"
+            to={{ name: 'project-settings', projectId, section: 'execution' }}
+          >
+            进入项目测试准备
+          </AppLink>
+        </p>
+        <AppMessageFeedback success={message} error={error} />
         <AsyncRegion
           loading={readiness.loading && !readiness.value}
           error={!readiness.value ? readiness.error : ''}
           onRetry={readiness.reload}
         >
-          {readiness.value && <ReadinessVerdict snapshot={readiness.value} />}
+          {readiness.value ? (
+            <ReadinessVerdict snapshot={readiness.value} />
+          ) : (
+            !readiness.loading &&
+            !readiness.error && <p className="notice notice-neutral">尚未运行准备检查。</p>
+          )}
         </AsyncRegion>
         <AsyncRegion
           loading={detail.loading && !detail.value}
@@ -188,10 +220,16 @@ export function ProjectReadinessPage({ projectId }: { projectId: string }) {
                 <dl className="fact-list">
                   <Fact
                     label="非生产环境"
-                    value={detail.value.detail.configuration.baseUrl || '未配置'}
+                    value={
+                      detail.value.detail.configuration.runtimeMode === 'managed'
+                        ? '由罗网在每次测试时创建独立环境，自动提供临时网址'
+                        : detail.value.detail.configuration.runtimeMode === 'repository-only'
+                          ? '仅测试仓库内容，无需应用网址'
+                          : detail.value.detail.configuration.baseUrl || '未配置'
+                    }
                   />
                   <Fact
-                    label="测试账号"
+                    label="账号凭据（非登录验证）"
                     value={configured(detail.value.detail.secrets.testUsername.configured)}
                   />
                   <Fact
@@ -199,11 +237,13 @@ export function ProjectReadinessPage({ projectId }: { projectId: string }) {
                     value={configured(detail.value.detail.secrets.testPassword.configured)}
                   />
                   <Fact
-                    label="清理能力"
+                    label="清理方式"
                     value={
-                      detail.value.detail.configuration.testDataCleanupUrl
-                        ? configured(detail.value.detail.secrets.testDataCleanupToken.configured)
-                        : '未配置'
+                      detail.value.detail.configuration.runtimeMode === 'managed'
+                        ? '临时环境由罗网回收；外部副作用仍需单独处理'
+                        : detail.value.detail.configuration.testDataCleanupUrl
+                          ? configured(detail.value.detail.secrets.testDataCleanupToken.configured)
+                          : '未配置清理接口'
                     }
                   />
                 </dl>
@@ -308,7 +348,7 @@ function SectionHeading({
   );
 }
 
-function Fact({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function Fact({ label, value, mono = false }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div>
       <dt>{label}</dt>
@@ -341,7 +381,9 @@ function checkStatus(status: ConsoleReadinessCheck['status'] | undefined) {
 }
 
 function configured(value: boolean) {
-  return value ? '已配置（不回显）' : '未配置';
+  return (
+    <StatusLabel tone={value ? 'success' : 'neutral'}>{value ? '已配置' : '未配置'}</StatusLabel>
+  );
 }
 function shortSha(value: string | null) {
   return value ? value.slice(0, 12) : '尚无';

@@ -5,9 +5,14 @@ import { requestJson, toUserMessage } from '../api';
 import { AppLink } from '../app/navigation';
 import { useResource } from '../app/resource';
 import { AsyncRegion } from '../components/AsyncRegion';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { PageHeading } from '../components/PageHeading';
-import { StatusLabel } from '../components/StatusLabel';
+import {
+  AppMessageFeedback,
+  Button,
+  ConfirmDialog,
+  PageHeading,
+  StatusLabel,
+  useAppDialog,
+} from '../components/ui';
 
 const projectsError = (cause: unknown) => toUserMessage(cause, '项目列表读取失败');
 
@@ -17,10 +22,12 @@ export function ProjectsPage({ onProjectsChanged }: { onProjectsChanged: () => P
     [],
   );
   const resource = useResource('projects', load, projectsError);
+  const dialog = useAppDialog();
   const [filter, setFilter] = useState<'all' | 'attention' | 'active' | 'paused'>('all');
   const [confirmation, setConfirmation] = useState<WorkspaceProjectSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [actionMessage, setActionMessage] = useState('');
   const projects = useMemo(() => {
     const values = [...(resource.value?.projects ?? [])].sort(
       (left, right) =>
@@ -37,9 +44,10 @@ export function ProjectsPage({ onProjectsChanged }: { onProjectsChanged: () => P
   }, [filter, resource.value]);
 
   async function changeStatus() {
-    if (!confirmation) return;
+    if (!confirmation || busy) return;
     setBusy(true);
     setActionError('');
+    setActionMessage('');
     try {
       const operation = confirmation.project.status === 'active' ? 'pause' : 'resume';
       await requestJson(`/api/projects/${confirmation.project.projectId}/${operation}`, {
@@ -47,8 +55,33 @@ export function ProjectsPage({ onProjectsChanged }: { onProjectsChanged: () => P
       });
       setConfirmation(null);
       await Promise.all([onProjectsChanged(), Promise.resolve(resource.reload())]);
+      setActionMessage(confirmation.project.status === 'active' ? '项目已暂停' : '项目已启用');
     } catch (cause) {
       setActionError(toUserMessage(cause, '项目状态更新失败'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeProject(summary: WorkspaceProjectSummary) {
+    const confirmed = await dialog.confirm({
+      title: `删除项目「${summary.project.displayName}」？`,
+      message:
+        '将删除罗网中的项目配置、凭据和测试记录，无法撤销。GitHub 仓库、场景、报告和 Issue，以及服务器、共享 Token 和已存储文件会保留。',
+      confirmLabel: '删除项目',
+      cancelLabel: '取消',
+      danger: true,
+    });
+    if (!confirmed) return;
+    setBusy(true);
+    setActionError('');
+    setActionMessage('');
+    try {
+      await requestJson(`/api/projects/${summary.project.projectId}`, { method: 'DELETE' });
+      setActionMessage('项目已删除');
+      await Promise.all([onProjectsChanged(), Promise.resolve(resource.reload())]);
+    } catch (cause) {
+      setActionError(toUserMessage(cause, '项目删除失败'));
     } finally {
       setBusy(false);
     }
@@ -86,7 +119,7 @@ export function ProjectsPage({ onProjectsChanged }: { onProjectsChanged: () => P
             </button>
           ))}
         </div>
-        {actionError && <p className="app-banner">{actionError}</p>}
+        <AppMessageFeedback success={actionMessage} error={actionError} />
         <AsyncRegion
           loading={resource.loading && !resource.value}
           error={!resource.value ? resource.error : ''}
@@ -119,27 +152,46 @@ export function ProjectsPage({ onProjectsChanged }: { onProjectsChanged: () => P
                     <code>
                       {summary.project.repositoryOwner}/{summary.project.repositoryName}
                     </code>
-                    <small>{summary.project.projectId}</small>
                   </div>
                   <StatusLabel tone={summary.project.status === 'active' ? 'success' : 'warning'}>
                     {summary.project.status === 'active' ? '已启用' : '已暂停'}
                   </StatusLabel>
                   <span>{readinessLabel(summary.readiness.status)}</span>
                   <span>{summary.attentionCount} 项待处理</span>
-                  <div className="row-actions">
+                  <div className="project-actions">
                     <AppLink
-                      className="text-link"
+                      className="project-action project-action-primary"
                       to={{ name: 'project-overview', projectId: summary.project.projectId }}
                     >
                       打开
                     </AppLink>
+                    <AppLink
+                      className="project-action"
+                      to={{
+                        name: 'project-settings',
+                        projectId: summary.project.projectId,
+                        section: 'general',
+                      }}
+                    >
+                      重新配置
+                    </AppLink>
                     <button
-                      className="text-button"
+                      className="project-action project-action-state"
                       type="button"
+                      disabled={busy}
                       onClick={() => setConfirmation(summary)}
                     >
                       {summary.project.status === 'active' ? '暂停' : '启用'}
                     </button>
+                    <Button
+                      variant="secondary"
+                      compact
+                      className="project-action project-action-delete"
+                      disabled={busy}
+                      onClick={() => void removeProject(summary)}
+                    >
+                      删除
+                    </Button>
                   </div>
                 </li>
               ))}

@@ -24,6 +24,7 @@ const newProject = {
 };
 const projectAConfiguration = {
   language: 'zh-CN',
+  browserAllowedOrigins: [],
   scenarioBranch: 'scenario-testing',
   scenarioMode: 'autonomous',
   scenarioLabels: ['core'],
@@ -35,9 +36,30 @@ const projectAConfiguration = {
   externalDatabase: '',
   testDataCleanupUrl: '',
   executionDockerfile: 'Dockerfile',
+  runtimeMode: 'external',
+  startType: 'single-container',
+  runtime: {
+    workingDirectory: '.',
+    prepareCommand: [],
+    startCommand: [],
+    servicePort: null,
+    healthPath: '/',
+    healthTimeoutSeconds: 60,
+    composeFile: 'compose.yml',
+    composeServices: [],
+    applicationService: '',
+    commandService: '',
+  },
 };
 const configuration = {
+  generatedDefinition: null as {
+    sourceCommit: string;
+    summary: string;
+    files: Array<{ path: string; content: string }>;
+  } | null,
+  scheduleIntervalSeconds: 0,
   language: 'zh-CN',
+  browserAllowedOrigins: [],
   scenarioBranch: 'scenario-testing',
   scenarioMode: 'autonomous',
   scenarioLabels: [],
@@ -49,6 +71,20 @@ const configuration = {
   externalDatabase: '',
   testDataCleanupUrl: '',
   executionDockerfile: '',
+  runtimeMode: 'managed',
+  startType: 'single-container',
+  runtime: {
+    workingDirectory: '.',
+    prepareCommand: [],
+    startCommand: [],
+    servicePort: null,
+    healthPath: '/',
+    healthTimeoutSeconds: 60,
+    composeFile: 'compose.yml',
+    composeServices: [],
+    applicationService: '',
+    commandService: '',
+  },
 };
 const secrets = {
   gitToken: { configured: false, masked: null },
@@ -56,14 +92,90 @@ const secrets = {
   testPassword: { configured: false, masked: null },
   testDataCleanupToken: { configured: false, masked: null },
 };
+const environmentDraft = {
+  generatedDefinition: {
+    sourceCommit: 'a'.repeat(40),
+    summary: 'AI 草案',
+    preparation: {
+      scope: '完整网页与后端（合成交互测试）',
+      data: '每次创建合成数据',
+      account: { mode: 'generated', description: '创建普通测试用户' },
+      externalServices: '不发送真实短信',
+      decisions: ['短信使用模拟发送'],
+      evidence: ['src/auth.ts：登录入口'],
+    },
+    files: [
+      {
+        path: '.catchnet-generated/compose.yml',
+        content: 'services:\n  app:\n    image: node:24\n  tools:\n    image: node:24\n',
+      },
+    ],
+  },
+  runtime: {
+    ...configuration.runtime,
+    servicePort: 3000,
+    composeFile: '.catchnet-generated/compose.yml',
+    composeServices: ['app', 'tools'],
+    applicationService: 'app',
+    commandService: 'tools',
+    initializationSteps: [],
+  },
+};
+let generationNeedsInput = false;
+let holdGeneration = false;
+let generationTask: Record<string, unknown> | null = null;
+let validationTask: Record<string, unknown> | null = null;
+let validationShouldFail = true;
+const managedFiles: Array<{
+  id: string;
+  path: string;
+  purpose: string;
+  revision: number;
+  byteSize: number;
+  configured: boolean;
+  serviceName: null;
+}> = [];
 const deploymentConfiguration = {
   language: 'zh-CN',
   provider: 'openai-compatible',
   providerBaseUrl: 'https://provider.example.test/v1',
+  modelProviders: [
+    {
+      id: 'fixture-source',
+      name: 'OpenAI compatible',
+      provider: 'openai-compatible',
+      baseUrl: 'https://provider.example.test/v1',
+      verifiedAt: '2026-09-27T08:00:00.000Z',
+      models: [
+        {
+          provider: 'openai-compatible',
+          id: 'deepseek-v4-flash',
+          name: 'DeepSeek Flash',
+          input: ['text'],
+          reasoning: true,
+          thinkingLevels: ['off', 'low'],
+          available: true,
+        },
+        {
+          provider: 'openai-compatible',
+          id: 'deepseek-v4-flash-vision-exp',
+          name: 'DeepSeek Vision',
+          input: ['text', 'image'],
+          reasoning: true,
+          thinkingLevels: ['off', 'low'],
+          available: true,
+        },
+      ],
+    },
+  ],
   agents: {
-    main: { model: 'deepseek-v4-flash', thinking: 'medium' },
-    runner: { model: 'deepseek-v4-flash', thinking: 'low' },
-    reviewer: { model: 'deepseek-v4-flash-vision-exp', thinking: 'high' },
+    main: { providerSourceId: 'fixture-source', model: 'deepseek-v4-flash', thinking: 'medium' },
+    runner: { providerSourceId: 'fixture-source', model: 'deepseek-v4-flash', thinking: 'low' },
+    reviewer: {
+      providerSourceId: 'fixture-source',
+      model: 'deepseek-v4-flash-vision-exp',
+      thinking: 'high',
+    },
   },
   local: { repoDir: '/data/repositories', reportDir: '/data/reports', retentionDays: 30 },
   mcp: { enabled: true, browser: 'chromium', headless: true, timeoutMs: 30000 },
@@ -73,7 +185,7 @@ const deploymentConfiguration = {
     bucket: 'evidence',
     publicBaseUrl: 'https://evidence.example.test',
     accessMode: 'private',
-    objectPrefix: 'luowang',
+    objectPrefix: 'catchnet',
   },
 };
 const deploymentSecrets = {
@@ -81,11 +193,16 @@ const deploymentSecrets = {
   ossAccessKeyId: { configured: false, masked: null },
   ossAccessKeySecret: { configured: false, masked: null },
 };
+const deploymentProviderSecrets = {
+  'fixture-source': { configured: true, masked: '••••••••' },
+};
 let adminDisplayName = '管理员';
 let created = false;
 let ready = false;
 let resumeCalls = 0;
 let emptyWorkspace = false;
+const deletedProjects = new Set<string>();
+let deletionBlocked = true;
 let readinessFailure = false;
 let readinessGitTimeout = false;
 let parallelPreparing = false;
@@ -97,8 +214,8 @@ let holdWorkspace = false;
 let holdConfiguration = false;
 let globalSettingsUnlocked = false;
 let resourceInventoryFailure = false;
-let catalogFailure = false;
-let delayOpenAiCatalog = false;
+const catalogFailure = false;
+const delayOpenAiCatalog = false;
 let systemCheckFailure = false;
 let releaseWorkspace: () => void = () => undefined;
 let releaseConfiguration: () => void = () => undefined;
@@ -148,6 +265,19 @@ const origin = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch({ headless: true, ignoreDefaultArgs: ['--hide-scrollbars'] });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const saveConfiguration = async (name: string) => {
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          (response.url().endsWith(`/api/projects/${newProject.projectId}/configuration`) ||
+            (response.url().includes('/environment-generation/') &&
+              response.url().endsWith('/apply'))) &&
+          response.request().method() === 'PUT',
+      ),
+      page.getByRole('button', { name, exact: true }).click(),
+    ]);
+    await page.getByText('项目配置已保存', { exact: true }).last().waitFor();
+  };
   const pageErrors: string[] = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
   await page.route('**/api/**', async (route) => {
@@ -182,6 +312,9 @@ try {
         workspace.activeRuns[0].progress = { completed: 0, total: 0 };
         workspace.activeRuns[0].currentScenario = null;
       }
+      workspace.projects = workspace.projects.filter(
+        (summary) => !deletedProjects.has(summary.project.projectId),
+      );
       return route.fulfill({ json: workspace });
     }
     if (pathname === '/api/system/status' && method === 'GET') {
@@ -295,7 +428,11 @@ try {
     }
     if (pathname === '/api/deployment' && method === 'GET') {
       return route.fulfill({
-        json: { configuration: deploymentConfiguration, secrets: deploymentSecrets },
+        json: {
+          configuration: deploymentConfiguration,
+          secrets: deploymentSecrets,
+          providerSecrets: deploymentProviderSecrets,
+        },
       });
     }
     if (pathname === '/api/deployment' && method === 'PUT') {
@@ -308,6 +445,7 @@ try {
       if (patch.provider !== undefined) deploymentConfiguration.provider = patch.provider;
       if (patch.providerBaseUrl !== undefined)
         deploymentConfiguration.providerBaseUrl = patch.providerBaseUrl;
+      if (patch.modelProviders) deploymentConfiguration.modelProviders = patch.modelProviders;
       return route.fulfill({ json: { configuration: deploymentConfiguration } });
     }
     const deploymentSecretMatch = pathname.match(
@@ -324,21 +462,81 @@ try {
     if (pathname === '/api/account' && method === 'GET') {
       return route.fulfill({ json: { profile: { displayName: adminDisplayName } } });
     }
+    if (pathname === '/api/system-settings' && method === 'GET') {
+      return route.fulfill({
+        json: {
+          runtime: { maxConcurrentProjects: 2 },
+          startup: {
+            host: '127.0.0.1',
+            port: 3000,
+            dataDir: '/data',
+            databasePath: '/data/catchnet.db',
+            repoDir: '/data/repos',
+            reportDir: '/data/reports',
+            logLevel: 'info',
+          },
+        },
+      });
+    }
     if (pathname === '/api/account' && method === 'PUT') {
       adminDisplayName = request.postDataJSON().displayName;
       return route.fulfill({ json: { profile: { displayName: adminDisplayName } } });
     }
     if (pathname === '/api/auth/password' && method === 'POST') {
+      if (request.postDataJSON().currentPassword !== 'current-password') {
+        return route.fulfill({
+          status: 401,
+          json: { error: { code: 'INVALID_CURRENT_PASSWORD', message: '当前管理员密码不正确' } },
+        });
+      }
       assert.equal(request.postDataJSON().currentPassword, 'current-password');
       return route.fulfill({ json: { authenticated: false, passwordChanged: true } });
     }
     if (pathname === '/api/projects' && method === 'GET') {
-      return route.fulfill({ json: { projects: created ? [...projects, newProject] : projects } });
+      return route.fulfill({
+        json: {
+          projects: (created ? [...projects, newProject] : projects).filter(
+            (project) => !deletedProjects.has(project.projectId),
+          ),
+        },
+      });
+    }
+    if (pathname === `/api/projects/${projects[0].projectId}` && method === 'DELETE') {
+      if (deletionBlocked)
+        return route.fulfill({
+          status: 409,
+          json: {
+            error: {
+              code: 'PROJECT_DELETE_CONFLICT',
+              message: '项目仍有待处理任务，请先停止测试并完成归档',
+            },
+          },
+        });
+      deletedProjects.add(projects[0].projectId);
+      return route.fulfill({ json: { deleted: true } });
+    }
+    if (pathname === '/api/connection-resources' && method === 'GET') {
+      return route.fulfill({
+        json: {
+          githubCredentials: [
+            {
+              id: '44444444-4444-4444-8444-444444444444',
+              name: '合成共享 Token',
+              configured: true,
+              createdAt: fixture.now,
+              updatedAt: fixture.now,
+            },
+          ],
+          executionServers: [],
+        },
+      });
     }
     if (pathname === '/api/projects' && method === 'POST') {
       const body = request.postDataJSON();
       assert.equal(body.displayName, newProject.displayName);
       assert.equal(body.repositoryUrl, 'https://github.com/cynos-ai/synthetic-onboarding');
+      assert.equal(body.githubCredentialId, '44444444-4444-4444-8444-444444444444');
+      assert.equal(body.gitToken, undefined);
       created = true;
       return route.fulfill({ status: 201, json: { project: newProject } });
     }
@@ -355,6 +553,8 @@ try {
           json: {
             project: projects[0],
             configuration: projectAConfiguration,
+            resources: { githubCredentialId: null, executionServerId: null },
+            managedFiles: [],
             secrets: {
               gitToken: { configured: true, masked: '••••' },
               testUsername: { configured: true, masked: '••••' },
@@ -646,7 +846,18 @@ try {
     }
     const suffix = pathname.slice(base.length);
     if (suffix === '' && method === 'GET') {
-      return route.fulfill({ json: { project: newProject, configuration, secrets } });
+      return route.fulfill({
+        json: {
+          project: newProject,
+          configuration,
+          secrets,
+          resources: {
+            githubCredentialId: '44444444-4444-4444-8444-444444444444',
+            executionServerId: null,
+          },
+          managedFiles,
+        },
+      });
     }
     if (suffix === '/readiness/status' && method === 'GET') {
       return route.fulfill({ json: { readiness: readiness() } });
@@ -672,6 +883,104 @@ try {
     if (suffix === '/runs/current' && method === 'GET') {
       return route.fulfill({ json: { run: null } });
     }
+    if (suffix === '/environment-generation' && method === 'GET')
+      return route.fulfill({ json: { task: generationTask } });
+    if (suffix === '/environment-generation' && method === 'POST') {
+      generationTask = {
+        id: 'fixture-generation',
+        status: 'running',
+        startedAt: new Date().toISOString(),
+        model: 'synthetic-main-model',
+        thinking: 'high',
+        activity: '已读取 package.json，等待模型下一步',
+        filesRead: 1,
+        definitionAttempts: 0,
+        draft: null,
+        error: null,
+        targetCommit: null,
+        reviewState: 'pending',
+        stale: false,
+      };
+      return route.fulfill({ json: { task: generationTask } });
+    }
+    if (suffix === '/environment-generation/fixture-generation' && method === 'DELETE') {
+      generationTask = { ...generationTask, status: 'cancelled', error: '配置生成已停止' };
+      return route.fulfill({ json: { task: generationTask } });
+    }
+    if (suffix === '/environment-generation/fixture-generation' && method === 'GET') {
+      if (holdGeneration || generationTask?.status !== 'running')
+        return route.fulfill({ json: { task: generationTask } });
+      generationTask = {
+        ...generationTask,
+        status: generationNeedsInput ? 'needs_input' : 'completed',
+        draft: generationNeedsInput ? null : environmentDraft,
+        targetCommit: 'a'.repeat(40),
+        missingInputs: generationNeedsInput
+          ? [{ item: '上传 .env.test', reason: '需要测试配置文件', destination: 'files' }]
+          : [],
+      };
+      return route.fulfill({ json: { task: generationTask } });
+    }
+    if (suffix === '/environment-generation/fixture-generation/apply' && method === 'PUT') {
+      Object.assign(configuration, request.postDataJSON());
+      newProject.configRevision += 1;
+      generationTask = { ...generationTask, reviewState: 'applied' };
+      return route.fulfill({ json: { configuration } });
+    }
+    if (suffix === '/environment-generation/fixture-generation/discard' && method === 'POST') {
+      generationTask = { ...generationTask, reviewState: 'discarded' };
+      return route.fulfill({ json: { task: generationTask } });
+    }
+    if (suffix === '/environment-validation' && method === 'POST') {
+      validationTask = {
+        id: 'fixture-validation',
+        status: 'running',
+        steps: [{ stage: 'source', status: 'running' }],
+        cleanupConfirmed: false,
+        stale: false,
+      };
+      return route.fulfill({ json: { task: validationTask } });
+    }
+    if (suffix === '/environment-validation' && method === 'GET') {
+      if (validationTask?.status === 'running')
+        validationTask = {
+          ...validationTask,
+          status: validationShouldFail ? 'failed' : 'passed',
+          targetCommit: 'a'.repeat(40),
+          cleanupConfirmed: true,
+          steps: [
+            {
+              stage: 'health',
+              status: validationShouldFail ? 'failed' : 'passed',
+              durationMs: 1250,
+            },
+            { stage: 'cleanup', status: 'passed', durationMs: 50 },
+          ],
+          failure: validationShouldFail
+            ? { stage: 'health', message: '应用健康检查超时：HTTP 503' }
+            : null,
+        };
+      return route.fulfill({ json: { task: validationTask } });
+    }
+    if (suffix === '/files' && method === 'POST') {
+      const body = request.postDataJSON();
+      const bytes = body.encodedContent
+        ? Buffer.from(body.encodedContent, 'base64')
+        : Buffer.from(body.content, 'utf8');
+      if (body.purpose === 'data') assert.equal(bytes.toString(), 'SELECT 42;\n');
+      else assert.equal(bytes.toString(), 'FIXTURE=edited\n');
+      const file = {
+        id: `fixture-${managedFiles.length}`,
+        path: body.path,
+        purpose: body.purpose,
+        revision: 1,
+        byteSize: bytes.length,
+        configured: true,
+        serviceName: null,
+      };
+      managedFiles.push(file);
+      return route.fulfill({ json: { file } });
+    }
     if (suffix === '/queue' && method === 'GET') {
       return route.fulfill({ json: { queue: [] } });
     }
@@ -691,6 +1000,17 @@ try {
     const secretMatch = suffix.match(
       /^\/secrets\/(gitToken|testUsername|testPassword|testDataCleanupToken)$/,
     );
+    if (suffix === '/test-account' && method === 'PUT') {
+      const body = request.postDataJSON();
+      for (const key of ['testUsername', 'testPassword'] as const) {
+        if (body[key]) secrets[key] = { configured: true, masked: '••••' };
+      }
+      return route.fulfill({
+        json: {
+          secrets: { testUsername: secrets.testUsername, testPassword: secrets.testPassword },
+        },
+      });
+    }
     if (secretMatch && method === 'PUT') {
       const key = secretMatch[1] as keyof typeof secrets;
       assert.ok(request.postDataJSON().value);
@@ -724,7 +1044,7 @@ try {
   await page.goto(`${origin}/workspace`);
   parallelPreparing = true;
   await page.reload();
-  await page.getByText('2/2 个项目正在处理').waitFor();
+  await page.locator('.active-run-block .run-focus').nth(1).waitFor();
   assert.equal(await page.locator('.active-run-block .run-focus').count(), 2);
   assert.equal(
     await page.locator('.active-run-block a').nth(1).getAttribute('href'),
@@ -765,41 +1085,278 @@ try {
   await page.goto(`${origin}/projects/new`);
   await page.getByLabel('项目名称').fill(newProject.displayName);
   await page.getByLabel('GitHub 仓库地址').fill('https://github.com/cynos-ai/synthetic-onboarding');
-  await page.getByLabel('GitHub Token（私有仓库必填）').fill('synthetic-secret-token');
-  await page.getByRole('button', { name: '核验并创建暂停项目' }).click();
-  await page.getByRole('heading', { name: '配置测试' }).waitFor();
-  assert.equal(new URL(page.url()).searchParams.get('projectId'), newProject.projectId);
+  await page.getByRole('combobox', { name: 'GitHub Token', exact: true }).click();
+  await page.getByRole('option', { name: '合成共享 Token', exact: true }).click();
+  await page.getByRole('button', { name: '验证仓库并进入项目设置' }).click();
+  await page.getByRole('heading', { name: '测试策略' }).waitFor();
+  assert.equal(new URL(page.url()).pathname, `/projects/${newProject.projectId}/settings/testing`);
   assert.equal((await page.locator('body').innerText()).includes('synthetic-secret-token'), false);
 
-  await page.getByLabel('生成语言').fill('en-US');
-  await page.getByRole('button', { name: '保存测试配置' }).click();
-  await page.getByText('保存测试配置完成').waitFor();
-  await page.getByLabel('非生产环境 URL').fill('https://synthetic.example.test');
-  await page.getByRole('button', { name: '保存环境配置' }).click();
-  await page.getByText('保存环境配置完成').waitFor();
-
-  await page.getByLabel(/测试账号 · 未配置/).fill('synthetic-user');
+  await page.getByRole('combobox', { name: '语言', exact: true }).click();
+  await page.getByRole('option', { name: 'English', exact: true }).click();
+  await page.getByRole('button', { name: '保存测试策略' }).click();
+  await page.getByText(/项目配置已保存/).waitFor();
+  await page.getByRole('link', { name: '运行环境', exact: true }).click();
+  assert.equal(await page.getByLabel('测试网址').count(), 0);
+  assert.equal(writes.filter((write) => write.endsWith('/environment-generation')).length, 0);
+  holdGeneration = true;
+  await page.getByRole('button', { name: '分析项目并准备方案', exact: true }).click();
+  const progress = page.getByRole('dialog', { name: 'AI 正在准备测试方案', exact: true });
+  await progress.waitFor();
+  await progress.getByText(/synthetic-main-model.*最高可用思考等级.*high/).waitFor();
+  await progress.getByText(/总时限 30 分钟/).waitFor();
+  await page.keyboard.press('Escape');
+  assert.equal(await progress.isVisible(), true);
+  await assert.rejects(() =>
+    page.getByRole('combobox', { name: '执行服务器', exact: true }).click({ timeout: 250 }),
+  );
+  await page.keyboard.press('Tab');
+  assert.equal(
+    await progress.evaluate((element) => element.contains(document.activeElement)),
+    true,
+  );
+  for (const width of [768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const bounds = await progress.boundingBox();
+    assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width);
+    if (process.env.CATCHNET_PREPARATION_EVIDENCE_DIR)
+      await page.screenshot({
+        path: `${process.env.CATCHNET_PREPARATION_EVIDENCE_DIR}/synthetic-loading-overlay-${width}.png`,
+        fullPage: false,
+      });
+  }
+  await page.reload();
+  await progress.waitFor();
+  await progress.getByRole('button', { name: '停止分析', exact: true }).click();
+  await progress.waitFor({ state: 'hidden' });
+  holdGeneration = false;
+  await page.getByRole('button', { name: '分析项目并准备方案', exact: true }).click();
+  const definitionEditor = page.getByLabel('配置内容（JSON）');
+  await page.getByText('完整网页与后端（合成交互测试）', { exact: true }).waitFor();
+  assert.equal(await definitionEditor.isVisible(), false);
+  for (const width of [768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      true,
+    );
+    if (process.env.CATCHNET_PREPARATION_EVIDENCE_DIR)
+      await page.screenshot({
+        path: `${process.env.CATCHNET_PREPARATION_EVIDENCE_DIR}/synthetic-preparation-${width}.png`,
+        fullPage: true,
+      });
+  }
+  assert.equal(writes.filter((write) => write.endsWith('/environment-validation')).length, 0);
+  await page.getByLabel('告诉 AI 要调整什么（可选）').fill('需要管理员身份');
+  await page.getByRole('button', { name: '按我的要求调整方案', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '重新生成', exact: true }).click();
+  await page.getByRole('button', { name: '仅保存方案', exact: true }).waitFor();
+  await page.getByText('技术详情与高级编辑（通常无需修改）', { exact: true }).click();
+  await page.getByText('高级：查看 / 编辑原始 JSON', { exact: true }).click();
+  await definitionEditor.waitFor();
+  assert.equal(configuration.generatedDefinition, null);
+  const draft = JSON.parse(await definitionEditor.inputValue());
+  const withoutPlan = structuredClone(draft);
+  delete withoutPlan.generatedDefinition.preparation;
+  await definitionEditor.fill(JSON.stringify(withoutPlan));
+  assert.equal(
+    await page.getByRole('button', { name: '仅保存方案', exact: true }).isDisabled(),
+    true,
+  );
+  assert.equal(await page.getByText('查看旧方案说明', { exact: true }).count(), 0);
+  draft.generatedDefinition.summary = '人工修改';
+  await definitionEditor.fill(JSON.stringify(draft));
+  await saveConfiguration('仅保存方案');
+  assert.equal(configuration.generatedDefinition!.summary, '人工修改');
+  await page.getByRole('button', { name: '重新分析项目', exact: true }).click();
+  await page.getByRole('button', { name: '仅保存方案', exact: true }).waitFor();
+  if (!(await page.getByText('高级：查看 / 编辑原始 JSON', { exact: true }).isVisible()))
+    await page.getByText('技术详情与高级编辑（通常无需修改）', { exact: true }).click();
+  if (!(await definitionEditor.isVisible()))
+    await page.getByText('高级：查看 / 编辑原始 JSON', { exact: true }).click();
+  await page.getByText('上次保存的配置', { exact: true }).waitFor();
+  assert.equal(configuration.generatedDefinition!.summary, '人工修改');
+  await saveConfiguration('确认方案，保存并验证');
+  await page.getByRole('button', { name: '让 AI 分析失败并提出修正', exact: true }).waitFor();
+  const retryRequest = page.waitForRequest(
+    (request) => request.method() === 'POST' && request.url().endsWith('/environment-generation'),
+  );
+  await page.getByRole('button', { name: '让 AI 分析失败并提出修正', exact: true }).click();
+  assert.equal((await retryRequest).postDataJSON().useValidationFailure, true);
+  await page.getByRole('button', { name: '仅保存方案', exact: true }).waitFor();
+  await page.getByRole('button', { name: '放弃草案', exact: true }).click();
+  validationShouldFail = false;
+  await page.getByRole('button', { name: '验证已保存方案', exact: true }).click();
+  await page.getByText('已完成所配置的准备核验', { exact: true }).waitFor();
+  await page.getByText('检查应用健康 · 1.3 秒', { exact: true }).waitFor();
+  await page.getByText('清理验证环境 · 不到 1 秒', { exact: true }).waitFor();
   await page
-    .getByLabel(/测试账号 · 未配置/)
-    .locator('xpath=ancestor::div[contains(@class,"secret-editor")]')
-    .getByRole('button', { name: '保存' })
-    .click();
-  await page.getByText('保存测试账号完成').waitFor();
+    .getByText('测试账号登录与身份：未验证。当前方案未配置专门核验，可让 AI 补充。', {
+      exact: true,
+    })
+    .waitFor();
+  generationNeedsInput = true;
+  await page.getByRole('button', { name: '重新分析项目', exact: true }).click();
+  await page.getByText('上传 .env.test', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: '仅保存方案', exact: true }).count(), 0);
+  assert.ok(
+    (
+      await page.getByRole('link', { name: '上传配置文件', exact: true }).getAttribute('href')
+    )?.endsWith('/settings/files'),
+  );
+  await page.reload();
+  await page.getByText('上传 .env.test', { exact: true }).waitFor();
+  generationNeedsInput = false;
+  await page.getByRole('combobox', { name: '运行模式', exact: true }).click();
+  await page.getByRole('option', { name: '仅仓库测试', exact: true }).click();
+  assert.equal(await page.getByLabel('测试网址').count(), 0);
+  await page.getByRole('combobox', { name: '运行模式', exact: true }).click();
+  await page.getByRole('option', { name: '已有测试环境', exact: true }).click();
+  await saveConfiguration('保存运行方式');
+  await page.getByLabel('测试网址').fill('https://synthetic.example.test');
+  await page.getByRole('button', { name: '保存测试网址' }).click();
+  await page.getByText(/项目配置已保存/).waitFor();
+
+  await page.getByRole('link', { name: '测试数据', exact: true }).click();
+  assert.equal(await page.getByLabel('文件内容', { exact: true }).count(), 0);
+  assert.equal(await page.locator('.settings-panel .settings-panel').count(), 0);
+  assert.equal(await page.getByText('尚未保存受控文件', { exact: true }).count(), 0);
+  const dataUploader = page.locator('.file-upload');
+  await dataUploader.getByRole('button', { name: '选择文件', exact: true }).focus();
+  assert.equal(
+    await dataUploader
+      .getByRole('button', { name: '选择文件', exact: true })
+      .evaluate((element) => element === document.activeElement),
+    true,
+  );
+  await page.getByLabel('上传文件', { exact: true }).setInputFiles({
+    name: 'seed.sql',
+    mimeType: 'application/sql',
+    buffer: Buffer.from('SELECT 42;\n'),
+  });
+  await dataUploader.getByText('seed.sql', { exact: true }).waitFor();
+  await dataUploader.getByRole('button', { name: '移除', exact: true }).click();
+  await dataUploader.getByRole('button', { name: '选择文件', exact: true }).waitFor();
+  assert.equal(await page.getByLabel('文件内容', { exact: true }).count(), 0);
+  await page.getByLabel('上传文件', { exact: true }).setInputFiles({
+    name: 'seed.sql',
+    mimeType: 'application/sql',
+    buffer: Buffer.from('SELECT 42;\n'),
+  });
+  await dataUploader.getByText('seed.sql', { exact: true }).waitFor();
+  await page.getByLabel('项目内相对路径', { exact: true }).fill('data/seed.sql');
+  await page.getByRole('button', { name: '新增文件', exact: true }).click();
+  await page.getByText('受控文件已保存', { exact: true }).waitFor();
+  assert.equal(managedFiles[0].path, 'data/seed.sql');
+  await page.getByRole('link', { name: '配置文件', exact: true }).click();
+  assert.equal(await page.getByText('尚未保存受控文件', { exact: true }).count(), 0);
+  await page.getByLabel('上传文件', { exact: true }).setInputFiles({
+    name: 'oversized.env',
+    mimeType: 'text/plain',
+    buffer: Buffer.alloc(256 * 1024 + 1, 'a'),
+  });
+  await page.getByText('文件不能超过 256 KiB', { exact: true }).waitFor();
+  assert.equal(await page.getByLabel('项目内相对路径', { exact: true }).inputValue(), '');
+  await page.getByLabel('上传文件', { exact: true }).setInputFiles({
+    name: '.env.test',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('FIXTURE=original\n'),
+  });
+  await page.getByLabel('项目内相对路径', { exact: true }).fill('.env.test');
+  assert.equal(await page.getByLabel('文件内容', { exact: true }).isVisible(), false);
+  await page.getByText('编辑文件内容（可选）', { exact: true }).click();
+  await page.getByLabel('文件内容').fill('FIXTURE=edited\n');
+  await page.getByRole('button', { name: '新增文件', exact: true }).click();
+  await page.getByText('受控文件已保存', { exact: true }).waitFor();
+  await page.getByRole('link', { name: '触发规则', exact: true }).click();
+  const scheduledRule = page.getByRole('region', { name: /定时触发测试/ });
+  const scheduleSwitch = page.getByRole('switch', { name: '启用定时检查' });
+  assert.equal(await page.getByRole('spinbutton', { name: '每隔', exact: true }).isVisible(), true);
+  assert.equal(
+    await page.getByRole('spinbutton', { name: '每隔', exact: true }).isDisabled(),
+    true,
+  );
+  assert.equal(await scheduledRule.getAttribute('data-enabled'), 'false');
+  await scheduleSwitch.focus();
+  await page.keyboard.press('Space');
+  assert.equal(await scheduleSwitch.isChecked(), true);
+  assert.equal(await scheduledRule.getAttribute('data-enabled'), 'true');
+  await scheduleSwitch.uncheck();
+  await page.getByLabel('启用定时检查').check();
+  await page.getByRole('combobox', { name: '每隔单位' }).click();
+  await page.getByRole('option', { name: '秒', exact: true }).click();
+  await page.getByRole('spinbutton', { name: '每隔', exact: true }).fill('7');
+  await saveConfiguration('保存触发规则');
+  assert.equal(configuration.scheduleIntervalSeconds, 7);
+  await page.getByText('Cron（高级，UTC）', { exact: true }).click();
+  await page.getByLabel('Cron', { exact: true }).fill('0 8 * * *');
+  assert.equal(
+    await page.getByRole('spinbutton', { name: '每隔', exact: true }).isDisabled(),
+    true,
+  );
+  await saveConfiguration('保存触发规则');
+  assert.equal(configuration.scheduleIntervalSeconds, 0);
+  await page.getByLabel('Cron', { exact: true }).fill('');
+  assert.equal(await page.getByRole('spinbutton', { name: '每隔', exact: true }).isEnabled(), true);
+  await saveConfiguration('保存触发规则');
+  assert.equal(configuration.scheduleIntervalSeconds, 7);
+  await page.getByLabel('启用定时检查').uncheck();
+  await saveConfiguration('保存触发规则');
+  assert.equal(configuration.cron, '');
+  await page.getByRole('link', { name: '测试数据', exact: true }).click();
+  const accountRow = page
+    .getByRole('heading', { name: '测试账号', exact: true })
+    .locator('xpath=ancestor::section[contains(@class,"settings-group")]');
+  await accountRow.getByLabel('测试密码', { exact: true }).waitFor();
+  await accountRow.getByLabel('测试账号', { exact: true }).fill('synthetic-user');
+  await accountRow.getByLabel('测试密码', { exact: true }).fill('synthetic-account-password');
+  const accountWritesBefore = writes.filter((write) => write.endsWith('/test-account')).length;
+  await accountRow.getByRole('button', { name: '保存测试账号' }).click();
+  await page.getByText(/测试账号已保存/).waitFor();
+  assert.equal(
+    writes.filter((write) => write.endsWith('/test-account')).length,
+    accountWritesBefore + 1,
+  );
+  assert.equal(secrets.testUsername.configured, true);
+  assert.equal(secrets.testPassword.configured, true);
+  assert.equal(await accountRow.getByLabel('测试账号', { exact: true }).inputValue(), '');
+  assert.equal(await accountRow.getByLabel('测试密码', { exact: true }).inputValue(), '');
   assert.equal((await page.locator('body').innerText()).includes('synthetic-user'), false);
 
-  await page.getByRole('button', { name: '准备执行镜像' }).click();
+  await page.getByRole('link', { name: '运行准备', exact: true }).click();
+  await page.getByRole('button', { name: '准备或重建镜像' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '确认准备镜像' }).click();
   await page.getByText('准备执行镜像完成').waitFor();
   await page.reload();
-  await page.getByRole('heading', { name: '准备并启用' }).waitFor();
-  assert.equal(new URL(page.url()).searchParams.get('projectId'), newProject.projectId);
+  await page.getByRole('heading', { name: '仓库与同步' }).waitFor();
   assert.equal(resumeCalls, 0);
-  await page.getByRole('button', { name: '运行全部检查' }).click();
+  await page.getByRole('button', { name: '重新检查' }).click();
   await page.getByText('运行准备检查完成').waitFor();
   assert.equal(resumeCalls, 0);
-  await page.getByRole('button', { name: '明确启用项目' }).click();
+  await page.getByRole('button', { name: '启用项目' }).click();
   await page.getByText('启用项目完成').waitFor();
   assert.equal(resumeCalls, 1);
-  await page.getByRole('button', { name: '项目已启用' }).waitFor();
+
+  await page.goto(`${origin}/projects/${projects[0].projectId}/settings/general`);
+  await page.getByRole('heading', { name: '基本资料', exact: true }).waitFor();
+  const profileCells = await page.locator('.profile-grid > *').evaluateAll((elements) =>
+    elements.map((element) => {
+      const box = element.getBoundingClientRect();
+      return { height: box.height, width: box.width };
+    }),
+  );
+  assert.equal(profileCells.length, 4);
+  assert.ok(
+    Math.max(...profileCells.map((cell) => cell.height)) -
+      Math.min(...profileCells.map((cell) => cell.height)) <=
+      1,
+    JSON.stringify(profileCells),
+  );
+  assert.ok(
+    Math.max(...profileCells.map((cell) => cell.width)) -
+      Math.min(...profileCells.map((cell) => cell.width)) <=
+      1,
+  );
 
   await page.goto(`${origin}/projects/${projects[0].projectId}/overview`);
   await page
@@ -842,12 +1399,10 @@ try {
   );
 
   await page.goto(`${origin}/projects/${newProject.projectId}/settings/environment`);
-  await page.getByLabel('环境说明').fill('有未保存修改的合成环境');
-  page.once('dialog', async (dialog) => {
-    assert.match(dialog.message(), /未保存/);
-    await dialog.dismiss();
-  });
+  await page.getByLabel('环境备注（可选）').fill('有未保存修改的合成环境');
   await page.getByRole('link', { name: '概览', exact: true }).click();
+  await page.getByRole('dialog').getByText('当前页面的修改尚未保存。').waitFor();
+  await page.getByRole('dialog').getByRole('button', { name: '继续编辑' }).click();
   assert.match(page.url(), /\/settings\/environment$/);
   holdConfiguration = true;
   const pendingWrite = page.waitForRequest(
@@ -855,12 +1410,12 @@ try {
       request.method() === 'PUT' &&
       request.url().endsWith(`/api/projects/${newProject.projectId}/configuration`),
   );
-  await page.getByRole('button', { name: '保存测试环境' }).click();
+  await page.getByRole('button', { name: '保存测试网址' }).click();
   await pendingWrite;
   await page.getByRole('link', { name: '项目', exact: true }).click();
   assert.match(page.url(), /\/settings\/environment$/);
   releaseConfiguration();
-  await page.getByText(/已保存不代表连通或就绪/).waitFor();
+  await page.getByText('项目配置已保存', { exact: true }).waitFor();
   assert.ok(writes.includes(`PUT /api/projects/${newProject.projectId}/configuration`));
 
   await page.goto(`${origin}/projects/${newProject.projectId}/test`);
@@ -923,14 +1478,14 @@ try {
   stopGate = null;
   await page.waitForTimeout(100);
   assert.equal(
-    await page.getByText('停止请求已记录；实际退出与清理状态会继续更新。').count(),
+    await page.getByText('停止请求已记录', { exact: true }).count(),
     0,
     'late stop response cannot change another page',
   );
   await page.goto(`${origin}/projects/${projects[1].projectId}/test`);
   await page.getByRole('button', { name: '取消排队', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: '确认停止', exact: true }).click();
-  await page.getByText('停止请求已记录；实际退出与清理状态会继续更新。').waitFor();
+  await page.getByText('停止请求已记录', { exact: true }).waitFor();
 
   await page.goto(`${origin}/projects/${projects[0].projectId}/test`);
   await page.getByRole('heading', { name: '验证登录状态恢复与注册错误处理' }).waitFor();
@@ -969,9 +1524,9 @@ try {
   await telemetry.getByText(/耗时 1 分 30 秒/).waitFor();
   await telemetry.getByText(/已结束 Session 的部分用量/).waitFor();
   await telemetry.getByText(/reviewer-audit.*输入 未知/).waitFor();
-  await telemetry.getByText(/SDK 估价.*未知.*不是 Provider 账单/).waitFor();
+  await telemetry.getByText(/SDK 估价.*未知/).waitFor();
   await page.getByRole('button', { name: '重试归档', exact: true }).click();
-  await page.getByText('归档重试已结束：completed；原测试结论保持。').waitFor();
+  await page.getByText('归档重试已结束：completed').waitFor();
   await page.getByRole('button', { name: '重试归档', exact: true }).waitFor({ state: 'detached' });
   for (const width of [768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -1023,7 +1578,6 @@ try {
     .locator('.detail-panel > header')
     .getByRole('heading', { name: 'AI Reviewer 审核' })
     .waitFor();
-  await page.getByText('这是 AI 角色工件，不是人工评分。').waitFor();
   await page.getByRole('link', { name: '正式报告', exact: true }).click();
   await page.locator('.detail-panel > header').getByRole('heading', { name: '正式报告' }).waitFor();
   assert.equal(await page.locator('.markdown-view script').count(), 0);
@@ -1061,20 +1615,20 @@ try {
   await page.getByText('正在引用').waitFor();
   await page.getByRole('button', { name: '立即检查' }).last().click();
   assert.ok(writes.includes('POST /api/system/checks/oss'));
-  await page.getByText('OSS 能力尚未提供').waitFor();
+  await page.getByText('OSS 能力尚未提供', { exact: true }).waitFor();
   systemCheckFailure = true;
   await page.getByRole('button', { name: '立即检查' }).nth(1).click();
-  await page.getByText('检查执行失败，请查看服务日志并重试').waitFor();
+  await page
+    .locator('.dependency-note')
+    .filter({ hasText: /^检查执行失败，请查看服务日志并重试$/ })
+    .waitFor();
   systemCheckFailure = false;
 
   await page.goto(`${origin}/settings/models`);
   await page.getByText(/全局执行配置已锁定，相关测试记录/).waitFor();
   assert.equal(await page.getByRole('button', { name: '保存本分组' }).isDisabled(), true);
-  assert.equal(await page.getByLabel('Provider API Key').isDisabled(), true);
-  assert.equal(
-    await page.getByRole('button', { name: '清除 Provider API Key' }).isDisabled(),
-    true,
-  );
+  assert.equal(await page.getByRole('button', { name: '模型注册' }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: '删除来源' }).first().isDisabled(), true);
   await page.goto(`${origin}/settings/object-storage`);
   assert.equal(await page.getByLabel('Endpoint', { exact: true }).isDisabled(), true);
   const lockedOssSecret = page.getByLabel('设置OSS Access Key ID');
@@ -1087,97 +1641,59 @@ try {
   await lockedOssSecret.fill('');
   globalSettingsUnlocked = true;
   await page.goto(`${origin}/settings/models`);
-  await page.getByRole('heading', { name: '模型与角色' }).waitFor();
-  await page.getByText('已载入 2 个已知模型').waitFor();
-  assert.equal(await page.getByText('Thinking 自动选择', { exact: true }).count(), 3);
-  await page.getByText('规划 low · 收尾 off', { exact: true }).waitFor();
-  assert.equal(await page.locator('#global-provider-catalog option').count(), 2);
-  assert.equal(await page.locator('#global-model-catalog-reviewer option').count(), 2);
-  const roleModels = page.locator('.agent-config input[type="search"]');
-  await roleModels.nth(2).fill('deepseek-v4-flash');
-  await page.getByText('该模型不支持图像输入，视觉场景将被阻塞。').waitFor();
-  await roleModels.nth(2).fill('deepseek-v4-flash-vision-exp');
-  assert.equal(await page.getByText('该模型不支持图像输入，视觉场景将被阻塞。').count(), 0);
-  const providerInput = page.locator('input[list="global-provider-catalog"]');
-  const baseUrlInput = page.getByLabel('Provider Base URL');
-  assert.equal(await baseUrlInput.inputValue(), 'https://provider.example.test/v1');
-  const assertCatalogLayout = async () => {
-    const status = await page.locator('.catalog-summary').boundingBox();
-    assert.ok(status);
-    for (const role of await page.locator('.agent-config').all()) {
-      const box = await role.boundingBox();
-      assert.ok(box && box.y >= status.y + status.height - 1, 'catalog occupies its own row');
-    }
+  await page.getByRole('heading', { name: '模型配置', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '角色配置', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '测试组长', exact: true }).waitFor();
+  assert.equal(await page.getByText(/已载入 .* 个已知模型/).count(), 0);
+  assert.equal(await page.getByText('Thinking 自动选择', { exact: true }).count(), 0);
+  assert.equal(await page.locator('datalist').count(), 0);
+  assert.equal(
+    await page.getByLabel(/质量审核员模型要求/).getAttribute('title'),
+    '需要支持图像输入，用于审核截图证据。',
+  );
+  await page.locator('.model-capabilities .capability-icon').first().waitFor();
+  assert.equal(await page.locator('.model-capabilities .capability-icon').count(), 7);
+  const mainThinking = page.getByLabel('测试组长思考等级');
+  const runnerThinking = page.getByLabel('测试工程师思考等级');
+  const reviewerThinking = page.getByLabel('质量审核员思考等级');
+  assert.equal((await mainThinking.textContent())?.trim(), 'low');
+  assert.equal((await runnerThinking.textContent())?.trim(), 'low');
+  assert.equal((await reviewerThinking.textContent())?.trim(), 'low');
+  await mainThinking.click();
+  assert.deepEqual(await page.getByRole('option').allTextContents(), ['off', 'low']);
+  await page.getByRole('option', { name: 'off', exact: true }).click();
+  const roleModels = [
+    page.getByRole('combobox', { name: '测试组长模型' }),
+    page.getByRole('combobox', { name: '测试工程师模型' }),
+    page.getByRole('combobox', { name: '质量审核员模型' }),
+  ];
+  assert.equal(await roleModels[0].inputValue(), 'DeepSeek Flash');
+  assert.equal(await roleModels[2].inputValue(), 'DeepSeek Vision');
+  await roleModels[0].focus();
+  await roleModels[0].press('ArrowDown');
+  assert.equal(await page.getByRole('listbox').count(), 1);
+  assert.equal(await page.getByRole('option').count(), 2);
+  await roleModels[0].press('Escape');
+  assert.equal(await page.getByRole('listbox').count(), 0);
+  for (const width of [768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
       ),
       true,
     );
-  };
-  for (const width of [768, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
-    await assertCatalogLayout();
-    delayOpenAiCatalog = true;
-    await providerInput.fill('openai');
-    await page.getByText('正在加载已知模型目录…').waitFor();
-    await assertCatalogLayout();
-    await page.getByText('已载入 1 个已知模型').waitFor();
-    await assertCatalogLayout();
-    await providerInput.fill('unknown-fixture');
-    await page.getByText('暂无已知模型', { exact: true }).waitFor();
-    await assertCatalogLayout();
-    catalogFailure = true;
-    await providerInput.fill('openai-compatible');
-    await page.getByText(/目录加载失败：目录暂不可用/).waitFor();
-    await assertCatalogLayout();
-    catalogFailure = false;
-    await providerInput.fill('openai');
-    await page.getByText('已载入 1 个已知模型').waitFor();
-    await providerInput.fill('openai-compatible');
-    await page.getByText('已载入 2 个已知模型').waitFor();
   }
-  delayOpenAiCatalog = true;
-  const pendingCatalog = page.waitForRequest((request) =>
-    request.url().includes('/api/provider/models?provider=openai'),
-  );
-  await providerInput.fill('openai');
-  assert.equal(await baseUrlInput.inputValue(), 'https://api.openai.example.test/v1');
-  await pendingCatalog;
-  await providerInput.fill('openai-compatible');
-  assert.equal(await baseUrlInput.inputValue(), 'https://provider.example.test/v1');
-  await page.getByText('已载入 2 个已知模型').waitFor();
-  await page.waitForTimeout(550);
-  assert.equal(
-    await page.locator('#global-model-catalog-main option[value="gpt-vision-fixture"]').count(),
-    0,
-  );
-  delayOpenAiCatalog = false;
-  catalogFailure = true;
-  await providerInput.fill('openai');
-  await page.getByText(/目录加载失败：目录暂不可用/).waitFor();
-  await roleModels.nth(0).fill('manual-model-id');
-  assert.equal(await roleModels.nth(0).inputValue(), 'manual-model-id');
-  catalogFailure = false;
-  await providerInput.fill('openai-compatible');
-  await page.getByText('已载入 2 个已知模型').waitFor();
-  await roleModels.nth(0).fill('deepseek-v4-flash');
-  await providerInput.fill('fixture-provider');
-  assert.equal(await baseUrlInput.inputValue(), '');
-  await page.getByLabel('Provider API Key').fill('synthetic-provider-key');
+  await page.getByRole('button', { name: '模型注册' }).click();
+  assert.equal(await page.getByRole('button', { name: '删除来源' }).count(), 2);
+  await page.getByRole('button', { name: '删除来源' }).last().click();
+  await page.getByRole('dialog').getByRole('button', { name: '确认删除' }).click();
+  await page.getByText('未保存的模型来源已移除', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: '删除来源' }).count(), 1);
   await page.getByRole('button', { name: '保存本分组' }).click();
-  await page.getByText('配置与 Provider API Key 已保存。').waitFor();
+  await page.getByText('配置已保存', { exact: true }).waitFor();
   assert.ok(writes.includes('PUT /api/deployment'));
-  assert.ok(writes.includes('PUT /api/deployment/secrets/providerApiKey'));
-  assert.equal((await page.locator('body').innerText()).includes('synthetic-provider-key'), false);
-  page.once('dialog', async (dialog) => {
-    assert.match(dialog.message(), /清除该凭据/);
-    await dialog.accept();
-  });
-  await page.getByRole('button', { name: '清除 Provider API Key' }).click();
-  await page.getByText('凭据已清除。', { exact: true }).waitFor();
-  assert.ok(writes.includes('DELETE /api/deployment/secrets/providerApiKey'));
-
+  assert.equal(deploymentConfiguration.agents.main.thinking, 'off');
   await page.goto(`${origin}/settings/object-storage`);
   assert.equal(await page.getByRole('link', { name: '全局凭据', exact: true }).count(), 0);
   assert.equal((await page.locator('body').innerText()).includes('GitHub Token'), false);
@@ -1197,14 +1713,14 @@ try {
   await endpoint.press('Tab');
   assert.equal(await endpoint.inputValue(), 'https://oss.example.test');
   await page.getByRole('button', { name: '保存本分组' }).click();
-  await page.getByText('配置已保存。', { exact: true }).waitFor();
+  await page.getByText('配置已保存', { exact: true }).waitFor();
   assert.equal(deploymentConfiguration.oss.endpoint, 'https://oss.example.test');
   await page.getByLabel('设置OSS Access Key ID').fill('synthetic-oss-id');
   await page.getByRole('button', { name: '保存', exact: true }).nth(0).click();
-  await page.getByText('凭据已更新。', { exact: true }).waitFor();
+  await page.getByText('凭据已更新', { exact: true }).waitFor();
   await page.getByLabel('设置OSS Access Key Secret').fill('synthetic-oss-key');
   await page.getByRole('button', { name: '保存', exact: true }).click();
-  await page.getByText('凭据已更新。', { exact: true }).waitFor();
+  await page.getByText('凭据已更新', { exact: true }).waitFor();
   assert.ok(writes.includes('PUT /api/deployment/secrets/ossAccessKeyId'));
   assert.ok(writes.includes('PUT /api/deployment/secrets/ossAccessKeySecret'));
   assert.equal((await page.locator('body').innerText()).includes('synthetic-oss-id'), false);
@@ -1217,7 +1733,7 @@ try {
 
   holdWorkspace = true;
   const delayedRequest = page.waitForRequest((request) => request.url().endsWith('/api/workspace'));
-  await page.getByRole('link', { name: '工作台', exact: true }).click();
+  await page.getByRole('link', { name: '总览', exact: true }).click();
   await delayedRequest;
   await page.getByRole('link', { name: '系统状态', exact: true }).click();
   await page.getByRole('heading', { name: '系统状态' }).waitFor();
@@ -1230,7 +1746,10 @@ try {
     `/projects/new?projectId=${newProject.projectId}`,
     `/projects/${projects[0].projectId}/overview`,
     `/projects/${projects[0].projectId}/readiness`,
+    `/projects/${newProject.projectId}/settings/execution`,
     `/projects/${newProject.projectId}/settings/credentials`,
+    `/projects/${newProject.projectId}/settings/automation`,
+    `/projects/${newProject.projectId}/settings/files`,
     `/projects/${projects[0].projectId}/test`,
     `/projects/${projects[0].projectId}/runs`,
     `/projects/${projects[0].projectId}/runs/${fixtureRunId}/evidence`,
@@ -1244,7 +1763,35 @@ try {
     await page.setViewportSize({ width, height: 900 });
     for (const path of responsivePaths) {
       await page.goto(`${origin}${path}`);
-      await page.locator('h1').waitFor();
+      await page
+        .locator('h1')
+        .waitFor()
+        .catch(() => {
+          throw new Error(`Missing page heading at ${path}: ${pageErrors.join('; ')}`);
+        });
+      if (path.endsWith('/settings/execution')) {
+        await page.getByRole('combobox', { name: '执行服务器', exact: true }).waitFor();
+        await page.getByText('运行参数（高级）', { exact: true }).click();
+        await page.getByText('浏览器额外来源', { exact: true }).first().click();
+        const saveOrigins = await page
+          .getByRole('button', { name: '保存额外来源', exact: true })
+          .boundingBox();
+        assert.ok(
+          saveOrigins && saveOrigins.height < 70,
+          'save button must not stretch with its textarea',
+        );
+      } else if (path.endsWith('/settings/credentials')) {
+        await page
+          .getByRole('region', { name: '测试账号', exact: true })
+          .getByLabel('测试账号', { exact: true })
+          .waitFor();
+        await page.getByText('测试后清理（可选）', { exact: true }).click();
+        await page.getByLabel('清理接口 Token', { exact: true }).waitFor();
+      } else if (path.endsWith('/settings/automation')) {
+        await page.getByRole('switch', { name: '启用定时检查' }).waitFor();
+      } else if (path.endsWith('/settings/files')) {
+        await page.locator('.file-upload').waitFor();
+      }
       await page.addStyleTag({ content: 'html { overflow-y: scroll; scrollbar-gutter: stable; }' });
       assert.ok(
         await page.evaluate(() => document.documentElement.clientWidth < window.innerWidth),
@@ -1307,6 +1854,35 @@ try {
   assert.ok(['0.01ms', '1e-05s'].includes(reducedMotion.transition));
   await cdp.detach();
 
+  await page.goto(`${origin}/projects`);
+  const deleteButton = page
+    .locator('.project-directory > li')
+    .filter({ hasText: projects[0].displayName })
+    .getByRole('button', { name: '删除', exact: true });
+  const deletionRequest = `DELETE /api/projects/${projects[0].projectId}`;
+  assert.equal(
+    await deleteButton.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return style.color !== style.backgroundColor;
+    }),
+    true,
+  );
+  const beforeDelete = writes.filter((write) => write === deletionRequest).length;
+  await deleteButton.click();
+  await page.getByRole('dialog').getByRole('button', { name: '取消', exact: true }).click();
+  assert.equal(writes.filter((write) => write === deletionRequest).length, beforeDelete);
+  assert.equal(await deleteButton.evaluate((element) => element === document.activeElement), true);
+  await deleteButton.click();
+  await page.getByRole('dialog').getByRole('button', { name: '删除项目', exact: true }).click();
+  await page.getByText('项目仍有待处理任务，请先停止测试并完成归档', { exact: true }).waitFor();
+  assert.equal(await deleteButton.count(), 1);
+  deletionBlocked = false;
+  await deleteButton.click();
+  await page.getByRole('dialog').getByRole('button', { name: '删除项目', exact: true }).click();
+  await page.getByText('项目已删除', { exact: true }).waitFor();
+  await deleteButton.waitFor({ state: 'hidden' });
+  assert.equal(await page.locator('.project-directory > li').count(), 1);
+
   await page.goto(`${origin}/account`);
   await page.getByLabel('当前密码').fill('current-password');
   await page.getByLabel('新密码', { exact: true }).fill('new-password-123');
@@ -1314,8 +1890,19 @@ try {
   await page.getByRole('button', { name: '更新密码并退出' }).click();
   await page.getByText('两次输入的新密码不一致').waitFor();
   await page.getByLabel('确认新密码').fill('new-password-123');
+  await page.getByLabel('当前密码').fill('incorrect-current-password');
+  await page.getByRole('button', { name: '更新密码并退出' }).click();
+  await page.locator('.app-message').filter({ hasText: '当前管理员密码不正确' }).waitFor();
+  assert.equal(new URL(page.url()).pathname, '/account');
+  assert.equal(await page.getByText('登录已过期，请重新登录', { exact: true }).count(), 0);
+  await page.getByLabel('当前密码').fill('current-password');
   await page.getByRole('button', { name: '更新密码并退出' }).click();
   await page.getByRole('heading', { name: '管理员登录' }).waitFor();
+  await page
+    .locator('.app-message-success')
+    .filter({ hasText: '密码已更新，请重新登录' })
+    .waitFor();
+  assert.equal(await page.locator('.login-panel .notice-error').count(), 0);
   assert.ok(writes.includes('POST /api/auth/password'));
 
   assert.deepEqual(pageErrors, []);

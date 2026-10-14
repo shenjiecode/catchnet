@@ -53,7 +53,7 @@ describe('Phase 4 browser and evidence boundaries', () => {
   });
 
   it('records known-object read failures without counting invalid routes or erasing failure after success', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'luowang-read-diagnostic-'));
+    const directory = await mkdtemp(join(tmpdir(), 'catchnet-read-diagnostic-'));
     cleanup.push(async () => rm(directory, { recursive: true, force: true }));
     const workspace = new RunWorkspace('01K00000000000000000000001', directory);
     await workspace.create();
@@ -95,7 +95,7 @@ describe('Phase 4 browser and evidence boundaries', () => {
   });
 
   it('redacts registered runtime credentials without truncating execution prose', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'luowang-redact-execution-'));
+    const directory = await mkdtemp(join(tmpdir(), 'catchnet-redact-execution-'));
     cleanup.push(async () => rm(directory, { recursive: true, force: true }));
     const store = createRunEvidenceStore(
       new RunWorkspace('01K00000000000000000000001', directory),
@@ -156,9 +156,9 @@ describe('Phase 4 browser and evidence boundaries', () => {
   });
 
   it('keeps Playwright MCP headless, isolated, snapshot-based, and without unsafe tools', async () => {
-    const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase4-browser-'));
+    const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-browser-'));
     cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
-    const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDirectory });
+    const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDirectory });
     const database = initializeDatabase(config);
     cleanup.push(async () => database.close());
     const configuration = createConfigurationStore(database.sqlite, {
@@ -191,6 +191,16 @@ describe('Phase 4 browser and evidence boundaries', () => {
     assert.ok(definition.args.includes('--snapshot-mode=full'));
     assert.ok(definition.args.includes('--codegen=none'));
     assert.ok(definition.args.includes('--output-dir=C:/runs/evidence'));
+    const scopedDefinition = adapter.serverDefinition(
+      'C:/runs/evidence',
+      'https://run.example/app',
+      ['https://cdn.example', 'https://login.example'],
+    );
+    assert.ok(
+      scopedDefinition.args.includes(
+        '--allowed-origins=https://run.example;https://cdn.example;https://login.example',
+      ),
+    );
     // Cookie read/restore is the only approved storage surface.
     assert.ok(definition.args.includes('--caps=storage'));
     assert.deepEqual(
@@ -212,9 +222,9 @@ describe('Phase 4 browser and evidence boundaries', () => {
   });
 
   it('fails the browser connectivity check when cookie session replay is missing', async () => {
-    const dataDirectory = await mkdtemp(join(tmpdir(), 'luowang-phase4-browser-missing-'));
+    const dataDirectory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-browser-missing-'));
     cleanup.push(async () => rm(dataDirectory, { recursive: true, force: true }));
-    const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: dataDirectory });
+    const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: dataDirectory });
     const database = initializeDatabase(config);
     cleanup.push(async () => database.close());
     const configuration = createConfigurationStore(database.sqlite, {
@@ -271,7 +281,7 @@ describe('Phase 4 browser and evidence boundaries', () => {
   });
 
   it('lets Reviewer read only uploaded image evidence as image content', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'luowang-phase4-evidence-'));
+    const directory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-evidence-'));
     cleanup.push(async () => rm(directory, { recursive: true, force: true }));
     const workspace = new RunWorkspace('01K00000000000000000000001', directory);
     await workspace.create();
@@ -373,9 +383,9 @@ async function createStorageFixture(
     clientError?: { value: unknown };
   } = {},
 ): Promise<StorageFixture> {
-  const directory = await mkdtemp(join(tmpdir(), 'luowang-phase4-storage-'));
+  const directory = await mkdtemp(join(tmpdir(), 'catchnet-phase4-storage-'));
   cleanup.push(async () => rm(directory, { recursive: true, force: true }));
-  const config = loadConfig({ NODE_ENV: 'test', LUOWANG_DATA_DIR: directory });
+  const config = loadConfig({ NODE_ENV: 'test', CATCHNET_DATA_DIR: directory });
   const database = initializeDatabase(config);
   cleanup.push(async () => database.close());
   const configuration = createConfigurationStore(database.sqlite, {

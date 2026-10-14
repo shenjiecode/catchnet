@@ -11,7 +11,7 @@ npm run build
 npm run ops:inventory
 ```
 
-Docker Compose 部署可使用 `docker compose exec luowang npm run ops:inventory`。此命令以只读模式打开现有数据库，只向 Docker 发出 `ps`、`image ls` 和 `inspect` 查询；没有数据库、迁移不完整、Engine 不可用或归属标签不一致时直接失败。JSON 中的 `instanceId` 和 `projectId` 用于确认资源属于哪个实例和项目。`referenced` 镜像被当前镜像状态或历史 Run 引用；`restart-candidate` 与启动恢复清理的标签、项目和 tag 条件相符；`manual-review` 需要人工核对，不能据标签直接删除。列出的容器也通过实例、项目、Run ID 和容器名共同核验。
+Docker Compose 部署可使用 `docker compose exec catchnet npm run ops:inventory`。此命令以只读模式打开现有数据库，只向 Docker 发出 `ps`、`image ls` 和 `inspect` 查询；没有数据库、迁移不完整、Engine 不可用或归属标签不一致时直接失败。JSON 中的 `instanceId` 和 `projectId` 用于确认资源属于哪个实例和项目。`referenced` 镜像被当前镜像状态或历史 Run 引用；`restart-candidate` 与启动恢复清理的标签、项目和 tag 条件相符；`manual-review` 需要人工核对，不能据标签直接删除。列出的容器也通过实例、项目、Run ID 和容器名共同核验。
 
 `candidateImageBytes` 是候选镜像 `Size` 的相加值，不等于实际可释放空间：镜像层可能共享，容器或其他 tag 也可能阻止删除。无实例标签的旧镜像、无标签构建缓存和其他应用资源不在结果中。检查宿主机总占用时另用 `docker system df`，但不要在共享 Engine 上执行全局 prune。定期记录两者及 `/data` 所在文件系统的剩余容量；容量异常时先定位归属，再决定维护动作。当前没有自动删除历史 Run 或报告的期限。
 

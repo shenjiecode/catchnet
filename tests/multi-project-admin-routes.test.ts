@@ -7,12 +7,14 @@ import { describe, it } from 'vitest';
 
 import { createProjectTestRequestQueue } from '../src/server/automation/queue.js';
 import { GitHubApiError } from '../src/server/repository/github.js';
-import { runMigrations } from '../src/server/db/migrate.js';
+import { ensureSystemMetadata, runMigrations } from '../src/server/db/migrate.js';
 import { projectIdentityMigration } from '../src/server/db/migrations/0009-project-identity.js';
 import { migrateLegacyRunOwnership } from '../src/server/db/migrations/0011-project-run-ownership.js';
 import { migrateLegacyConfigurationOwnership } from '../src/server/db/migrations/0012-project-configuration-ownership.js';
 import { migrateProjectQueueContext } from '../src/server/db/migrations/0014-project-queue-context.js';
 import { migrateProjectImageState } from '../src/server/db/migrations/0015-project-image-state.js';
+import { migrateConnectionResources } from '../src/server/db/migrations/0021-connection-resources.js';
+import { migrateExecutionRuntime } from '../src/server/db/migrations/0022-execution-runtime.js';
 import { registerProjectAdminRoutes } from '../src/server/projects/admin-routes.js';
 import { createProjectConfigurationStore } from '../src/server/projects/configuration.js';
 import { createDeploymentConfigurationStore } from '../src/server/projects/deployment-configuration.js';
@@ -23,7 +25,7 @@ import {
 } from '../src/server/projects/readiness.js';
 import { createScopedSecretStore } from '../src/server/security/scoped-secret-store.js';
 
-const cookie = { cookie: 'luowang_session=valid' };
+const cookie = { cookie: 'catchnet_session=valid' };
 
 describe('project administration routes', () => {
   it('requires authentication, verifies identity and keeps project configuration and Secrets scoped', async () => {
@@ -180,7 +182,7 @@ describe('project administration routes', () => {
             method: 'PUT',
             url: `/api/projects/${a.projectId}/configuration`,
             headers: cookie,
-            payload: { baseUrl: 'https://a.example' },
+            payload: { runtimeMode: 'external', baseUrl: 'https://a.example' },
           })
         ).statusCode,
         200,
@@ -280,6 +282,87 @@ describe('project administration routes', () => {
       assert.ok(!allowedSecret.body.includes('password-b'));
       assert.equal(readinessResultCount(database, b.projectId), 0);
       assert.equal(secrets.project(b.projectId).get('testPassword'), 'password-b');
+      const accountUrl = `/api/projects/${b.projectId}/test-account`;
+      assert.equal(
+        (await app.inject({ method: 'PUT', url: accountUrl, payload: { testUsername: 'user-b' } }))
+          .statusCode,
+        401,
+      );
+      assert.equal(
+        (
+          await app.inject({
+            method: 'PUT',
+            url: accountUrl,
+            headers: { ...cookie, origin: 'https://other.example' },
+            payload: { testUsername: 'user-b' },
+          })
+        ).statusCode,
+        403,
+      );
+      const blockedAccount = await app.inject({
+        method: 'PUT',
+        url: `/api/projects/${a.projectId}/test-account`,
+        headers: cookie,
+        payload: { testUsername: 'blocked-user', testPassword: 'blocked-password' },
+      });
+      assert.equal(blockedAccount.statusCode, 409);
+      assert.equal(secrets.project(a.projectId).get('testUsername'), undefined);
+      const savedAccount = await app.inject({
+        method: 'PUT',
+        url: accountUrl,
+        headers: cookie,
+        payload: { testUsername: 'user-b', testPassword: 'account-password-b' },
+      });
+      assert.equal(savedAccount.statusCode, 200);
+      assert.ok(
+        !savedAccount.body.includes('user-b') && !savedAccount.body.includes('account-password-b'),
+      );
+      assert.equal(secrets.project(b.projectId).get('testUsername'), 'user-b');
+      assert.equal(secrets.project(b.projectId).get('testPassword'), 'account-password-b');
+      const partialAccount = await app.inject({
+        method: 'PUT',
+        url: accountUrl,
+        headers: cookie,
+        payload: { testUsername: '', testPassword: 'updated-account-password-b' },
+      });
+      assert.equal(partialAccount.statusCode, 200);
+      assert.equal(secrets.project(b.projectId).get('testUsername'), 'user-b');
+      assert.equal(secrets.project(b.projectId).get('testPassword'), 'updated-account-password-b');
+      for (const payload of [
+        { testUsername: 'bad-input', testPassword: 123 },
+        { gitToken: 'wrong-scope' },
+        { testUsername: '', testPassword: '' },
+      ]) {
+        assert.equal(
+          (await app.inject({ method: 'PUT', url: accountUrl, headers: cookie, payload }))
+            .statusCode,
+          400,
+        );
+      }
+      await app.inject({
+        method: 'POST',
+        url: `/api/projects/${b.projectId}/readiness/check`,
+        headers: cookie,
+      });
+      assert.equal(readinessResultCount(database, b.projectId), 5);
+      database.exec(`CREATE TEMP TRIGGER fail_account_password BEFORE UPDATE ON secret_entries
+        WHEN NEW.key = 'project:${b.projectId}:testPassword'
+        BEGIN SELECT RAISE(ABORT, 'synthetic-write-failure'); END`);
+      const failedAccount = await app.inject({
+        method: 'PUT',
+        url: accountUrl,
+        headers: cookie,
+        payload: { testUsername: 'partial-user-canary', testPassword: 'partial-password-canary' },
+      });
+      assert.equal(failedAccount.statusCode, 500);
+      assert.equal(secrets.project(b.projectId).get('testUsername'), 'user-b');
+      assert.equal(secrets.project(b.projectId).get('testPassword'), 'updated-account-password-b');
+      assert.equal(readinessResultCount(database, b.projectId), 5);
+      assert.ok(
+        !failedAccount.body.includes('partial-user-canary') &&
+          !failedAccount.body.includes('partial-password-canary'),
+      );
+      database.exec('DROP TRIGGER fail_account_password');
       assert.equal(
         (
           await app.inject({
@@ -366,11 +449,14 @@ function setupDatabase(): Database.Database {
   const database = new Database(':memory:');
   database.pragma('foreign_keys = ON');
   runMigrations(database);
+  ensureSystemMetadata(database, { appVersion: 'test' });
   runMigrations(database, [projectIdentityMigration]);
   migrateLegacyRunOwnership(database, null);
   migrateLegacyConfigurationOwnership(database, null);
   migrateProjectQueueContext(database);
   migrateProjectImageState(database);
+  migrateConnectionResources(database);
+  migrateExecutionRuntime(database);
   return database;
 }
 

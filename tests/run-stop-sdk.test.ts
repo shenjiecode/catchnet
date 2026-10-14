@@ -10,7 +10,7 @@ import type { ConfigurationStore } from '../src/server/configuration.js';
 
 it('aborts an actual production Pi streaming HTTP request and disposes its isolated Session', async () => {
   const model = await startLocalModelProtocol('stall');
-  const cwd = await mkdtemp(join(tmpdir(), 'luowang-stop-sdk-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'catchnet-stop-sdk-'));
   const controller = new AbortController();
   const session = await model.sessionFactory.create({
     role: 'main-a',
@@ -50,7 +50,9 @@ it.skipIf(process.platform !== 'linux')(
   'closes the actual owned MCP/browser process while a second production Session remains active',
   async () => {
     const model = await startLocalModelProtocol('browser-stall');
-    const roots = await Promise.all([0, 1].map(() => mkdtemp(join(tmpdir(), 'luowang-stop-mcp-'))));
+    const roots = await Promise.all(
+      [0, 1].map(() => mkdtemp(join(tmpdir(), 'catchnet-stop-mcp-'))),
+    );
     const controllers = roots.map(() => new AbortController());
     const browser = createPlaywrightMcpAdapter({
       getHarness: () => ({ mcp: { enabled: true, browser: 'chromium', timeoutMs: 10000 } }),

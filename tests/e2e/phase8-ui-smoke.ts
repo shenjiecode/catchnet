@@ -78,7 +78,7 @@ async function waitForHealth(port: number, child: ReturnType<typeof spawn>): Pro
   throw new Error(`server did not become healthy: ${lastError}`);
 }
 
-const dataDir = await mkdtemp(join(tmpdir(), 'luowang-phase8-ui-'));
+const dataDir = await mkdtemp(join(tmpdir(), 'catchnet-phase8-ui-'));
 const port = await getAvailablePort();
 const baseUrl = `http://127.0.0.1:${port}`;
 const child = spawn(process.execPath, ['dist/server/main.js'], {
@@ -86,12 +86,12 @@ const child = spawn(process.execPath, ['dist/server/main.js'], {
   env: {
     ...process.env,
     NODE_ENV: 'production',
-    LUOWANG_DATA_DIR: dataDir,
-    LUOWANG_HOST: '127.0.0.1',
-    LUOWANG_PORT: String(port),
-    LUOWANG_LOG_LEVEL: 'silent',
-    LUOWANG_ADMIN_PASSWORD: ADMIN_PASSWORD,
-    LUOWANG_MASTER_KEY: 'phase8-ui-smoke-master-key-material',
+    CATCHNET_DATA_DIR: dataDir,
+    CATCHNET_HOST: '127.0.0.1',
+    CATCHNET_PORT: String(port),
+    CATCHNET_LOG_LEVEL: 'silent',
+    CATCHNET_ADMIN_PASSWORD: ADMIN_PASSWORD,
+    CATCHNET_MASTER_KEY: 'phase8-ui-smoke-master-key-material',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -146,13 +146,13 @@ try {
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: '导出 YAML', exact: true }).click();
     const download = await downloadPromise;
-    assert.equal(download.suggestedFilename(), 'luowang-config.yml');
-    page.once('dialog', (dialog) => void dialog.accept());
+    assert.equal(download.suggestedFilename(), 'catchnet-config.yml');
     await page.locator('input[type="file"]').setInputFiles({
-      name: 'luowang-config.yml',
+      name: 'catchnet-config.yml',
       mimeType: 'application/yaml',
       buffer: Buffer.from('version: 1\nharness: {}\nrepository: {}\n'),
     });
+    await page.getByRole('dialog').getByRole('button', { name: '确认导入' }).click();
     await page.getByText('普通配置已从 YAML 原子导入', { exact: false }).waitFor();
     assert.ok(importedYaml.startsWith('version: 1'));
     await page.getByLabel('Provider Base URL（可选）').fill('https://models.example.test/v1');
@@ -172,7 +172,7 @@ try {
     await reviewerCard.getByLabel('模型').fill('deepseek-v4-flash');
     await reviewerCard.getByText('该模型不支持图像输入', { exact: false }).waitFor();
     await reviewerCard.getByLabel('模型').fill('deepseek-v4-flash-vision-exp');
-    await reviewerCard.getByText('视觉', { exact: true }).waitFor();
+    await reviewerCard.getByLabel('视觉', { exact: true }).waitFor();
 
     await page.getByRole('heading', { name: 'GitHub 仓库' }).waitFor();
     await page.getByLabel('目标仓库').fill('https://github.com/cynos-ai/cynos-website');
@@ -191,7 +191,6 @@ try {
     await repositorySection.getByText('4/4 项通过', { exact: true }).waitFor();
 
     const automationSection = page.locator('section').filter({ hasText: '自动触发' }).first();
-    await automationSection.getByText('自动测试默认关闭', { exact: false }).waitFor();
     assert.equal(
       await automationSection.getByRole('checkbox', { name: /新 commit 自动测试/ }).isChecked(),
       false,
@@ -236,13 +235,13 @@ try {
     await page.getByRole('button', { name: '场景', exact: true }).click();
     await page.getByRole('heading', { name: '长期场景' }).waitFor();
     await page.locator('details.scenario-detail summary').click();
-    await page.getByText('window.__luowangXss = true', { exact: false }).waitFor();
+    await page.getByText('window.__catchnetXss = true', { exact: false }).waitFor();
     assert.equal(
-      await page.locator('script').filter({ hasText: 'window.__luowangXss' }).count(),
+      await page.locator('script').filter({ hasText: 'window.__catchnetXss' }).count(),
       0,
     );
     assert.equal(
-      await page.evaluate(() => (window as Window & { __luowangXss?: boolean }).__luowangXss),
+      await page.evaluate(() => (window as Window & { __catchnetXss?: boolean }).__catchnetXss),
       undefined,
     );
     await page.getByPlaceholder('ID、名称、描述、正文或标签').fill('不存在的场景');
@@ -265,8 +264,9 @@ try {
     await page.getByText('safe final report', { exact: false }).waitFor();
     await page.getByRole('link', { name: /Issue 42/ }).waitFor();
     await page.getByRole('link', { name: /login\.png/ }).waitFor();
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: '重试归档', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: '确认重试' }).click();
+    await page.locator('.app-message-success').filter({ hasText: '归档重试已完成' }).waitFor();
     await page.getByText('report：published', { exact: false }).waitFor();
     assert.equal(await page.getByRole('button', { name: '重试归档', exact: true }).count(), 0);
 
@@ -284,7 +284,8 @@ try {
     expireNextDashboard = true;
     await page.getByRole('button', { name: '刷新', exact: true }).first().click();
     await page.getByRole('heading', { name: '管理员登录' }).waitFor();
-    await page.getByText('登录已过期，请重新登录', { exact: true }).waitFor();
+    await page.locator('.app-message').filter({ hasText: '登录已过期，请重新登录' }).waitFor();
+    assert.equal(await page.locator('.login-panel .notice-error').count(), 0);
 
     await page.getByLabel('管理员密码').fill(ADMIN_PASSWORD);
     await page.getByRole('button', { name: '登录', exact: true }).click();
@@ -326,7 +327,7 @@ async function installApiFixtures(page: import('playwright').Page): Promise<void
     }
     if (path === '/api/config/export' && request.method() === 'GET') {
       return fulfillJson(route, {
-        fileName: 'luowang-config.yml',
+        fileName: 'catchnet-config.yml',
         yaml: 'version: 1\nharness: {}\nrepository: {}\n',
       });
     }
@@ -611,7 +612,7 @@ function makeScenario(): OperationsScenario {
     description: '验证用户登录后刷新页面仍保持登录状态',
     status: 'approved',
     tags: ['core', 'flow:登录'],
-    content: '<script>window.__luowangXss = true</script>',
+    content: '<script>window.__catchnetXss = true</script>',
     commitSha: HASHES.indexed,
     indexedAt: '2026-08-30T02:00:00.000Z',
   };

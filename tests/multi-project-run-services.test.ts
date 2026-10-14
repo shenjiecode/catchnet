@@ -25,7 +25,7 @@ import { createScopedSecretStore } from '../src/server/security/scoped-secret-st
 const RUN_ID = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
 
 it('assembles two project Runs with fixed repository, cleanup, evidence and history scopes', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'luowang-project-runs-'));
+  const root = await mkdtemp(join(tmpdir(), 'catchnet-project-runs-'));
   const database = new Database(':memory:');
   database.pragma('foreign_keys = ON');
   try {
@@ -51,6 +51,7 @@ it('assembles two project Runs with fixed repository, cleanup, evidence and hist
     config.update(a.projectId, {
       language: 'en-US',
       baseUrl: 'https://a.example',
+      browserAllowedOrigins: ['https://cdn.a.example'],
       testDataCleanupUrl: 'https://a.example/cleanup',
     });
     config.update(b.projectId, {
@@ -71,6 +72,7 @@ it('assembles two project Runs with fixed repository, cleanup, evidence and hist
     const paths = { repoRoot: join(root, 'repos'), reportRoot: join(root, 'reports') };
     const secrets = createScopedSecretStore(database, 'synthetic-master-key');
     const runtimeA = createProjectTaskRuntime(claimedA, projects, deployment, paths);
+    assert.deepEqual(runtimeA.browserAllowedOrigins, ['https://cdn.a.example']);
     const servicesA = createProjectRunServices({
       database,
       task: runtimeA,

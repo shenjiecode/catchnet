@@ -322,7 +322,7 @@ class S3OssAdapter implements OssAdapter {
         /^\//,
         '',
       );
-    const body = Buffer.from('luowang-oss-connectivity-v1', 'utf8');
+    const body = Buffer.from('catchnet-oss-connectivity-v1', 'utf8');
     let result: ConnectivityResult = {
       status: 'failed',
       message: 'OSS 测试对象读写失败',

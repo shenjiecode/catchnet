@@ -3,7 +3,7 @@
 - 状态：Implementation Plan v0.1
 - 关联 Intent：[intent.md](./intent.md)
 - 关联 Spec：[spec.md](./spec.md)
-- 正式仓库：公开的 `cynos-ai/luowang`
+- 正式仓库：公开的 `shenjiecode/catchnet`
 - 许可证：GNU Affero General Public License v3.0（`AGPL-3.0`）
 - 实施方式：阶段顺序执行；每一阶段独立分支、独立 PR、独立验证、独立闭环
 
@@ -61,7 +61,7 @@ main ──> fix/* ──PR──> main ──> patch tag
 
 ### 3.2 与目标仓库 `scenario-testing` 的关系
 
-`scenario-testing` 只存在于罗网所管理的外部目标仓库，不属于 `cynos-ai/luowang` 的人工开发流：
+`scenario-testing` 只存在于罗网所管理的外部目标仓库，不属于 `shenjiecode/catchnet` 的人工开发流：
 
 1. 罗网项目的功能和修复只按 `feat/* | fix/* → develop → main` 流转；
 2. 不在罗网项目仓库创建或维护场景测试资产分支；
@@ -134,9 +134,9 @@ npm run test:e2e
 
 | 阶段 | 操作者必须提供的非生产资源 |
 |---|---|
-| Phase 0 | `cynos-ai/luowang` 组织管理员权限；当前已满足 |
+| Phase 0 | `shenjiecode/catchnet` 组织管理员权限；当前已满足 |
 | Phase 1 | `LUOWANG_ADMIN_PASSWORD`、`LUOWANG_MASTER_KEY` 和可访问的测试 URL |
-| Phase 2 | 对独立测试仓库具备读取、分支写入和 ref 合并权限的 GitHub Token；不得使用 `cynos-ai/luowang` 作为测试仓库 |
+| Phase 2 | 对独立测试仓库具备读取、分支写入和 ref 合并权限的 GitHub Token；不得使用 `shenjiecode/catchnet` 作为测试仓库 |
 | Phase 3 | 可用模型 Provider 凭据，以及支持所选 thinking level 的 Main/Runner/Reviewer 模型 |
 | Phase 4 | 非生产 Web 测试环境、Playwright MCP 运行依赖、测试账号和专用 OSS bucket/prefix |
 | Phase 5 | GitHub 报告分支写入、PR 和 Issue 权限；带明确测试标记且可清理的 smoke 目标 |
@@ -277,7 +277,7 @@ docker compose down
 - 使用合法/非法/重复场景 ID、最终报告缺字段、其他 Markdown 任意标题和 Git 删除文件验证索引事务；
 - 历史上下文查询覆盖空仓库、已有正式报告、open/closed Issue 和 GitHub 暂时不可达；
 - 同步中断时网站仍显示上一次完整缓存及其 commit/time，不展示半次同步；
-- 真实 smoke：使用独立、可清理的 GitHub 测试仓库验证最小权限，并在该仓库创建或验证 `scenario-testing` 分支；不得在 `cynos-ai/luowang` 中创建场景测试分支、测试资产、测试 PR 或测试 Issue。
+- 真实 smoke：使用独立、可清理的 GitHub 测试仓库验证最小权限，并在该仓库创建或验证 `scenario-testing` 分支；不得在 `shenjiecode/catchnet` 中创建场景测试分支、测试资产、测试 PR 或测试 Issue。
 
 ### 退出条件
 
@@ -381,7 +381,7 @@ completed Run 可由独立 Archiver 重复扫描而不产生重复副作用；�
 - Git 发布冲突 → 不 force-push，修复冲突条件后可重试；
 - 旧 Run 被新 Run 关联使用但内容和关系不被回写。
 
-本阶段自动测试使用临时 Git remote 和可记录请求的 GitHub API test double；另外只在独立 GitHub 测试仓库执行最小权限读写 smoke，测试对象必须带明显测试标记并在完成后清理/关闭，不得写入 `cynos-ai/luowang`。
+本阶段自动测试使用临时 Git remote 和可记录请求的 GitHub API test double；另外只在独立 GitHub 测试仓库执行最小权限读写 smoke，测试对象必须带明显测试标记并在完成后清理/关闭，不得写入 `shenjiecode/catchnet`。
 
 ### 退出条件
 
@@ -497,7 +497,7 @@ Git Poll、Cron、网站人工请求和 API 请求统一进入 SQLite FIFO 队�
 ### 实施范围
 
 1. 构建候选容器，使用持久化卷和仅用于验收的本地部署；
-2. 准备独立、可清理的样例仓库及其 `scenario-testing` 分支；样例仓库包含可控的需求/产品提交，但不复用 `cynos-ai/luowang`；
+2. 准备独立、可清理的样例仓库及其 `scenario-testing` 分支；样例仓库包含可控的需求/产品提交，但不复用 `shenjiecode/catchnet`；
 3. 启动独立本地或非生产样例应用，提供 API 与 UI 流程以及可控的通过、产品错误和阻塞条件，禁止连接生产数据或真实外部副作用目标；
 4. 使用 `LUOWANG_ADMIN_PASSWORD` 完成首次管理员初始化，并配置真实 Provider、Main/Runner/Reviewer、Playwright MCP、私有 OSS 和样例测试账号；
 5. 按陌生项目流程初始化少量核心场景，禁止为追求数量铺量；
@@ -530,7 +530,7 @@ npm run test:acceptance
 - 纯测试资产 commit 不触发，产品/需求 commit 正确合批；
 - 重启不恢复 Agent 对话、不伪造结果，归档失败可幂等恢复；
 - 所有 Secret 扫描为阴性；
-- `cynos-ai/luowang` 中没有验收产生的 `scenario-testing` 分支、测试资产、测试 PR 或测试 Issue；
+- `shenjiecode/catchnet` 中没有验收产生的 `scenario-testing` 分支、测试资产、测试 PR 或测试 Issue；
 - `npm test`、typecheck、生产 build、e2e smoke、Docker smoke 和 acceptance 全部通过。
 
 ### 退出条件

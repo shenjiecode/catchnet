@@ -21,7 +21,7 @@ import {
 } from './playwright-mcp.js';
 
 const TMPFS_MAGIC = 0x01021994;
-const MARKER = 'LuoWang native MCP preflight';
+const MARKER = 'Catchnet native MCP preflight';
 
 /** Operator-only readiness check, never exposed as a Run tool or model prompt. */
 export async function runBrowserPreflight(
@@ -63,7 +63,7 @@ export async function runBrowserPreflight(
       const info = await statfs(path);
       if (info.type !== TMPFS_MAGIC || info.bavail * info.bsize < 16 * 1024 * 1024)
         throw new Error('WRITABLE_TMPFS_REQUIRED');
-      const probe = await mkdtemp(join(path, 'luowang-write-probe-'));
+      const probe = await mkdtemp(join(path, 'catchnet-write-probe-'));
       try {
         await writeFile(join(probe, 'probe'), MARKER, { flag: 'wx' });
         if ((await readFile(join(probe, 'probe'), 'utf8')) !== MARKER)

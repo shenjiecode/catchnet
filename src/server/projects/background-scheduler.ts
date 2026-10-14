@@ -58,6 +58,14 @@ export function createProjectBackgroundScheduler(input: {
         { repoRoot: input.repoRoot, reportRoot: input.reportRoot },
       );
       return createGitPoller({
+        hasPendingRequest: () =>
+          Boolean(
+            input.database
+              .prepare(
+                "SELECT 1 FROM test_request_queue WHERE project_id=? AND status IN ('queued','running','waiting_archive')",
+              )
+              .get(projectId),
+          ),
         configuration,
         repository: createProjectRepositoryService(
           input.database,
@@ -79,6 +87,7 @@ export function createProjectBackgroundScheduler(input: {
   const indexers = new Map<string, Pick<RepositoryIndexer, 'sync'>>();
   let timer: NodeJS.Timeout | undefined;
   let activeTick: Promise<void> | null = null;
+  let lastResourceRecoveryAt = 0;
 
   async function processProject(projectId: string, at: Date): Promise<void> {
     const state = createProjectAutomationStateStore(input.database, projectId);
@@ -105,6 +114,17 @@ export function createProjectBackgroundScheduler(input: {
         if (result.status === 'failed') throw new Error(result.message);
       }
       const minute = at.toISOString().slice(0, 16);
+      const interval = config.scheduleIntervalSeconds ?? 0;
+      const lastSchedule = Date.parse(state.get('scheduler.last-interval-at') ?? '');
+      if (interval > 0) {
+        if (!Number.isFinite(lastSchedule))
+          state.set('scheduler.last-interval-at', at.toISOString());
+        else if (at.getTime() >= lastSchedule + interval * 1000) {
+          state.set('scheduler.last-interval-at', at.toISOString());
+          const result = await poller().poll('schedule');
+          if (result.status === 'failed') throw new Error(result.message);
+        }
+      } else state.delete('scheduler.last-interval-at');
       if (config.cron.trim() && state.get(LAST_CRON) !== minute && matchesCron(config.cron, at)) {
         state.set(LAST_CRON, minute);
         const result = await poller().poll('schedule');
@@ -112,6 +132,7 @@ export function createProjectBackgroundScheduler(input: {
       }
       state.delete(LAST_ERROR);
     } catch (error) {
+      if (!input.projects.get(projectId)) return;
       const message = error instanceof Error ? error.message : '项目后台检查失败';
       state.set(LAST_ERROR, message);
       input.logger?.warn(
@@ -149,6 +170,7 @@ export function createProjectBackgroundScheduler(input: {
       if (result.status !== 'synced') throw new Error(result.message);
       state.delete(INDEX_ERROR);
     } catch (error) {
+      if (!input.projects.get(projectId)) return;
       state.set(INDEX_ERROR, error instanceof Error ? error.message : '项目索引失败');
       input.logger?.warn(
         { projectId, errorName: error instanceof Error ? error.name : 'UnknownError' },
@@ -164,7 +186,8 @@ export function createProjectBackgroundScheduler(input: {
         input.projects.list().map(async (project) => {
           if (awaitsCutoverActivation(input.database, project.projectId)) return;
           await indexProject(project.projectId, at);
-          if (project.status === 'active') await processProject(project.projectId, at);
+          if (input.projects.get(project.projectId)?.status === 'active')
+            await processProject(project.projectId, at);
         }),
       );
       void input.dispatcher
@@ -175,6 +198,17 @@ export function createProjectBackgroundScheduler(input: {
             'project background archive retry failed',
           ),
         );
+      if (input.dispatcher.reconcileResources && at.getTime() - lastResourceRecoveryAt >= 60_000) {
+        lastResourceRecoveryAt = at.getTime();
+        void input.dispatcher
+          .reconcileResources()
+          .catch((error: unknown) =>
+            input.logger?.warn(
+              { errorName: error instanceof Error ? error.name : 'UnknownError' },
+              'execution resource reconciliation failed',
+            ),
+          );
+      }
       void input.dispatcher
         .drain()
         .catch((error: unknown) =>
